@@ -19,8 +19,8 @@ function scrape_dfrn($url, $dont_probe = false) {
 
 	$probe = probe_url($url);
 
-	if (isset($probe["addr"]))
-		$ret["addr"] = $probe["addr"];
+	if (isset($probe['addr']))
+		$ret['addr'] = $probe['addr'];
 
 	$headers = $a->get_curl_headers();
 	logger('scrape_dfrn: headers=' . $headers, LOGGER_DEBUG);
