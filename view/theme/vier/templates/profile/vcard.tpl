@@ -62,8 +62,8 @@
 			{{if $follow_link}}
 				<li><a id="dfrn-request-link" href="{{$follow_link}}">{{$follow}}</a></li>
 			{{/if}}
-			{{if $wallmessage_link}}
-				<li><a id="wallmessage-link" href="{{$wallmessage_link}}">{{$wallmessage}}</a></li>
+			{{if $new_message_link}}
+				<li><a id="wallmessage-link" href="{{$new_message_link}}">{{$new_message}}</a></li>
 			{{/if}}
 			{{if $subscribe_feed_link}}
 				<li><a id="subscribe-feed-link" href="{{$subscribe_feed_link}}">{{$subscribe_feed}}</a></li>

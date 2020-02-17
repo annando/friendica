@@ -46,7 +46,7 @@
 			{{if $account_type}}<div class="account-type">({{$account_type}})</div>{{/if}}
 		</div>
 
-		{{if $follow_link || $unfollow_link || $wallmessage_link}}
+		{{if $follow_link || $unfollow_link || $new_message_link}}
 		<div id="profile-extra-links">
 			{{if $follow_link || $unfollow_link}}
 			<div id="dfrn-request-link-button">
@@ -63,11 +63,11 @@
 				{{/if}}
 			</div>
 			{{/if}}
-			{{if $wallmessage_link}}
+			{{if $new_message_link}}
 			<div id="wallmessage-link-botton">
-				<button type="button" id="wallmessage-link" class="btn btn-labeled btn-primary btn-sm" onclick="openWallMessage('{{$wallmessage_link}}')">
+				<button type="button" id="wallmessage-link" class="btn btn-labeled btn-primary btn-sm" onclick="openWallMessage('{{$new_message_link}}')">
 					<span class=""><i class="fa fa-envelope"></i></span>
-					<span class="">{{$wallmessage}}</span>
+					<span class="">{{$new_message}}</span>
 				</button>
 			</div>
 			{{/if}}

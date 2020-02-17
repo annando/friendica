@@ -301,9 +301,7 @@ class Profile
 		$follow_link = null;
 		$unfollow_link = null;
 		$subscribe_feed_link = null;
-		$wallmessage_link = null;
-
-
+		$new_message_link = null;
 
 		$visitor_contact = [];
 		if (!empty($profile['uid']) && self::getMyURL()) {
@@ -344,12 +342,9 @@ class Profile
 				$subscribe_feed_link = 'dfrn_poll/' . $profile['nickname'];
 			}
 
-			if (Contact::canReceivePrivateMessages($profile)) {
-				if ($visitor_is_followed || $visitor_is_following) {
-					$wallmessage_link = $visitor_base_path . '/message/new/' . base64_encode($profile['addr'] ?? '');
-				} elseif ($visitor_is_authenticated && !empty($profile['unkmail'])) {
-					$wallmessage_link = 'wallmessage/' . $profile['nickname'];
-				}
+			if (Contact::canReceivePrivateMessages($profile)
+				&& ($visitor_is_followed || $visitor_is_following || ($visitor_is_authenticated && !empty($profile['unkmail'])))) {
+				$new_message_link = $visitor_base_path . '/message/new/' . base64_encode($profile['addr'] ?? '');
 			}
 		}
 
@@ -466,8 +461,8 @@ class Profile
 			'$unfollow_link' => $unfollow_link,
 			'$subscribe_feed' => DI::l10n()->t('Atom feed'),
 			'$subscribe_feed_link' => $subscribe_feed_link,
-			'$wallmessage' => DI::l10n()->t('Message'),
-			'$wallmessage_link' => $wallmessage_link,
+			'$new_message' => DI::l10n()->t('Message'),
+			'$new_message_link' => $new_message_link,
 			'$account_type' => $account_type,
 			'$location' => $location,
 			'$homepage' => $homepage,

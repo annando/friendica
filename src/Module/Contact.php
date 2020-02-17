@@ -311,9 +311,9 @@ class Contact extends BaseModule
 				}
 			}
 
-			$wallmessage_link = '';
+			$new_message_link = '';
 			if ($contact['uid'] && Model\Contact::canReceivePrivateMessages($contact)) {
-				$wallmessage_link = 'message/new/' . $contact['id'];
+				$new_message_link = 'message/new/' . $contact['id'];
 			}
 
 			$vcard_widget = Renderer::replaceMacros(Renderer::getMarkupTemplate('widget/vcard.tpl'), [
@@ -328,8 +328,8 @@ class Contact extends BaseModule
 				'$follow_link'   => $follow_link,
 				'$unfollow'     => DI::l10n()->t('Unfollow'),
 				'$unfollow_link' => $unfollow_link,
-				'$wallmessage'  => DI::l10n()->t('Message'),
-				'$wallmessage_link' => $wallmessage_link,
+				'$new_message'  => DI::l10n()->t('Message'),
+				'$new_message_link' => $new_message_link,
 			]);
 
 			$findpeople_widget = '';

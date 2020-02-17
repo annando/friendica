@@ -30,6 +30,7 @@ use Friendica\Model\Notify\Type;
 use Friendica\Network\Probe;
 use Friendica\Protocol\Activity;
 use Friendica\Util\DateTimeFormat;
+use Friendica\Util\Strings;
 use Friendica\Worker\Delivery;
 
 /**
@@ -46,6 +47,13 @@ class Mail
 	public static function insert($msg)
 	{
 		$user = User::getById($msg['uid']);
+
+		// Ensure to only receive private messages from connected accounts or when unknown contacts are allowed
+		if (!DBA::exists('contact', ['id' => $msg['contact-id'], 'uid' => $msg['uid'], 'pending' => false, 'self' => false]) && !$user['unkmail']) {
+				return false;
+		}
+
+		/// @todo Implement test for $user['cntunkmail'] (Number of mails from unknown contacts)
 
 		if (!isset($msg['reply'])) {
 			$msg['reply'] = DBA::exists('mail', ['parent-uri' => $msg['parent-uri']]);

@@ -50,11 +50,11 @@
 					</a>
 				{{/if}}
 			</div>
-			{{if $wallmessage_link}}
+			{{if $new_message_link}}
 				<div id="wallmessage-link-botton">
-					<button type="button" id="wallmessage-link" class="btn btn-labeled btn-primary btn-sm" onclick="openWallMessage('{{$wallmessage_link}}')">
+					<button type="button" id="wallmessage-link" class="btn btn-labeled btn-primary btn-sm" onclick="openWallMessage('{{$new_message_link}}')">
 						<span class=""><i class="fa fa-envelope"></i></span>
-						<span class="">{{$wallmessage}}</span>
+						<span class="">{{$new_message}}</span>
 					</button>
 				</div>
 			{{/if}}

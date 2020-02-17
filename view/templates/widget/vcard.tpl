@@ -19,8 +19,8 @@
 			{{if $unfollow_link}}
 				<li><a id="dfrn-request-link" href="{{$unfollow_link}}">{{$unfollow}}</a></li>
 			{{/if}}
-			{{if $wallmessage_link}}
-				<li><a id="wallmessage-link" href="{{$wallmessage_link}}">{{$wallmessage}}</a></li>
+			{{if $new_message_link}}
+				<li><a id="wallmessage-link" href="{{$new_message_link}}">{{$new_message}}</a></li>
 			{{/if}}
 		</ul>
 	</div>
