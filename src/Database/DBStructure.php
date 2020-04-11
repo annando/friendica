@@ -119,14 +119,17 @@ class DBStructure
 	 * On first pass, defines DB_UPDATE_VERSION constant.
 	 *
 	 * @see static/dbstructure.config.php
-	 * @param boolean $with_addons_structure Whether to tack on addons additional tables
 	 * @param string  $basePath              The base path of this application
+	 * @param boolean $with_addons_structure Whether to tack on addons additional tables
 	 * @return array
 	 * @throws Exception
 	 */
-	public static function definition($basePath, $with_addons_structure = true)
+	public static function definition($basePath = '', $with_addons_structure = true)
 	{
 		if (!self::$definition) {
+			if (empty($basePath)) {
+				$basePath = DI::app()->getBasePath();
+			}
 
 			$filename = $basePath . '/static/dbstructure.config.php';
 
