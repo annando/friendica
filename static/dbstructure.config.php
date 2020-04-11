@@ -1111,6 +1111,110 @@ return [
 			"poll_id" => ["poll_id"],
 		]
 	],
+	"post" => [
+		"comment" => "Structure for all posts",
+		"fields" => [
+			"uri-id" => ["type" => "int unsigned", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"parent-uri-id" => ["type" => "int unsigned", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table that contains the parent uri"],
+			"thr-parent-id" => ["type" => "int unsigned", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table that contains the thread parent uri"],
+			"created" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "Creation timestamp."],
+			"edited" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "Date of last edit (default is created)"],
+			"commented" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "Date of last comment/reply to this item"],
+			"received" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "datetime"],
+			"changed" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "Date that something in the conversation changed, indicating clients should fetch the conversation again"],
+			"gravity" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => ""],
+			"network" => ["type" => "char(4)", "not null" => "1", "default" => "", "comment" => "Network from where the item comes from"],
+			"owner-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Link to the contact table with uid=0 of the owner of this item"],
+			"author-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Link to the contact table with uid=0 of the author of this item"],
+			"external-id" => ["type" => "int unsigned", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the external uri"],
+			"post-type" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => "Post type (personal note, bookmark, ...)"],
+			"vid" => ["type" => "smallint unsigned", "relation" => ["verb" => "id"], "comment" => "Id of the verb table entry that contains the activity verbs"],
+			"private" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => "0=public, 1=private, 2=unlisted"],
+			"visible" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
+			"moderated" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
+			"deleted" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "item has been deleted"]
+		],
+		"indexes" => [
+			"PRIMARY" => ["uri-id"]
+		]
+	],
+	"post-content" => [
+		"comment" => "Content for all posts",
+		"fields" => [
+			"uri-id" => ["type" => "int unsigned", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"title" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => "item title"],
+			"content-warning" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => ""],
+			"body" => ["type" => "mediumtext", "comment" => "item body content"],
+			"location" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => "text location where this item originated"],
+			"coord" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => "longitude/latitude pair representing location where this item originated"],
+			"language" => ["type" => "text", "comment" => "Language information about this post"],
+			"app" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => "application which generated this item"],
+			"attach" => ["type" => "mediumtext", "comment" => "JSON structure representing attachments to this post"],
+			"rendered-hash" => ["type" => "varchar(32)", "not null" => "1", "default" => "", "comment" => ""],
+			"rendered-html" => ["type" => "mediumtext", "comment" => "item.body converted to html"],
+			"object-type" => ["type" => "varchar(100)", "not null" => "1", "default" => "", "comment" => "ActivityStreams object type"],
+			"object" => ["type" => "text", "comment" => "JSON encoded object structure unless it is an implied object (normal post)"],
+			"target-type" => ["type" => "varchar(100)", "not null" => "1", "default" => "", "comment" => "ActivityStreams target type if applicable (URI)"],
+			"target" => ["type" => "text", "comment" => "JSON encoded target structure if used"],
+			"resource-id" => ["type" => "varchar(32)", "not null" => "1", "default" => "", "comment" => "Used to link other tables to items, it identifies the linked resource (e.g. photo) and if set must also set resource_type"],
+			"event-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["event" => "id"], "comment" => "Used to link to the event.id"],
+			"plink" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => "permalink or URL to a displayable copy of the message at its source"]
+		],
+		"indexes" => [
+			"PRIMARY" => ["uri-id"]
+		]
+	],
+	"post-thread" => [
+		"comment" => "Thread related data",
+		"fields" => [
+			"uri-id" => ["type" => "int unsigned", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"owner-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Item owner"],
+			"author-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Item author"],
+			"created" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
+			"edited" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
+			"commented" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
+			"received" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
+			"changed" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
+			"network" => ["type" => "char(4)", "not null" => "1", "default" => "", "comment" => ""]
+		],
+		"indexes" => [
+			"PRIMARY" => ["uri-id"]
+		]
+	],
+	"post-thread-user" => [
+		"comment" => "Thread related data per user",
+		"fields" => [
+			"uri-id" => ["type" => "int unsigned", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "default" => "0", "primary" => "1", "relation" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
+			"pinned" => ["type" => "boolean", "comment" => "The item is pinned on the profile page"],
+			"starred" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
+			"hidden" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "Marker to hide an item from the user"],
+			"ignored" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
+			"bookmark" => ["type" => "boolean", "comment" => ""],
+			"forum_mode" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => ""]
+		],
+		"indexes" => [
+			"PRIMARY" => ["uri-id"]
+		]
+	],
+	"post-user" => [
+		"comment" => "User specific post data",
+		"fields" => [
+			"uri-id" => ["type" => "int unsigned", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "default" => "0", "primary" => "1", "relation" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
+			"contact-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "contact.id"],
+			"wall" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "This item was posted to the wall of uid"],
+			"origin" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "item originated at this site"],
+			"pubmail" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
+			"ignored" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
+			"unseen" => ["type" => "boolean", "not null" => "1", "default" => "1", "comment" => "item has not been seen"],
+			"psid" => ["type" => "int unsigned", "relation" => ["permissionset" => "id"], "comment" => "ID of the permission set of this post"],
+			"notification-type" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => ""],
+		],
+		"indexes" => [
+			"PRIMARY" => ["uid", "uri-id"]
+		]
+	],
 	"process" => [
 		"comment" => "Currently running system processes",
 		"fields" => [
@@ -1458,6 +1562,16 @@ return [
 			"PRIMARY" => ["uid", "iid"],
 			"uid_pinned" => ["uid", "pinned"],
 			"iid_uid" => ["iid", "uid"]
+		]
+	],
+	"verb" => [
+		"comment" => "Activity Verbs",
+		"fields" => [
+			"id" => ["type" => "int unsigned", "not null" => "1", "extra" => "auto_increment", "primary" => "1"],
+			"verb" => ["type" => "varchar(100)", "not null" => "1", "default" => "", "comment" => ""]
+		],
+		"indexes" => [
+			"PRIMARY" => ["id"]
 		]
 	],
 	"worker-ipc" => [
