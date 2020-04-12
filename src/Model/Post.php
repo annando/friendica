@@ -29,7 +29,9 @@ use Friendica\Util\DateTimeFormat;
 
 class Post
 {
-	const POST_TABLES = ['post', 'post-content', 'post-thread', 'post-thread-user', 'post-user'];
+	const TABLES = ['post-structure', 'post-content', 'post-thread', 'post-thread-user', 'post-user'];
+	const USER_TABLES = ['post-thread-user', 'post-user'];
+	const THREAD_TABLES = ['post-thread', 'post-thread-user'];
 
 	const ACTIVITIES = [
 		Activity::LIKE, Activity::DISLIKE,
@@ -42,7 +44,7 @@ class Post
 		$definition = DBStructure::definition('', false);
 
 		$postfields = [];
-		foreach (self::POST_TABLES as $table) {
+		foreach (self::TABLES as $table) {
 			$postfields[$table] = array_keys($definition[$table]['fields']);
 		}
 
@@ -177,20 +179,21 @@ class Post
 		// To-Do
 		unset($fields['tag']);
 		unset($fields['file']);
+		unset($fields['type']);
 
 		return $fields;
 	}
 
-	public static function insert(array $fields)
+	private static function assignTableFields(array $fields, array $condition = [])
 	{
-		$fields = self::prepareFields($fields);
-		$test = $fields;
-		unset($test['verb']);
-		if (empty($fields['uri-id'])) {
-			return 0;
+		if (empty($condition)) {
+			$condition = $fields;
 		}
 
 		$structure = self::getPostFields();
+
+		$test = $fields;
+		unset($test['verb']);
 
 		$table_fields = [];
 
@@ -201,7 +204,7 @@ class Post
 			if (is_null($value)) {
 				continue;
 			}
-			foreach (self::POST_TABLES as $table) {
+			foreach (self::TABLES as $table) {
 				if (in_array($field, $structure[$table])) {
 					$table_fields[$table][$field] = $value;
 					unset($test[$field]);
@@ -212,28 +215,80 @@ if (!empty($test)) {
 	var_dump($test);
 	die();
 }
-		if (!isset($fields['uid'])) {
-			unset($table_fields['post-thread-user']);
-			unset($table_fields['post-user']);
+		if (!array_key_exists('uid', $condition)) {
+			foreach (self::USER_TABLES as $table) {
+				unset($table_fields[$table]);
+			}
 		}
 
-		if ($fields['gravity'] != GRAVITY_PARENT) {
-			unset($table_fields['post-thread']);
-			unset($table_fields['post-thread-user']);
+		if ($condition['gravity'] != GRAVITY_PARENT) {
+			foreach (self::THREAD_TABLES as $table) {
+				unset($table_fields[$table]);
+			}
 		}
 
 		// When the activity doesn't need a content, we remove it
-		if (in_array($fields['verb'], self::ACTIVITIES)) {
+		if (!empty($condition['verb']) && in_array($condition['verb'], self::ACTIVITIES)) {
 			unset($table_fields['post-content']);
 		}
 
-		foreach (self::POST_TABLES as $table) {
+		return $table_fields;
+	}
+
+	public static function insert(array $fields)
+	{
+		DBA::transaction();
+
+		$fields = self::prepareFields($fields);
+		if (empty($fields['uri-id'])) {
+			DBA::rollback();
+			return 0;
+		}
+
+		$table_fields = self::assignTableFields($fields);
+
+		foreach (self::TABLES as $table) {
 			if (empty($table_fields[$table])) {
 				continue;
 			}
-			DBA::insert($table, $table_fields[$table], true);
+			if (!DBA::insert($table, $table_fields[$table], true)) {
+				DBA::rollback();
+				return 0;
+			}
 		}
+		DBA::commit();
 
 		return $fields['uri-id'];
+	}
+
+	public static function update(array $fields, array $condition, int $uid = null)
+	{
+		$affected_rows = DBA::select('post-structure', ['uri-id', 'gravity'], $condition);
+		if (!DBA::isResult($affected_rows)) {
+			return true;
+		}
+
+		while ($row = DBA::fetch($affected_rows)) {
+			$table_fields = self::assignTableFields($fields, array_merge(['uid' => $uid], $row));
+
+			foreach (self::TABLES as $table) {
+				if (empty($table_fields[$table])) {
+					continue;
+				}
+
+				$condition = ['uri-id' => $row['uri-id']];
+				if (in_array($table, self::USER_TABLES) && !is_null($uid)) {
+					$condition['uid'] = $uid;
+				}
+
+				if (!DBA::update($table, $table_fields[$table], $condition)) {
+					DBA::rollback();
+					return false;
+				}
+			}
+		}
+		DBA::commit();
+
+		return true;
 	}
 }
