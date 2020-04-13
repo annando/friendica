@@ -1189,7 +1189,8 @@ return [
 			"forum_mode" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => ""]
 		],
 		"indexes" => [
-			"PRIMARY" => ["uid", "uri-id"]
+			"PRIMARY" => ["uid", "uri-id"],
+			"uid_wall" => ["uid", "wall"],
 		]
 	],
 	"post-user" => [

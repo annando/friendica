@@ -179,7 +179,6 @@ class Post
 		// To-Do
 		unset($fields['tag']);
 		unset($fields['file']);
-		unset($fields['type']);
 
 		return $fields;
 	}
