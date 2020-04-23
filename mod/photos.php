@@ -36,6 +36,7 @@ use Friendica\Model\Contact;
 use Friendica\Model\Item;
 use Friendica\Model\Photo;
 use Friendica\Model\Profile;
+use Friendica\Model\Tag;
 use Friendica\Model\User;
 use Friendica\Module\BaseProfile;
 use Friendica\Network\Probe;
@@ -309,7 +310,7 @@ function photos_post(App $a)
 		$desc        = !empty($_POST['desc'])      ? Strings::escapeTags(trim($_POST['desc']))      : '';
 		$rawtags     = !empty($_POST['newtag'])    ? Strings::escapeTags(trim($_POST['newtag']))    : '';
 		$item_id     = !empty($_POST['item_id'])   ? intval($_POST['item_id'])                      : 0;
-		$albname     = !empty($_POST['albname'])   ? Strings::escapeTags(trim($_POST['albname']))   : '';
+		$albname     = !empty($_POST['albname'])   ? trim($_POST['albname'])                        : '';
 		$origaname   = !empty($_POST['origaname']) ? Strings::escapeTags(trim($_POST['origaname'])) : '';
 
 		$aclFormatter = DI::aclFormatter();
@@ -421,7 +422,7 @@ function photos_post(App $a)
 		}
 
 		if ($item_id) {
-			$item = Item::selectFirst(['tag', 'inform'], ['id' => $item_id, 'uid' => $page_owner_uid]);
+			$item = Item::selectFirst(['tag', 'inform', 'uri-id'], ['id' => $item_id, 'uid' => $page_owner_uid]);
 
 			if (DBA::isResult($item)) {
 				$old_tag    = $item['tag'];
@@ -521,10 +522,17 @@ function photos_post(App $a)
 
 							$profile = str_replace(',', '%2c', $profile);
 							$str_tags .= '@[url=' . $profile . ']' . $newname . '[/url]';
+
+							if (!empty($item['uri-id'])) {
+								Tag::store($item['uri-id'], Tag::MENTION, $newname, $profile);
+							}	
 						}
 					} elseif (strpos($tag, '#') === 0) {
 						$tagname = substr($tag, 1);
 						$str_tags .= '#[url=' . DI::baseUrl() . "/search?tag=" . $tagname . ']' . $tagname . '[/url],';
+						if (!empty($item['uri-id'])) {
+							Tag::store($item['uri-id'], Tag::HASHTAG, $tagname);
+						}
 					}
 				}
 			}
@@ -615,10 +623,10 @@ function photos_post(App $a)
 	Hook::callAll('photo_post_init', $_POST);
 
 	// Determine the album to use
-	$album    = !empty($_REQUEST['album'])    ? Strings::escapeTags(trim($_REQUEST['album']))    : '';
-	$newalbum = !empty($_REQUEST['newalbum']) ? Strings::escapeTags(trim($_REQUEST['newalbum'])) : '';
+	$album    = trim($_REQUEST['album'] ?? '');
+	$newalbum = trim($_REQUEST['newalbum'] ?? '');
 
-	Logger::log('mod/photos.php: photos_post(): album= ' . $album . ' newalbum= ' . $newalbum , Logger::DEBUG);
+	Logger::info('album= ' . $album . ' newalbum= ' . $newalbum);
 
 	if (!strlen($album)) {
 		if (strlen($newalbum)) {

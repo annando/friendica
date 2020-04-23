@@ -51,7 +51,7 @@
 use Friendica\Database\DBA;
 
 if (!defined('DB_UPDATE_VERSION')) {
-	define('DB_UPDATE_VERSION', 1338);
+	define('DB_UPDATE_VERSION', 1339);
 }
 
 return [
@@ -1367,20 +1367,6 @@ return [
 			"expire" => ["expire"],
 		]
 	],
-	"sign" => [
-		"comment" => "Diaspora signatures",
-		"fields" => [
-			"id" => ["type" => "int unsigned", "not null" => "1", "extra" => "auto_increment", "primary" => "1", "comment" => "sequential ID"],
-			"iid" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["item" => "id"], "comment" => "item.id"],
-			"signed_text" => ["type" => "mediumtext", "comment" => ""],
-			"signature" => ["type" => "text", "comment" => ""],
-			"signer" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => ""],
-		],
-		"indexes" => [
-			"PRIMARY" => ["id"],
-			"iid" => ["UNIQUE", "iid"],
-		]
-	],
 	"term" => [
 		"comment" => "item taxonomy (categories, tags, etc.) table",
 		"fields" => [
@@ -1403,6 +1389,33 @@ return [
 			"uid_otype_type_term_global_created" => ["uid", "otype", "type", "term(32)", "global", "created"],
 			"uid_otype_type_url" => ["uid", "otype", "type", "url(64)"],
 			"guid" => ["guid(64)"],
+		]
+	],
+	"tag" => [
+		"comment" => "tags and mentions",
+		"fields" => [
+			"id" => ["type" => "int unsigned", "not null" => "1", "extra" => "auto_increment", "primary" => "1", "comment" => ""],
+			"name" => ["type" => "varchar(96)", "not null" => "1", "default" => "", "comment" => ""],
+			"url" => ["type" => "varbinary(255)", "not null" => "1", "default" => "", "comment" => ""]
+		],
+		"indexes" => [
+			"PRIMARY" => ["id"],
+			"type_name_url" => ["UNIQUE", "name", "url"],
+			"url" => ["url"]
+		]
+	],
+	"post-tag" => [
+		"comment" => "post relation to tags",
+		"fields" => [
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"type" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "primary" => "1", "comment" => ""],
+			"tid" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "primary" => "1", "relation" => ["tag" => "id"], "comment" => ""],
+			"cid" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "primary" => "1", "relation" => ["contact" => "id"], "comment" => "Contact id of the mentioned public contact"],
+		],
+		"indexes" => [
+			"PRIMARY" => ["uri-id", "type", "tid", "cid"],
+			"uri-id" => ["tid"],
+			"cid" => ["tid"]
 		]
 	],
 	"thread" => [
