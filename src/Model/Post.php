@@ -29,7 +29,7 @@ use Friendica\Util\DateTimeFormat;
 
 class Post
 {
-	const TABLES = ['post-structure', 'post-content', 'post-thread', 'post-thread-user', 'post-user'];
+	const TABLES = ['post', 'post-content', 'post-thread', 'post-thread-user', 'post-user'];
 	const USER_TABLES = ['post-thread-user', 'post-user'];
 	const THREAD_TABLES = ['post-thread', 'post-thread-user'];
 
@@ -54,6 +54,7 @@ class Post
 	private static function prepareFields($fields)
 	{
 		unset($fields['id']);
+		unset($fields['tag']);
 
 		if (!empty($fields['uri']) && empty($fields['uri-id'])) {
 			$itemuri_fields = ['uri' => $fields['uri']];
@@ -177,8 +178,8 @@ class Post
 		unset($fields['deny_gid']);
 
 		// To-Do
-		unset($fields['tag']);
 		unset($fields['file']);
+		unset($fields['type']);
 
 		return $fields;
 	}
@@ -210,10 +211,7 @@ class Post
 				}
 			}
 		}
-if (!empty($test)) {
-	var_dump($test);
-	die();
-}
+
 		if (!array_key_exists('uid', $condition)) {
 			foreach (self::USER_TABLES as $table) {
 				unset($table_fields[$table]);
@@ -262,7 +260,7 @@ if (!empty($test)) {
 
 	public static function update(array $fields, array $condition, int $uid = null)
 	{
-		$affected_rows = DBA::select('post-structure', ['uri-id', 'gravity'], $condition);
+		$affected_rows = DBA::select('post', ['uri-id', 'gravity'], $condition);
 		if (!DBA::isResult($affected_rows)) {
 			return true;
 		}

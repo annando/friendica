@@ -1111,7 +1111,7 @@ return [
 			"poll_id" => ["poll_id"],
 		]
 	],
-	"post-structure" => [
+	"post" => [
 		"comment" => "Structure for all posts",
 		"fields" => [
 			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
@@ -1196,8 +1196,9 @@ return [
 	"post-user" => [
 		"comment" => "User specific post data",
 		"fields" => [
-			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
-			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "default" => "0", "primary" => "1", "relation" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
+			"id" => ["type" => "int unsigned", "not null" => "1", "extra" => "auto_increment", "primary" => "1", "comment" => "sequential ID"],
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "default" => "0", "relation" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
 			"contact-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "contact.id"],
 			"unseen" => ["type" => "boolean", "not null" => "1", "default" => "1", "comment" => "post has not been seen"],
 			"hidden" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "Marker to hide the post from the user"],
@@ -1207,7 +1208,8 @@ return [
 			"psid" => ["type" => "int unsigned", "relation" => ["permissionset" => "id"], "comment" => "ID of the permission set of this post"],
 		],
 		"indexes" => [
-			"PRIMARY" => ["uid", "uri-id"]
+			"PRIMARY" => ["id"],
+			"uid_uri-id" => ["UNIQUE", "uid", "uri-id"],
 		],
 	],
 	"process" => [
