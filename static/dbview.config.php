@@ -128,9 +128,9 @@ return [
 			"profile-id" => ["contact", "profile-id"],
 			"bdyear" => ["contact", "bdyear"],
 			"bd" => ["contact", "bd"],
-			"notify_new_posts" => ["notify_new_posts"],
-			"fetch_further_information" => ["fetch_further_information"],
-			"ffi_keyword_blacklist" => ["ffi_keyword_blacklist"],
+			"notify_new_posts" => ["contact", "notify_new_posts"],
+			"fetch_further_information" => ["contact", "fetch_further_information"],
+			"ffi_keyword_blacklist" => ["contact", "ffi_keyword_blacklist"],
 			"parent-uid" => ["user", "parent-uid"],
 			"guid" => ["user", "guid"],
 			"nickname" => ["user", "nickname"], /// @todo Replaces all uses of "nickname" with "nick"
@@ -180,7 +180,6 @@ return [
 			"postal-code" => ["profile", "postal-code"],
 			"country-name" => ["profile", "country-name"],
 			"homepage" => ["profile", "homepage"],
-			"xmpp" => ["profile", "xmpp"],
 			"dob" => ["profile", "dob"],
 		],
 		"query" => "FROM `user`
@@ -220,6 +219,25 @@ return [
 		"query" => "FROM `register`
 			INNER JOIN `contact` ON `register`.`uid` = `contact`.`uid`
 			INNER JOIN `user` ON `register`.`uid` = `user`.`uid`"
+	],
+	"tag-search-view" => [
+		"fields" => [
+			"uri-id" => ["post-tag", "uri-id"],
+			"iid" => ["item", "id"],
+			"uri" => ["item", "uri"],
+			"guid" => ["item", "guid"],
+			"uid" => ["item", "uid"],
+			"private" => ["item", "private"],
+			"wall" => ["item", "wall"],
+			"origin" => ["item", "origin"],
+			"gravity" => ["item", "gravity"],
+			"received" => ["item", "received"],			
+			"name" => ["tag", "name"],
+		],
+		"query" => "FROM `post-tag`
+			INNER JOIN `tag` ON `tag`.`id` = `post-tag`.`tid`
+			INNER JOIN `item` ON `item`.`uri-id` = `post-tag`.`uri-id`
+			WHERE `post-tag`.`type` = 1"
 	],
 	"workerqueue-view" => [
 		"fields" => [
