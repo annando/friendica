@@ -39,12 +39,12 @@ class Verb
 			return 0;
 		}
 
-		$verb_record = DBA::selectFirst('verb', ['id'], ['verb' => $verb]);
+		$verb_record = DBA::selectFirst('verb', ['id'], ['name' => $verb]);
 		if (DBA::isResult($verb_record)) {
 			return $verb_record['id'];
 		}
 
-		DBA::insert('verb', ['verb' => $verb], true);
+		DBA::insert('verb', ['name' => $verb], true);
 
 		return DBA::lastInsertId();
 	}
