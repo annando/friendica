@@ -19,24 +19,23 @@
  *
  */
 
-namespace Friendica\Model;
+namespace Friendica\Model\Post;
 
 use Friendica\Database\DBA;
+use Friendica\Model\Item;
+use Friendica\Model\Tag;
 
 /**
- * Class Term
+ * Class Category
  *
- * This Model class handles term table interactions.
- * This tables stores relevant terms related to posts, photos and searches, like hashtags, mentions and
- * user-applied categories.
+ * This Model class handles category table interactions.
+ * This tables stores user-applied categories related to posts.
  */
-class Term
+class Category
 {
     const UNKNOWN           = 0;
     const CATEGORY          = 3;
     const FILE              = 5;
-
-    const OBJECT_TYPE_POST  = 1;
 
 	/**
 	 * Generates the legacy item.file field string from an item ID.
@@ -46,17 +45,16 @@ class Term
 	 * @return string
 	 * @throws \Exception
 	 */
-	public static function fileTextFromItemId($item_id)
+	public static function getTextByURIId(int $uri_id, int $uid)
 	{
 		$file_text = '';
 
-		$condition = ['otype' => self::OBJECT_TYPE_POST, 'oid' => $item_id, 'type' => [self::FILE, self::CATEGORY]];
-		$tags = DBA::selectToArray('term', ['type', 'term', 'url'], $condition);
+		$tags = DBA::selectToArray('category-view', ['type', 'name'], ['uri-id' => $uri_id, 'uid' => $uid]);
 		foreach ($tags as $tag) {
 			if ($tag['type'] == self::CATEGORY) {
-				$file_text .= '<' . $tag['term'] . '>';
+				$file_text .= '<' . $tag['name'] . '>';
 			} else {
-				$file_text .= '[' . $tag['term'] . ']';
+				$file_text .= '[' . $tag['name'] . ']';
 			}
 		}
 
@@ -72,42 +70,48 @@ class Term
 	 * @return void
 	 * @throws \Exception
 	 */
-	public static function insertFromFileFieldByItemId($item_id, $files)
+	public static function storeTextByURIId(int $uri_id, int $uid, string $files)
 	{
-		$message = Item::selectFirst(['uid', 'deleted'], ['id' => $item_id]);
+		$message = Item::selectFirst(['deleted'], ['uri-id' => $uri_id, 'uid' => $uid]);
 		if (!DBA::isResult($message)) {
 			return;
 		}
 
 		// Clean up all tags
-		DBA::delete('term', ['otype' => self::OBJECT_TYPE_POST, 'oid' => $item_id, 'type' => [self::FILE, self::CATEGORY]]);
+		DBA::delete('post-category', ['uri-id' => $uri_id, 'uid' => $uid]);
 
-		if ($message["deleted"]) {
+		if ($message['deleted']) {
 			return;
 		}
 
-		$message['file'] = $files;
+		if (preg_match_all("/\[(.*?)\]/ism", $files, $result)) {
+			foreach ($result[1] as $file) {
+				$tagid = Tag::getID($file);
+				if (empty($tagid)) {
+					continue;
+				}
 
-		if (preg_match_all("/\[(.*?)\]/ism", $message["file"], $files)) {
-			foreach ($files[1] as $file) {
-				DBA::insert('term', [
-					'uid' => $message["uid"],
-					'oid' => $item_id,
-					'otype' => self::OBJECT_TYPE_POST,
+				DBA::insert('post-category', [
+					'uri-id' => $uri_id,
+					'uid' => $uid,
 					'type' => self::FILE,
-					'term' => $file
+					'tid' => $tagid
 				]);
 			}
 		}
 
-		if (preg_match_all("/\<(.*?)\>/ism", $message["file"], $files)) {
-			foreach ($files[1] as $file) {
-				DBA::insert('term', [
-					'uid' => $message["uid"],
-					'oid' => $item_id,
-					'otype' => self::OBJECT_TYPE_POST,
+		if (preg_match_all("/\<(.*?)\>/ism", $files, $result)) {
+			foreach ($result[1] as $file) {
+				$tagid = Tag::getID($file);
+				if (empty($tagid)) {
+					continue;
+				}
+
+				DBA::insert('post-category', [
+					'uri-id' => $uri_id,
+					'uid' => $uid,
 					'type' => self::CATEGORY,
-					'term' => $file
+					'tid' => $tagid
 				]);
 			}
 		}

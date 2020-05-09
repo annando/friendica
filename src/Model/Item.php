@@ -32,6 +32,7 @@ use Friendica\Core\System;
 use Friendica\Core\Worker;
 use Friendica\Database\DBA;
 use Friendica\DI;
+use Friendica\Model\Post\Category;
 use Friendica\Protocol\Activity;
 use Friendica\Protocol\ActivityPub;
 use Friendica\Protocol\Diaspora;
@@ -73,14 +74,14 @@ class Item
 		'event-id', 'event-created', 'event-edited', 'event-start', 'event-finish',
 		'event-summary', 'event-desc', 'event-location', 'event-type',
 		'event-nofinish', 'event-adjust', 'event-ignore', 'event-id',
-		'delivery_queue_count', 'delivery_queue_done', 'delivery_queue_failed'
+		'delivery_queue_count', 'delivery_queue_done', 'delivery_queue_failed', 'activity'
 	];
 
 	// Field list that is used to deliver items via the protocols
 	const DELIVER_FIELDLIST = ['uid', 'id', 'parent', 'uri-id', 'uri', 'thr-parent', 'parent-uri', 'guid',
 			'parent-guid', 'created', 'edited', 'verb', 'object-type', 'object', 'target',
 			'private', 'title', 'body', 'location', 'coord', 'app',
-			'attach', 'tag', 'deleted', 'extid', 'post-type',
+			'attach', 'deleted', 'extid', 'post-type',
 			'allow_cid', 'allow_gid', 'deny_cid', 'deny_gid',
 			'author-id', 'author-link', 'owner-link', 'contact-uid',
 			'signed_text', 'signature', 'signer', 'network'];
@@ -98,7 +99,7 @@ class Item
 			'guid', 'uri-id', 'parent-uri-id', 'thr-parent-id',
 			'contact-id', 'type', 'wall', 'gravity', 'extid', 'icid', 'iaid', 'psid',
 			'created', 'edited', 'commented', 'received', 'changed', 'verb',
-			'postopts', 'plink', 'resource-id', 'event-id', 'tag', 'attach', 'inform',
+			'postopts', 'plink', 'resource-id', 'event-id', 'attach', 'inform',
 			'file', 'allow_cid', 'allow_gid', 'deny_cid', 'deny_gid', 'post-type',
 			'private', 'pubmail', 'moderated', 'visible', 'starred', 'bookmark',
 			'unseen', 'deleted', 'origin', 'forum_mode', 'mention', 'global', 'network',
@@ -283,7 +284,7 @@ class Item
 
 		// Fetch data from the item-content table whenever there is content there
 		if (self::isLegacyMode()) {
-			$legacy_fields = array_merge(ItemDeliveryData::LEGACY_FIELD_LIST, self::MIXED_CONTENT_FIELDLIST);
+			$legacy_fields = array_merge(Post\DeliveryData::LEGACY_FIELD_LIST, self::MIXED_CONTENT_FIELDLIST);
 			foreach ($legacy_fields as $field) {
 				if (empty($row[$field]) && !empty($row['internal-item-' . $field])) {
 					$row[$field] = $row['internal-item-' . $field];
@@ -317,14 +318,9 @@ class Item
 		}
 
 		if (!array_key_exists('verb', $row) || in_array($row['verb'], ['', Activity::POST, Activity::SHARE])) {
-			// Build the tag string out of the term entries
-			if (array_key_exists('tag', $row) && empty($row['tag'])) {
-				$row['tag'] = Term::tagTextFromItemId($row['internal-iid']);
-			}
-
 			// Build the file string out of the term entries
 			if (array_key_exists('file', $row) && empty($row['file'])) {
-				$row['file'] = Term::fileTextFromItemId($row['internal-iid']);
+				$row['file'] = Category::getTextByURIId($row['internal-uri-id'], $row['internal-uid']);
 			}
 		}
 
@@ -350,7 +346,8 @@ class Item
 		// Remove internal fields
 		unset($row['internal-activity']);
 		unset($row['internal-network']);
-		unset($row['internal-iid']);
+		unset($row['internal-uri-id']);
+		unset($row['internal-uid']);
 		unset($row['internal-psid']);
 		unset($row['internal-iaid']);
 		unset($row['internal-user-ignored']);
@@ -673,10 +670,11 @@ class Item
 			'guid', 'uri-id', 'parent-uri-id', 'thr-parent-id',
 			'contact-id', 'owner-id', 'author-id', 'type', 'wall', 'gravity', 'extid',
 			'created', 'edited', 'commented', 'received', 'changed', 'psid',
-			'resource-id', 'event-id', 'tag', 'attach', 'post-type', 'file',
+			'resource-id', 'event-id', 'attach', 'post-type', 'file',
 			'private', 'pubmail', 'moderated', 'visible', 'starred', 'bookmark',
 			'unseen', 'deleted', 'origin', 'forum_mode', 'mention', 'global',
-			'id' => 'item_id', 'network', 'icid', 'iaid', 'id' => 'internal-iid',
+			'id' => 'item_id', 'network', 'icid', 'iaid',
+			'uri-id' => 'internal-uri-id', 'uid' => 'internal-uid',
 			'network' => 'internal-network', 'iaid' => 'internal-iaid', 'psid' => 'internal-psid'];
 
 		if ($usermode) {
@@ -687,7 +685,7 @@ class Item
 
 		$fields['item-content'] = array_merge(self::CONTENT_FIELDLIST, self::MIXED_CONTENT_FIELDLIST);
 
-		$fields['item-delivery-data'] = array_merge(ItemDeliveryData::LEGACY_FIELD_LIST, ItemDeliveryData::FIELD_LIST);
+		$fields['post-delivery-data'] = array_merge(Post\DeliveryData::LEGACY_FIELD_LIST, Post\DeliveryData::FIELD_LIST);
 
 		$fields['permissionset'] = ['allow_cid', 'allow_gid', 'deny_cid', 'deny_gid'];
 
@@ -809,8 +807,8 @@ class Item
 			$joins .= " LEFT JOIN `item-content` ON `item-content`.`uri-id` = `item`.`uri-id`";
 		}
 
-		if (strpos($sql_commands, "`item-delivery-data`.") !== false) {
-			$joins .= " LEFT JOIN `item-delivery-data` ON `item-delivery-data`.`iid` = `item`.`id`";
+		if (strpos($sql_commands, "`post-delivery-data`.") !== false) {
+			$joins .= " LEFT JOIN `post-delivery-data` ON `post-delivery-data`.`uri-id` = `item`.`uri-id` AND `item`.`origin`";
 		}
 
 		if (strpos($sql_commands, "`permissionset`.") !== false) {
@@ -839,7 +837,7 @@ class Item
 	private static function constructSelectFields(array $fields, array $selected)
 	{
 		if (!empty($selected)) {
-			$selected = array_merge($selected, ['internal-iid', 'internal-psid', 'internal-iaid', 'internal-network']);
+			$selected = array_merge($selected, ['internal-uri-id', 'internal-uid', 'internal-psid', 'internal-iaid', 'internal-network']);
 		}
 
 		if (in_array('verb', $selected)) {
@@ -850,7 +848,7 @@ class Item
 			$selected[] = 'internal-user-ignored';
 		}
 
-		$legacy_fields = array_merge(ItemDeliveryData::LEGACY_FIELD_LIST, self::MIXED_CONTENT_FIELDLIST);
+		$legacy_fields = array_merge(Post\DeliveryData::LEGACY_FIELD_LIST, self::MIXED_CONTENT_FIELDLIST);
 
 		$selection = [];
 		foreach ($fields as $table => $table_fields) {
@@ -922,7 +920,7 @@ class Item
 		// We cannot simply expand the condition to check for origin entries
 		// The condition needn't to be a simple array but could be a complex condition.
 		// And we have to execute this query before the update to ensure to fetch the same data.
-		$items = DBA::select('item', ['id', 'origin', 'uri', 'uri-id', 'iaid', 'icid', 'tag', 'file'], $condition);
+		$items = DBA::select('item', ['id', 'origin', 'uri', 'uri-id', 'iaid', 'icid', 'uid', 'file'], $condition);
 
 		$content_fields = [];
 		foreach (array_merge(self::CONTENT_FIELDLIST, self::MIXED_CONTENT_FIELDLIST) as $field) {
@@ -936,20 +934,13 @@ class Item
 			}
 		}
 
-		$delivery_data = ItemDeliveryData::extractFields($fields);
+		$delivery_data = Post\DeliveryData::extractFields($fields);
 
 		$clear_fields = ['bookmark', 'type', 'author-name', 'author-avatar', 'author-link', 'owner-name', 'owner-avatar', 'owner-link', 'postopts', 'inform'];
 		foreach ($clear_fields as $field) {
 			if (array_key_exists($field, $fields)) {
 				$fields[$field] = null;
 			}
-		}
-
-		if (array_key_exists('tag', $fields)) {
-			$tags = $fields['tag'];
-			$fields['tag'] = null;
-		} else {
-			$tags = null;
 		}
 
 		if (array_key_exists('file', $fields)) {
@@ -1024,21 +1015,14 @@ class Item
 				}
 			}
 
-			if (!is_null($tags)) {
-				Term::insertFromTagFieldByItemId($item['id'], $tags);
-				if (!empty($item['tag'])) {
-					DBA::update('item', ['tag' => ''], ['id' => $item['id']]);
-				}
-			}
-
 			if (!is_null($files)) {
-				Term::insertFromFileFieldByItemId($item['id'], $files);
+				Category::storeTextByURIId($item['uri-id'], $item['uid'], $files);
 				if (!empty($item['file'])) {
 					DBA::update('item', ['file' => ''], ['id' => $item['id']]);
 				}
 			}
 
-			ItemDeliveryData::update($item['id'], $delivery_data);
+			Post\DeliveryData::update($item['uri-id'], $delivery_data);
 
 			self::updateThread($item['id']);
 
@@ -1118,7 +1102,7 @@ class Item
 	{
 		Logger::info('Mark item for deletion by id', ['id' => $item_id, 'callstack' => System::callstack()]);
 		// locate item to be deleted
-		$fields = ['id', 'uri', 'uid', 'parent', 'parent-uri', 'origin',
+		$fields = ['id', 'uri', 'uri-id', 'uid', 'parent', 'parent-uri', 'origin',
 			'deleted', 'file', 'resource-id', 'event-id', 'attach',
 			'verb', 'object-type', 'object', 'target', 'contact-id',
 			'icid', 'iaid', 'psid'];
@@ -1184,9 +1168,6 @@ class Item
 			}
 		}
 
-		// Delete tags that had been attached to other items
-		self::deleteTagsFromItem($item);
-
 		// Delete notifications
 		DBA::delete('notify', ['iid' => $item['id'], 'uid' => $item['uid']]);
 
@@ -1194,15 +1175,14 @@ class Item
 		$item_fields = ['deleted' => true, 'edited' => DateTimeFormat::utcNow(), 'changed' => DateTimeFormat::utcNow()];
 		DBA::update('item', $item_fields, ['id' => $item['id']]);
 
-		Term::insertFromTagFieldByItemId($item['id'], '');
-		Term::insertFromFileFieldByItemId($item['id'], '');
+		Category::storeTextByURIId($item['uri-id'], $item['uid'], '');
 		self::deleteThread($item['id'], $item['parent-uri']);
 
 		if (!self::exists(["`uri` = ? AND `uid` != 0 AND NOT `deleted`", $item['uri']])) {
 			self::markForDeletion(['uri' => $item['uri'], 'uid' => 0, 'deleted' => false], $priority);
 		}
 
-		ItemDeliveryData::delete($item['id']);
+		Post\DeliveryData::delete($item['uri-id']);
 
 		// We don't delete the item-activity here, since we need some of the data for ActivityPub
 
@@ -1243,43 +1223,6 @@ class Item
 		return true;
 	}
 
-	private static function deleteTagsFromItem($item)
-	{
-		if (($item["verb"] != Activity::TAG) || ($item["object-type"] != Activity\ObjectType::TAGTERM)) {
-			return;
-		}
-
-		$xo = XML::parseString($item["object"]);
-		$xt = XML::parseString($item["target"]);
-
-		if ($xt->type != Activity\ObjectType::NOTE) {
-			return;
-		}
-
-		$i = self::selectFirst(['id', 'contact-id', 'tag'], ['uri' => $xt->id, 'uid' => $item['uid']]);
-		if (!DBA::isResult($i)) {
-			return;
-		}
-
-		// For tags, the owner cannot remove the tag on the author's copy of the post.
-		$owner_remove = ($item["contact-id"] == $i["contact-id"]);
-		$author_copy = $item["origin"];
-
-		if (($owner_remove && $author_copy) || !$owner_remove) {
-			return;
-		}
-
-		$tags = explode(',', $i["tag"]);
-		$newtags = [];
-		if (count($tags)) {
-			foreach ($tags as $tag) {
-				if (trim($tag) !== trim($xo->body)) {
-				       $newtags[] = trim($tag);
-				}
-			}
-		}
-		self::update(['tag' => implode(',', $newtags)], ['id' => $i["id"]]);
-	}
 
 	private static function guid($item, $notify)
 	{
@@ -1547,7 +1490,6 @@ class Item
 		$item['deny_gid']      = trim($item['deny_gid'] ?? '');
 		$item['private']       = intval($item['private'] ?? self::PUBLIC);
 		$item['body']          = trim($item['body'] ?? '');
-		$item['tag']           = trim($item['tag'] ?? '');
 		$item['attach']        = trim($item['attach'] ?? '');
 		$item['app']           = trim($item['app'] ?? '');
 		$item['origin']        = intval($item['origin'] ?? 0);
@@ -1730,7 +1672,13 @@ class Item
 				$allow_gid      = $parent['allow_gid'];
 				$deny_cid       = $parent['deny_cid'];
 				$deny_gid       = $parent['deny_gid'];
-				$item['wall']   = $parent['wall'];
+
+				// Don't federate received participation messages
+				if ($item['verb'] != Activity::FOLLOW) {
+					$item['wall'] = $parent['wall'];
+				} else {
+					$item['wall'] = false;
+				}
 
 				/*
 				 * If the parent is private, force privacy for the entire conversation
@@ -1870,13 +1818,6 @@ class Item
 
 		Logger::log('' . print_r($item,true), Logger::DATA);
 
-		if (array_key_exists('tag', $item)) {
-			$tags = $item['tag'];
-			unset($item['tag']);
-		} else {
-			$tags = '';
-		}
-
 		if (array_key_exists('file', $item)) {
 			$files = $item['file'];
 			unset($item['file']);
@@ -1903,7 +1844,7 @@ class Item
 			self::insertContent($item);
 		}
 
-		$delivery_data = ItemDeliveryData::extractFields($item);
+		$delivery_data = Post\DeliveryData::extractFields($item);
 
 		unset($item['postopts']);
 		unset($item['inform']);
@@ -2007,7 +1948,7 @@ class Item
 		}
 
 		if (!empty($item['origin']) || !empty($item['wall']) || !empty($delivery_data['postopts']) || !empty($delivery_data['inform'])) {
-			ItemDeliveryData::insert($current_post, $delivery_data);
+			Post\DeliveryData::insert($item['uri-id'], $delivery_data);
 		}
 
 		DBA::commit();
@@ -2016,12 +1957,8 @@ class Item
 		 * Due to deadlock issues with the "term" table we are doing these steps after the commit.
 		 * This is not perfect - but a workable solution until we found the reason for the problem.
 		 */
-		if (!empty($tags)) {
-			Term::insertFromTagFieldByItemId($current_post, $tags);
-		}
-
 		if (!empty($files)) {
-			Term::insertFromFileFieldByItemId($current_post, $files);
+			Category::storeTextByURIId($item['uri-id'], $item['uid'], $files);
 		}
 
 		// In that function we check if this is a forum post. Additionally we delete the item under certain circumstances
@@ -2058,7 +1995,19 @@ class Item
 
 		check_user_notification($current_post);
 
-		if ($notify || ($item['visible'] && ((!empty($parent) && $parent['origin']) || $item['origin']))) {
+		$transmit = $notify || ($item['visible'] && ((!empty($parent) && $parent['origin']) || $item['origin']));
+
+		if ($transmit) {
+			$transmit_item = Item::selectFirst(['verb', 'origin'], ['id' => $item['id']]);
+			// Don't relay participation messages
+			if (($transmit_item['verb'] == Activity::FOLLOW) && 
+				(!$transmit_item['origin'] || ($item['author-id'] != Contact::getPublicIdByUserId($uid)))) {
+				Logger::info('Participation messages will not be relayed', ['item' => $item['id'], 'uri' => $item['uri'], 'verb' => $transmit_item['verb']]);
+				$transmit = false;
+			}
+		}
+
+		if ($transmit) {
 			Worker::add(['priority' => $priority, 'dont_fork' => true], 'Notifier', $notify_type, $current_post);
 		}
 
@@ -2634,9 +2583,6 @@ class Item
 		if (DI::config()->get('system', 'local_tags')) {
 			$item["body"] = preg_replace("/#\[url\=([$URLSearchString]*)\](.*?)\[\/url\]/ism",
 					"#[url=".DI::baseUrl()."/search?tag=$2]$2[/url]", $item["body"]);
-
-			$item["tag"] = preg_replace("/#\[url\=([$URLSearchString]*)\](.*?)\[\/url\]/ism",
-					"#[url=".DI::baseUrl()."/search?tag=$2]$2[/url]", $item["tag"]);
 		}
 
 		// mask hashtags inside of url, bookmarks and attachments to avoid urls in urls
@@ -2668,13 +2614,6 @@ class Item
 			$newtag = '#[url=' . DI::baseUrl() . '/search?tag=' . $basetag . ']' . $basetag . '[/url]';
 
 			$item["body"] = str_replace($tag, $newtag, $item["body"]);
-
-			if (!stristr($item["tag"], "/search?tag=" . $basetag . "]" . $basetag . "[/url]")) {
-				if (strlen($item["tag"])) {
-					$item["tag"] = ',' . $item["tag"];
-				}
-				$item["tag"] = $newtag . $item["tag"];
-			}
 		}
 
 		// Convert back the masked hashtags
@@ -3030,30 +2969,6 @@ class Item
 		$deny         = array_unique(array_merge($deny_people, $deny_groups));
 		$recipients   = array_diff($recipients, $deny);
 		return $recipients;
-	}
-
-	public static function getFeedTags($item)
-	{
-		$ret = [];
-		$matches = false;
-		$cnt = preg_match_all('|\#\[url\=(.*?)\](.*?)\[\/url\]|', $item['tag'], $matches);
-		if ($cnt) {
-			for ($x = 0; $x < $cnt; $x ++) {
-				if ($matches[1][$x]) {
-					$ret[$matches[2][$x]] = ['#', $matches[1][$x], $matches[2][$x]];
-				}
-			}
-		}
-		$matches = false;
-		$cnt = preg_match_all('|\@\[url\=(.*?)\](.*?)\[\/url\]|', $item['tag'], $matches);
-		if ($cnt) {
-			for ($x = 0; $x < $cnt; $x ++) {
-				if ($matches[1][$x]) {
-					$ret[] = ['@', $matches[1][$x], $matches[2][$x]];
-				}
-			}
-		}
-		return $ret;
 	}
 
 	public static function expire($uid, $days, $network = "", $force = false)

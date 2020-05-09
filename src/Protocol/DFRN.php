@@ -39,9 +39,9 @@ use Friendica\Model\ItemURI;
 use Friendica\Model\Mail;
 use Friendica\Model\Notify\Type;
 use Friendica\Model\PermissionSet;
+use Friendica\Model\Post\Category;
 use Friendica\Model\Profile;
 use Friendica\Model\Tag;
-use Friendica\Model\Term;
 use Friendica\Model\User;
 use Friendica\Network\Probe;
 use Friendica\Util\Crypto;
@@ -241,13 +241,8 @@ class DFRN
 		}
 
 		if (isset($category)) {
-			$sql_post_table = sprintf(
-				"INNER JOIN (SELECT `oid` FROM `term` WHERE `term` = '%s' AND `otype` = %d AND `type` = %d AND `uid` = %d ORDER BY `tid` DESC) AS `term` ON `item`.`id` = `term`.`oid` ",
-				DBA::escape(Strings::protectSprintf($category)),
-				intval(Term::OBJECT_TYPE_POST),
-				intval(Term::CATEGORY),
-				intval($owner_id)
-			);
+			$sql_post_table = sprintf("INNER JOIN (SELECT `uri-id` FROM `category-view` WHERE `name` = '%s' AND `type` = %d AND `uid` = %d ORDER BY `uri-id` DESC) AS `category` ON `item`.`uri-id` = `category`.`uri-id` ",
+				DBA::escape(Strings::protectSprintf($category)), intval(Category::CATEGORY), intval($owner_id));
 		}
 
 		if ($public_feed && ! $converse) {
@@ -1080,21 +1075,15 @@ class DFRN
 			$entry->appendChild($actarg);
 		}
 
-		$tags = Item::getFeedTags($item);
+		$tags = Tag::getByURIId($item['uri-id']);
 
-		/// @TODO Combine this with similar below if() block?
 		if (count($tags)) {
-			foreach ($tags as $t) {
-				if (($type != 'html') || ($t[0] != "@")) {
-					XML::addElement($doc, $entry, "category", "", ["scheme" => "X-DFRN:".$t[0].":".$t[1], "term" => $t[2]]);
+			foreach ($tags as $tag) {
+				if (($type != 'html') || ($tag['type'] == Tag::HASHTAG)) {
+					XML::addElement($doc, $entry, "category", "", ["scheme" => "X-DFRN:" . Tag::TAG_CHARACTER[$tag['type']] . ":" . $tag['url'], "term" => $tag['name']]);
 				}
-			}
-		}
-
-		if (count($tags)) {
-			foreach ($tags as $t) {
-				if ($t[0] == "@") {
-					$mentioned[$t[1]] = $t[1];
+				if ($tag['type'] != Tag::HASHTAG) {
+					$mentioned[$tag['url']] = $tag['url'];
 				}
 			}
 		}
@@ -2007,7 +1996,7 @@ class DFRN
 			}
 
 			$fields = ['title' => $item['title'] ?? '', 'body' => $item['body'] ?? '',
-					'tag' => $item['tag'] ?? '', 'changed' => DateTimeFormat::utcNow(),
+					'changed' => DateTimeFormat::utcNow(),
 					'edited' => DateTimeFormat::utc($item["edited"])];
 
 			$condition = ["`uri` = ? AND `uid` IN (0, ?)", $item["uri"], $importer["importer_uid"]];
@@ -2238,11 +2227,6 @@ class DFRN
 					// extract tag, if not duplicate, add to parent item
 					if ($xo->content) {
 						Tag::store($item_tag['uri-id'], Tag::HASHTAG, $xo->content);
-
-						if (!stristr($item_tag["tag"], trim($xo->content))) {
-							$tag = $item_tag["tag"] . (strlen($item_tag["tag"]) ? ',' : '') . '#[url=' . $xo->id . ']'. $xo->content . '[/url]';
-							Item::update(['tag' => $tag], ['id' => $item_tag["id"]]);
-						}
 					}
 				}
 			}
@@ -2440,17 +2424,7 @@ class DFRN
 				if (($term != "") && ($scheme != "")) {
 					$parts = explode(":", $scheme);
 					if ((count($parts) >= 4) && (array_shift($parts) == "X-DFRN")) {
-						$termhash = array_shift($parts);
 						$termurl = implode(":", $parts);
-
-						if (!empty($item["tag"])) {
-							$item["tag"] .= ",";
-						} else {
-							$item["tag"] = "";
-						}
-
-						$item["tag"] .= $termhash . "[url=" . $termurl . "]" . $term . "[/url]";
-
 						Tag::store($item['uri-id'], Tag::IMPLICIT_MENTION, $term, $termurl);
 					}
 				}

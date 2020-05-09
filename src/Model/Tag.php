@@ -40,8 +40,6 @@ class Tag
 	const UNKNOWN  = 0;
 	const HASHTAG  = 1;
 	const MENTION  = 2;
-	const CATEGORY = 3;
-	const FILE     = 5;
 	/**
 	 * An implicit mention is a mention in a comment body that is redundant with the threading information.
 	 */
@@ -126,22 +124,14 @@ class Tag
 		}
 
 		if (empty($cid)) {
-			$fields = ['name' => substr($name, 0, 96), 'url' => ''];
-
 			if (($type != self::HASHTAG) && !empty($url) && ($url != $name)) {
-				$fields['url'] = strtolower($url);
-			}
-
-			$tag = DBA::selectFirst('tag', ['id'], $fields);
-			if (!DBA::isResult($tag)) {
-				DBA::insert('tag', $fields, true);
-				$tagid = DBA::lastInsertId();
+				$url = strtolower($url);
 			} else {
-				$tagid = $tag['id'];
+				$url = '';
 			}
 
+			$tagid = self::getID($name, $url);
 			if (empty($tagid)) {
-				Logger::error('No tag id created', $fields);
 				return;
 			}
 		}
@@ -160,6 +150,32 @@ class Tag
 		DBA::insert('post-tag', $fields, true);
 
 		Logger::info('Stored tag/mention', ['uri-id' => $uriid, 'tag-id' => $tagid, 'contact-id' => $cid, 'name' => $name, 'type' => $type, 'callstack' => System::callstack(8)]);
+	}
+
+	/**
+	 * Get a tag id for a given tag name and url
+	 *
+	 * @param string $name
+	 * @param string $url
+	 * @return void
+	 */
+	public static function getID(string $name, string $url = '')
+	{
+		$fields = ['name' => substr($name, 0, 96), 'url' => $url];
+
+		$tag = DBA::selectFirst('tag', ['id'], $fields);
+		if (DBA::isResult($tag)) {
+			return $tag['id'];
+		}
+
+		DBA::insert('tag', $fields, true);
+		$tid = DBA::lastInsertId();
+		if (!empty($tid)) {
+			return $tid;
+		}
+
+		Logger::error('No tag id created', $fields);
+		return 0;
 	}
 
 	/**
@@ -321,6 +337,23 @@ class Tag
 	{
 		$condition = ['uri-id' => $uri_id, 'type' => $type];
 		return DBA::selectToArray('tag-view', ['type', 'name', 'url'], $condition);
+	}
+
+	/**
+	 * Return a string with all tags and mentions
+	 *
+	 * @param integer $uri_id
+	 * @return string tags and mentions
+	 */
+	public static function getCSVByURIId(int $uri_id)
+	{
+		$tag_list = [];
+		$tags = self::getByURIId($uri_id);
+		foreach ($tags as $tag) {
+			$tag_list[] = self::TAG_CHARACTER[$tag['type']] . '[url=' . $tag['url'] . ']' . $tag['name'] . '[/url]';
+		}
+
+		return implode(',', $tag_list);
 	}
 
 	/**
