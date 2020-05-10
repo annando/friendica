@@ -1995,6 +1995,8 @@ class Item
 
 		self::updateContact($item);
 
+		Post::copyFromItem($item['uri-id'], $item['uid']);
+
 		UserItem::setNotification($current_post);
 
 		check_user_notification($current_post);

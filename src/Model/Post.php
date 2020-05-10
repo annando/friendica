@@ -20,7 +20,6 @@
  */
 
 namespace Friendica\Model;
-use Friendica\DI;
 use Friendica\Core\Logger;
 use Friendica\Database\DBA;
 use Friendica\Database\DBStructure;
@@ -39,6 +38,18 @@ class Post
 		Activity::FOLLOW,
 		Activity::ANNOUNCE];
 
+	const FIELDLIST =  ['uid', 'uri', 'parent-uri', 'thr-parent', 'guid',
+		'contact-id', 'type', 'wall', 'gravity', 'extid', 'psid',
+		'created', 'edited', 'received', 'changed', 'verb',
+		'plink', 'resource-id', 'event-id', 'attach',
+		'allow_cid', 'allow_gid', 'deny_cid', 'deny_gid', 'post-type',
+		'private', 'pubmail', 'visible', 'starred', 'bookmark',
+		'unseen', 'deleted', 'origin', 'forum_mode', 'network',
+		'title', 'content-warning', 'body', 'location', 'coord', 'app',
+		'rendered-hash', 'rendered-html', 'object-type', 'object', 'target-type', 'target',
+		'author-id', 'author-link', 'author-name', 'author-avatar',
+		'owner-id', 'owner-link', 'owner-name', 'owner-avatar'];
+
 	private static function getPostFields()
 	{
 		$definition = DBStructure::definition('', false);
@@ -54,7 +65,6 @@ class Post
 	private static function prepareFields($fields)
 	{
 		unset($fields['id']);
-		unset($fields['tag']);
 
 		if (!empty($fields['uri']) && empty($fields['uri-id'])) {
 			$itemuri_fields = ['uri' => $fields['uri']];
@@ -132,7 +142,7 @@ class Post
 		} elseif (in_array($fields['verb'], self::ACTIVITIES)) {
 			$fields['gravity'] = GRAVITY_ACTIVITY;		
 		} else {
-			$fields['gravity'] = GRAVITY_UNKNOWN;   // Should not happen
+			$fields['gravity'] = GRAVITY_UNKNOWN; // Should not happen
 			Logger::info('Unknown gravity for verb', ['verb' => $fields['verb']]);
 		}
 
@@ -178,7 +188,6 @@ class Post
 		unset($fields['deny_gid']);
 
 		// To-Do
-		unset($fields['file']);
 		unset($fields['type']);
 
 		return $fields;
@@ -212,7 +221,7 @@ class Post
 			}
 		}
 
-		if (!array_key_exists('uid', $condition)) {
+		if (!array_key_exists('uid', $condition) || empty($condition['uid'])) {
 			foreach (self::USER_TABLES as $table) {
 				unset($table_fields[$table]);
 			}
@@ -287,5 +296,13 @@ class Post
 		DBA::commit();
 
 		return true;
+	}
+
+	public static function copyFromItem(int $uriid, int $uid)
+	{
+		$item = Item::selectFirst(self::FIELDLIST, ['uri-id' => $uriid, 'uid' => $uid]);
+		if (DBA::isResult($item)) {
+			self::insert($item);
+		}
 	}
 }
