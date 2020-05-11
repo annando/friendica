@@ -28,7 +28,7 @@ use Friendica\Util\DateTimeFormat;
 
 class Post
 {
-	const TABLES = ['post', 'post-content', 'post-thread', 'post-thread-user', 'post-user'];
+	const TABLES = ['post', 'post-content', 'post-thread', 'post-thread-user', 'post-user']; // TODO , 'post-delivery-data'];
 	const USER_TABLES = ['post-thread-user', 'post-user'];
 	const THREAD_TABLES = ['post-thread', 'post-thread-user'];
 
@@ -38,10 +38,11 @@ class Post
 		Activity::FOLLOW,
 		Activity::ANNOUNCE];
 
-	const FIELDLIST =  ['uid', 'uri', 'parent-uri', 'thr-parent', 'guid',
-		'contact-id', 'type', 'wall', 'gravity', 'extid', 'psid',
+	const FIELDLIST =  ['uid', 'uri', 'uri-id', 'parent-uri', 'parent-uri-id',
+		'thr-parent', 'thr-parent-id', 'guid', 'contact-id',
+		'type', 'wall', 'gravity', 'extid', 'psid',
 		'created', 'edited', 'received', 'changed', 'verb',
-		'plink', 'resource-id', 'event-id', 'attach',
+		'plink', 'resource-id', 'event-id', 'attach', 'postopts', 'inform',
 		'allow_cid', 'allow_gid', 'deny_cid', 'deny_gid', 'post-type',
 		'private', 'pubmail', 'visible', 'starred', 'bookmark',
 		'unseen', 'deleted', 'origin', 'forum_mode', 'network',
@@ -163,6 +164,8 @@ class Post
 			'photo' => $fields['author-avatar'], 'network' => $fields['network']];
 
 			$fields['author-id'] = ($fields['author-id'] ?? 0) ?: Contact::getIdForURL($fields['author-link'], 0, false, $default);
+		} elseif (!DBA::exists('contact', ['id' => $fields['author-id']])) {
+			return [];
 		}
 
 		unset($fields['author-link']);
@@ -174,13 +177,19 @@ class Post
 			'photo' => $fields['owner-avatar'], 'network' => $fields['network']];
 
 			$fields['owner-id'] = ($fields['owner-id'] ?? 0) ?: Contact::getIdForURL($fields['owner-link'], 0, false, $default);
+		} elseif (!DBA::exists('contact', ['id' => $fields['owner-id']])) {
+			return [];
 		}
 
 		unset($fields['owner-link']);
 		unset($fields['owner-avatar']);
 		unset($fields['owner-name']);
 
-		if (empty($fields['psid'])) {
+		if (!DBA::exists('contact', ['id' => $fields['contact-id']])) {
+			$fields['contact-id'] = $fields['owner-id'];
+		}
+
+		if (empty($fields['psid']) && !empty($fields['uid'])) {
 			$fields['psid'] = PermissionSet::getIdFromACL(
 				$fields['uid'],
 				$fields['allow_cid'],
@@ -194,18 +203,6 @@ class Post
 		unset($fields['allow_gid']);
 		unset($fields['deny_cid']);
 		unset($fields['deny_gid']);
-
-		if (!DBA::exists('contact', ['id' => $fields['contact-id']])) {
-			$fields['contact-id'] = $fields['owner-id']; 
-		}
-
-		if (!DBA::exists('contact', ['id' => $fields['owner-id']])) {
-			$fields['owner-id'] = $fields['author-id']; 
-		}
-
-		if (!DBA::exists('contact', ['id' => $fields['author-id']])) {
-			return [];
-		}
 
 		// To-Do
 		unset($fields['type']);
