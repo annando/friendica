@@ -66,6 +66,14 @@ class Post
 	{
 		unset($fields['id']);
 
+		if (!empty($fields['uid']) && !DBA::exists('user', ['uid' => $fields['uid']])) {
+			$fields['uid'] = 0; 
+		}
+
+		if (empty($fields['uid']) && !empty($fields['private'])) {
+			return [];			
+		}
+
 		if (!empty($fields['uri']) && empty($fields['uri-id'])) {
 			$itemuri_fields = ['uri' => $fields['uri']];
 			if (!empty($fields['guid'])) {
@@ -186,6 +194,18 @@ class Post
 		unset($fields['allow_gid']);
 		unset($fields['deny_cid']);
 		unset($fields['deny_gid']);
+
+		if (!DBA::exists('contact', ['id' => $fields['contact-id']])) {
+			$fields['contact-id'] = $fields['owner-id']; 
+		}
+
+		if (!DBA::exists('contact', ['id' => $fields['owner-id']])) {
+			$fields['owner-id'] = $fields['author-id']; 
+		}
+
+		if (!DBA::exists('contact', ['id' => $fields['author-id']])) {
+			return [];
+		}
 
 		// To-Do
 		unset($fields['type']);

@@ -1106,31 +1106,37 @@ return [
 	"post" => [
 		"comment" => "Structure for all posts",
 		"fields" => [
-			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
-			"parent-uri-id" => ["type" => "int unsigned", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table that contains the parent uri"],
-			"thr-parent-id" => ["type" => "int unsigned", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table that contains the thread parent uri"],
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"parent-uri-id" => ["type" => "int unsigned", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table that contains the parent uri"],
+			"thr-parent-id" => ["type" => "int unsigned", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table that contains the thread parent uri"],
 			"created" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "Creation timestamp."],
 			"edited" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "Date of last edit (default is created)"],
 			"received" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => "datetime"],
 			"gravity" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => ""],
 			"network" => ["type" => "char(4)", "not null" => "1", "default" => "", "comment" => "Network from where the item comes from"],
-			"owner-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Link to the contact table with uid=0 of the owner of this item"],
-			"author-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Link to the contact table with uid=0 of the author of this item"],
-			"external-id" => ["type" => "int unsigned", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the external uri"],
+			"owner-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "foreign" => ["contact" => "id", "on delete" => "restrict"], "comment" => "Link to the contact table with uid=0 of the owner of this item"],
+			"author-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "foreign" => ["contact" => "id", "on delete" => "restrict"], "comment" => "Link to the contact table with uid=0 of the author of this item"],
+			"external-id" => ["type" => "int unsigned", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the external uri"],
 			"post-type" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => "Post type (personal note, bookmark, ...)"],
-			"vid" => ["type" => "smallint unsigned", "relation" => ["verb" => "id"], "comment" => "Id of the verb table entry that contains the activity verbs"],
+			"vid" => ["type" => "smallint unsigned", "foreign" => ["verb" => "id", "on delete" => "restrict"], "comment" => "Id of the verb table entry that contains the activity verbs"],
 			"private" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => "0=public, 1=private, 2=unlisted"],
 			"visible" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
 			"deleted" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "item has been marked for deletion"]
 		],
 		"indexes" => [
-			"PRIMARY" => ["uri-id"]
+			"PRIMARY" => ["uri-id"],
+			"parent-uri-id" => ["parent-uri-id"],
+			"thr-parent-id" => ["thr-parent-id"],
+			"owner-id" => ["owner-id"],
+			"author-id" => ["author-id"],
+			"external-id" => ["external-id"],
+			"vid" => ["vid"],
 		]
 	],
 	"post-content" => [
 		"comment" => "Content for all posts",
 		"fields" => [
-			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
 			"title" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => "item title"],
 			"content-warning" => ["type" => "varchar(255)", "not null" => "1", "default" => "", "comment" => ""],
 			"body" => ["type" => "mediumtext", "comment" => "item body content"],
@@ -1155,9 +1161,9 @@ return [
 	"post-thread" => [
 		"comment" => "Thread related data",
 		"fields" => [
-			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
-			"owner-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Item owner"],
-			"author-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "Item author"],
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"owner-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "foreign" => ["contact" => "id", "on delete" => "restrict"], "comment" => "Item owner"],
+			"author-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "foreign" => ["contact" => "id", "on delete" => "restrict"], "comment" => "Item author"],
 			"network" => ["type" => "char(4)", "not null" => "1", "default" => "", "comment" => ""],
 			"created" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
 			"received" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""],
@@ -1165,14 +1171,16 @@ return [
 			"commented" => ["type" => "datetime", "not null" => "1", "default" => DBA::NULL_DATETIME, "comment" => ""]
 		],
 		"indexes" => [
-			"PRIMARY" => ["uri-id"]
+			"PRIMARY" => ["uri-id"],
+			"owner-id" => ["owner-id"],
+			"author-id" => ["author-id"],
 		]
 	],
 	"post-thread-user" => [
 		"comment" => "Thread related data per user",
 		"fields" => [
-			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
-			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "default" => "0", "primary" => "1", "relation" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "default" => "0", "primary" => "1", "foreign" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
 			"pinned" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "The thread is pinned on the profile page"],
 			"starred" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => ""],
 			"ignored" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "Ignore updates for this thread"],
@@ -1183,25 +1191,28 @@ return [
 		"indexes" => [
 			"PRIMARY" => ["uid", "uri-id"],
 			"uid_wall" => ["uid", "wall"],
+			"uri-id" => ["uri-id"],
 		]
 	],
 	"post-user" => [
 		"comment" => "User specific post data",
 		"fields" => [
-			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "relation" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
-			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "primary" => "1", "relation" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
-			"contact-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["contact" => "id"], "comment" => "contact.id"],
+			"uri-id" => ["type" => "int unsigned", "not null" => "1", "primary" => "1", "foreign" => ["item-uri" => "id"], "comment" => "Id of the item-uri table entry that contains the item uri"],
+			"uid" => ["type" => "mediumint unsigned", "not null" => "1", "primary" => "1", "foreign" => ["user" => "uid"], "comment" => "Owner id which owns this copy of the item"],
+			"contact-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "foreign" => ["contact" => "id"], "comment" => "contact.id"],
 			"unseen" => ["type" => "boolean", "not null" => "1", "default" => "1", "comment" => "post has not been seen"],
 			"hidden" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "Marker to hide the post from the user"],
 			"notification-type" => ["type" => "tinyint unsigned", "not null" => "1", "default" => "0", "comment" => ""],
 			"event-id" => ["type" => "int unsigned", "not null" => "1", "default" => "0", "relation" => ["event" => "id"], "comment" => "Used to link to the event.id"],
 			"origin" => ["type" => "boolean", "not null" => "1", "default" => "0", "comment" => "item originated at this site"],
-			"psid" => ["type" => "int unsigned", "relation" => ["permissionset" => "id"], "comment" => "ID of the permission set of this post"],
+			"psid" => ["type" => "int unsigned", "foreign" => ["permissionset" => "id", "on delete" => "restrict"], "comment" => "ID of the permission set of this post"],
 		],
 		"indexes" => [
 			"PRIMARY" => ["uid", "uri-id"],
 			"uri-id" => ["uri-id"],
 			"contact-id" => ["contact-id"],
+			"event-id" => ["event-id"],
+			"psid" => ["psid"],
 		],
 	],
 	"process" => [
