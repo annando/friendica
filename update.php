@@ -45,6 +45,7 @@ use Friendica\Core\Logger;
 use Friendica\Core\Update;
 use Friendica\Core\Worker;
 use Friendica\Database\DBA;
+use Friendica\Database\DBStructure;
 use Friendica\DI;
 use Friendica\Model\Contact;
 use Friendica\Model\GContact;
@@ -70,7 +71,8 @@ function update_1181()
 {
 
 	// Fill the new fields in the term table.
-	Worker::add(PRIORITY_LOW, "TagUpdate");
+	// deactivated, the "term" table is deprecated
+	// Worker::add(PRIORITY_LOW, "TagUpdate");
 
 	return Update::SUCCESS;
 }
@@ -469,6 +471,50 @@ function update_1348()
 		if ($lastid != 0) {
 			DBA::update('tag', ['id' => 0], ['id' => $lastid]);
 		}
+	}
+
+	return Update::SUCCESS;
+}
+
+function update_1349()
+{
+	$correct = true;
+	foreach (Item::ACTIVITIES as $index => $activity) {
+		if (!DBA::exists('verb', ['id' => $index + 1, 'name' => $activity])) {
+			$correct = false;
+		}
+	}
+
+	if (!$correct) {
+		// The update failed - but it cannot be recovered, since the data doesn't match our expectation
+		// This means that we can't use this "shortcut" to fill the "vid" field and we have to rely upon
+		// the postupdate. This is not fatal, but means that it will take some longer time for the system
+		// to fill all data.
+		return Update::SUCCESS;
+	}
+
+	if (!DBA::e("UPDATE `item` INNER JOIN `item-activity` ON `item`.`uri-id` = `item-activity`.`uri-id`
+		SET `vid` = `item-activity`.`activity` + 1 WHERE `gravity` = ? AND (`vid` IS NULL OR `vid` = 0)", GRAVITY_ACTIVITY)) {
+		return Update::FAILED;
+	}
+
+	return Update::SUCCESS;
+}
+
+function update_1351()
+{
+	if (!DBA::e("UPDATE `thread` INNER JOIN `item` ON `thread`.`iid` = `item`.`id` SET `thread`.`uri-id` = `item`.`uri-id`")) {
+		return Update::FAILED;
+	}
+
+	return Update::SUCCESS;
+}
+
+function pre_update_1354()
+{
+	if (DBStructure::existsColumn('contact', ['ffi_keyword_blacklist'])
+		&& !DBA::e("ALTER TABLE `contact` CHANGE `ffi_keyword_blacklist` `ffi_keyword_denylist` text null")) {
+		return Update::FAILED;
 	}
 
 	return Update::SUCCESS;

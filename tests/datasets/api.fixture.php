@@ -99,6 +99,77 @@ return [
 			'rel'     => 2,
 			'network' => 'dfrn',
 		],
+		[
+			'id'      => 45,
+			'uid'     => 0,
+			'name'    => 'Friend contact',
+			'nick'    => 'friendcontact',
+			'self'    => 0,
+			'nurl'    => 'http://localhost/profile/friendcontact',
+			'url'     => 'http://localhost/profile/friendcontact',
+			'pending' => 0,
+			'blocked' => 0,
+			'rel'     => 2,
+			'network' => 'dfrn',
+		],
+		[
+			'id'      => 46,
+			'uid'     => 42,
+			'name'    => 'Mutual contact',
+			'nick'    => 'mutualcontact',
+			'self'    => 0,
+			'nurl'    => 'http://localhost/profile/mutualcontact',
+			'url'     => 'http://localhost/profile/mutualcontact',
+			'pending' => 0,
+			'blocked' => 0,
+			'rel'     => 3,
+			'network' => 'dfrn',
+		],
+		[
+			'id'      => 47,
+			'uid'     => 0,
+			'name'    => 'Mutual contact',
+			'nick'    => 'mutualcontact',
+			'self'    => 0,
+			'nurl'    => 'http://localhost/profile/mutualcontact',
+			'url'     => 'http://localhost/profile/mutualcontact',
+			'pending' => 0,
+			'blocked' => 0,
+			'rel'     => 2,
+			'network' => 'dfrn',
+		],
+	],
+	'item-uri'    => [
+		[
+			'id'   => 1,
+			'uri'  => '1',
+			'guid' => '1',
+		],
+		[
+			'id'   => 2,
+			'uri'  => '2',
+			'guid' => '2',
+		],
+		[
+			'id'   => 3,
+			'uri'  => '3',
+			'guid' => '3',
+		],
+		[
+			'id'   => 4,
+			'uri'  => '4',
+			'guid' => '4',
+		],
+		[
+			'id'   => 5,
+			'uri'  => '5',
+			'guid' => '5',
+		],
+		[
+			'id'   => 6,
+			'uri'  => '6',
+			'guid' => '6',
+		],
 	],
 	'item'    => [
 		[
@@ -236,6 +307,7 @@ return [
 	'thread'  => [
 		[
 			'iid'        => 1,
+			'uri-id'     => 1,
 			'visible'    => 1,
 			'contact-id' => 42,
 			'author-id'  => 42,
@@ -245,6 +317,7 @@ return [
 		],
 		[
 			'iid'        => 3,
+			'uri-id'     => 3,
 			'visible'    => 1,
 			'contact-id' => 43,
 			'author-id'  => 43,
@@ -254,6 +327,7 @@ return [
 		],
 		[
 			'iid'        => 6,
+			'uri-id'     => 6,
 			'visible'    => 1,
 			'contact-id' => 44,
 			'author-id'  => 44,

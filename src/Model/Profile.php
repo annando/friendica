@@ -27,7 +27,6 @@ use Friendica\Content\Widget\ContactBlock;
 use Friendica\Core\Cache\Duration;
 use Friendica\Core\Hook;
 use Friendica\Core\Logger;
-use Friendica\Network\Probe;
 use Friendica\Core\Protocol;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session;
@@ -601,7 +600,7 @@ class Profile
 
 			while ($rr = DBA::fetch($s)) {
 				$condition = ['parent-uri' => $rr['uri'], 'uid' => $rr['uid'], 'author-id' => public_contact(),
-					'activity' => [Item::activityToIndex( Activity::ATTEND), Item::activityToIndex(Activity::ATTENDMAYBE)],
+					'vid' => [Verb::getID(Activity::ATTEND), Verb::getID(Activity::ATTENDMAYBE)],
 					'visible' => true, 'deleted' => false];
 				if (!Item::exists($condition)) {
 					continue;
@@ -772,7 +771,7 @@ class Profile
 		$_SESSION['visitor_handle'] = $visitor['addr'];
 		$_SESSION['visitor_home'] = $visitor['url'];
 		$_SESSION['my_url'] = $visitor['url'];
-		$_SESSION['remote_comment'] = Probe::getRemoteFollowLink($visitor['url']);
+		$_SESSION['remote_comment'] = $visitor['subscribe'];
 
 		Session::setVisitorsContacts();
 

@@ -25,12 +25,12 @@ use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
 use Friendica\DI;
 use Friendica\Model\Contact;
+use Friendica\Model\GServer;
 use Friendica\Model\Item;
 use Friendica\Model\ItemURI;
 use Friendica\Model\PermissionSet;
 use Friendica\Model\Post\Category;
 use Friendica\Model\Tag;
-use Friendica\Model\Term;
 use Friendica\Model\UserItem;
 use Friendica\Model\Verb;
 use Friendica\Util\Strings;
@@ -43,6 +43,9 @@ use Friendica\Util\Strings;
  */
 class PostUpdate
 {
+	// Needed for the helper function to read from the legacy term table
+	const OBJECT_TYPE_POST  = 1;
+
 	/**
 	 * Calls the post update functions
 	 */
@@ -82,6 +85,15 @@ class PostUpdate
 			return false;
 		}
 		if (!self::update1347()) {
+			return false;
+		}
+		if (!self::update1348()) {
+			return false;
+		}
+		if (!self::update1349()) {
+			return false;
+		}
+		if (!self::update1350()) {
 			return false;
 		}
 
@@ -732,6 +744,31 @@ class PostUpdate
 	}
 
 	/**
+	 * Generates the legacy item.file field string from an item ID.
+	 * Includes only file and category terms.
+	 *
+	 * @param int $item_id
+	 * @return string
+	 * @throws \Exception
+	 */
+	private static function fileTextFromItemId($item_id)
+	{
+		$file_text = '';
+
+		$condition = ['otype' => self::OBJECT_TYPE_POST, 'oid' => $item_id, 'type' => [Category::FILE, Category::CATEGORY]];
+		$tags = DBA::selectToArray('term', ['type', 'term', 'url'], $condition);
+		foreach ($tags as $tag) {
+			if ($tag['type'] == Category::CATEGORY) {
+				$file_text .= '<' . $tag['term'] . '>';
+			} else {
+				$file_text .= '[' . $tag['term'] . ']';
+			}
+		}
+
+		return $file_text;
+	}
+
+	/**
 	 * Fill the "tag" table with tags and mentions from the "term" table
 	 *
 	 * @return bool "true" when the job is done
@@ -765,7 +802,7 @@ class PostUpdate
 				continue;
 			}
 
-			$file = Term::fileTextFromItemId($term['oid']);
+			$file = self::fileTextFromItemId($term['oid']);
 			if (!empty($file)) {
 				Category::storeTextByURIId($item['uri-id'], $item['uid'], $file);
 			}
@@ -794,7 +831,7 @@ class PostUpdate
 	}
 
 	/**
-	 * update the "vid" (verb) field in the item table 
+	 * update the "vid" (verb) field in the item table
 	 *
 	 * @return bool "true" when the job is done
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
@@ -813,20 +850,31 @@ class PostUpdate
 
 		$start_id = $id;
 		$rows = 0;
-		$condition = ["`id` > ? AND `vid` IS NULL", $id];
-		$params = ['order' => ['id'], 'limit' => 10000];
-		$items = Item::select(['id', 'verb'], $condition, $params);
+
+		$items = DBA::p("SELECT `item`.`id`, `item`.`verb` AS `item-verb`, `item-content`.`verb`, `item-activity`.`activity`
+			FROM `item` LEFT JOIN `item-content` ON `item-content`.`uri-id` = `item`.`uri-id`
+			LEFT JOIN `item-activity` ON `item-activity`.`uri-id` = `item`.`uri-id` AND `item`.`gravity` = ?
+			WHERE `item`.`id` >= ? AND `item`.`vid` IS NULL ORDER BY `item`.`id` LIMIT 10000", GRAVITY_ACTIVITY, $id);
 
 		if (DBA::errorNo() != 0) {
 			Logger::error('Database error', ['no' => DBA::errorNo(), 'message' => DBA::errorMessage()]);
 			return false;
 		}
 
-		while ($item = Item::fetch($items)) {
+		while ($item = DBA::fetch($items)) {
 			$id = $item['id'];
+			$verb = $item['item-verb'];
+			if (empty($verb)) {
+				$verb = $item['verb'];
+			}
+			if (empty($verb) && is_int($item['activity'])) {
+				$verb = Item::ACTIVITIES[$item['activity']];
+			}
+			if (empty($verb)) {
+				continue;
+			}
 
-			DBA::update('item', ['vid' => Verb::getID($item['verb'])], ['id' => $item['id']]);
-
+			DBA::update('item', ['vid' => Verb::getID($verb)], ['id' => $item['id']]);
 			++$rows;
 		}
 		DBA::close($items);
@@ -837,6 +885,165 @@ class PostUpdate
 
 		if ($start_id == $id) {
 			DI::config()->set("system", "post_update_version", 1347);
+			Logger::info('Done');
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * update the "gsid" (global server id) field in the contact table
+	 *
+	 * @return bool "true" when the job is done
+	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
+	 * @throws \ImagickException
+	 */
+	private static function update1348()
+	{
+		// Was the script completed?
+		if (DI::config()->get("system", "post_update_version") >= 1348) {
+			return true;
+		}
+
+		$id = DI::config()->get("system", "post_update_version_1348_id", 0);
+
+		Logger::info('Start', ['contact' => $id]);
+
+		$start_id = $id;
+		$rows = 0;
+		$condition = ["`id` > ? AND `gsid` IS NULL AND `baseurl` != '' AND NOT `baseurl` IS NULL", $id];
+		$params = ['order' => ['id'], 'limit' => 10000];
+		$contacts = DBA::select('contact', ['id', 'baseurl'], $condition, $params);
+
+		if (DBA::errorNo() != 0) {
+			Logger::error('Database error', ['no' => DBA::errorNo(), 'message' => DBA::errorMessage()]);
+			return false;
+		}
+
+		while ($contact = DBA::fetch($contacts)) {
+			$id = $contact['id'];
+
+			DBA::update('contact',
+				['gsid' => GServer::getID($contact['baseurl'], true), 'baseurl' => GServer::cleanURL($contact['baseurl'])],
+				['id' => $contact['id']]);
+
+			++$rows;
+		}
+		DBA::close($contacts);
+
+		DI::config()->set("system", "post_update_version_1348_id", $id);
+
+		Logger::info('Processed', ['rows' => $rows, 'last' => $id]);
+
+		if ($start_id == $id) {
+			DI::config()->set("system", "post_update_version", 1348);
+			Logger::info('Done');
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * update the "gsid" (global server id) field in the apcontact table
+	 *
+	 * @return bool "true" when the job is done
+	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
+	 * @throws \ImagickException
+	 */
+	private static function update1349()
+	{
+		// Was the script completed?
+		if (DI::config()->get("system", "post_update_version") >= 1349) {
+			return true;
+		}
+
+		$id = DI::config()->get("system", "post_update_version_1349_id", '');
+
+		Logger::info('Start', ['apcontact' => $id]);
+
+		$start_id = $id;
+		$rows = 0;
+		$condition = ["`url` > ? AND `gsid` IS NULL AND `baseurl` != '' AND NOT `baseurl` IS NULL", $id];
+		$params = ['order' => ['url'], 'limit' => 10000];
+		$apcontacts = DBA::select('apcontact', ['url', 'baseurl'], $condition, $params);
+
+		if (DBA::errorNo() != 0) {
+			Logger::error('Database error', ['no' => DBA::errorNo(), 'message' => DBA::errorMessage()]);
+			return false;
+		}
+
+		while ($apcontact = DBA::fetch($apcontacts)) {
+			$id = $apcontact['url'];
+
+			DBA::update('apcontact',
+				['gsid' => GServer::getID($apcontact['baseurl'], true), 'baseurl' => GServer::cleanURL($apcontact['baseurl'])],
+				['url' => $apcontact['url']]);
+
+			++$rows;
+		}
+		DBA::close($apcontacts);
+
+		DI::config()->set("system", "post_update_version_1349_id", $id);
+
+		Logger::info('Processed', ['rows' => $rows, 'last' => $id]);
+
+		if ($start_id == $id) {
+			DI::config()->set("system", "post_update_version", 1349);
+			Logger::info('Done');
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * update the "gsid" (global server id) field in the gcontact table
+	 *
+	 * @return bool "true" when the job is done
+	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
+	 * @throws \ImagickException
+	 */
+	private static function update1350()
+	{
+		// Was the script completed?
+		if (DI::config()->get("system", "post_update_version") >= 1350) {
+			return true;
+		}
+
+		$id = DI::config()->get("system", "post_update_version_1350_id", 0);
+
+		Logger::info('Start', ['gcontact' => $id]);
+
+		$start_id = $id;
+		$rows = 0;
+		$condition = ["`id` > ? AND `gsid` IS NULL AND `server_url` != '' AND NOT `server_url` IS NULL", $id];
+		$params = ['order' => ['id'], 'limit' => 10000];
+		$gcontacts = DBA::select('gcontact', ['id', 'server_url'], $condition, $params);
+
+		if (DBA::errorNo() != 0) {
+			Logger::error('Database error', ['no' => DBA::errorNo(), 'message' => DBA::errorMessage()]);
+			return false;
+		}
+
+		while ($gcontact = DBA::fetch($gcontacts)) {
+			$id = $gcontact['id'];
+
+			DBA::update('gcontact',
+				['gsid' => GServer::getID($gcontact['server_url'], true), 'server_url' => GServer::cleanURL($gcontact['server_url'])],
+				['id' => $gcontact['id']]);
+
+			++$rows;
+		}
+		DBA::close($gcontacts);
+
+		DI::config()->set("system", "post_update_version_1350_id", $id);
+
+		Logger::info('Processed', ['rows' => $rows, 'last' => $id]);
+
+		if ($start_id == $id) {
+			DI::config()->set("system", "post_update_version", 1350);
 			Logger::info('Done');
 			return true;
 		}

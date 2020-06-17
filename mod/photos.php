@@ -82,7 +82,7 @@ function photos_init(App $a) {
 			'$photo' => $profile['photo'],
 			'$addr' => $profile['addr'] ?? '',
 			'$account_type' => $account_type,
-			'$about' => BBCode::convert($profile['about'] ?? ''),
+			'$about' => BBCode::convert($profile['about']),
 		]);
 
 		$albums = Photo::getAlbums($a->data['user']['uid']);
@@ -509,9 +509,9 @@ function photos_post(App $a)
 
 						if ($profile) {
 							if (!empty($contact)) {
-								$taginfo[] = [$newname, $profile, $notify, $contact, '@[url=' . str_replace(',', '%2c', $profile) . ']' . $newname . '[/url]'];
+								$taginfo[] = [$newname, $profile, $notify, $contact];
 							} else {
-								$taginfo[] = [$newname, $profile, $notify, null, '@[url=' . $profile . ']' . $newname . '[/url]'];
+								$taginfo[] = [$newname, $profile, $notify, null];
 							}
 
 							$profile = str_replace(',', '%2c', $profile);
@@ -579,7 +579,6 @@ function photos_post(App $a)
 					$arr['gravity']       = GRAVITY_PARENT;
 					$arr['object-type']   = Activity\ObjectType::PERSON;
 					$arr['target-type']   = Activity\ObjectType::IMAGE;
-					$arr['tag']           = $tagged[4];
 					$arr['inform']        = $tagged[2];
 					$arr['origin']        = 1;
 					$arr['body']          = DI::l10n()->t('%1$s was tagged in %2$s by %3$s', '[url=' . $tagged[1] . ']' . $tagged[0] . '[/url]', '[url=' . DI::baseUrl() . '/photos/' . $owner_record['nickname'] . '/image/' . $photo['resource-id'] . ']' . DI::l10n()->t('a photo') . '[/url]', '[url=' . $owner_record['url'] . ']' . $owner_record['name'] . '[/url]') ;
@@ -1288,7 +1287,7 @@ function photos_content(App $a)
 		}
 
 		if (!empty($link_item['parent']) && !empty($link_item['uid'])) {
-			$condition = ["`parent` = ? AND `parent` != `id`",  $link_item['parent']];
+			$condition = ["`parent` = ? AND `gravity` != ?",  $link_item['parent'], GRAVITY_PARENT];
 			$total = DBA::count('item', $condition);
 
 			$pager = new Pager(DI::l10n(), DI::args()->getQueryString());
@@ -1457,7 +1456,7 @@ function photos_content(App $a)
 
 					if (($activity->match($item['verb'], Activity::LIKE) ||
 					     $activity->match($item['verb'], Activity::DISLIKE)) &&
-					    ($item['id'] != $item['parent'])) {
+					    ($item['gravity'] != GRAVITY_PARENT)) {
 						continue;
 					}
 

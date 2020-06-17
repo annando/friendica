@@ -112,10 +112,8 @@ $(document).ready(function(){
 		}
 	});
 
-	//$('ul.flex-nav').flexMenu();
-
 	// initialize the bootstrap tooltips
-	$('body').tooltip({
+	$body.tooltip({
 		selector: '[data-toggle="tooltip"]',
 		container: 'body',
 		animation: true,
@@ -364,10 +362,16 @@ $(document).ready(function(){
 
 	// Comment form submit
 	$body.on('submit', '.comment-edit-form', function(e) {
-		e.preventDefault();
-
 		let $form = $(this);
 		let id = $form.data('item-id');
+
+		// Compose page form exception: id is always 0 and form must not be submitted asynchronously
+		if (id === 0) {
+			return;
+		}
+
+		e.preventDefault();
+
 		let $commentSubmit = $form.find('.comment-edit-submit').button('loading');
 
 		unpause();
@@ -716,22 +720,17 @@ function htmlToText(htmlString) {
  * Sends a /like API call and updates the display of the relevant action button
  * before the update reloads the item.
  *
- * @param {string} ident The id of the relevant item
- * @param {string} verb The verb of the action
- * @returns {undefined}
+ * @param {int}     ident The id of the relevant item
+ * @param {string}  verb  The verb of the action
+ * @param {boolean} un    Whether to perform an activity removal instead of creation
  */
-function doLikeAction(ident, verb) {
-	unpause();
-
+function doLikeAction(ident, verb, un) {
 	if (verb.indexOf('attend') === 0) {
 		$('.item-' + ident + ' .button-event:not(#' + verb + '-' + ident + ')').removeClass('active');
 	}
 	$('#' + verb + '-' + ident).toggleClass('active');
-	$('#like-rotator-' + ident.toString()).show();
-	$.get('like/' + ident.toString() + '?verb=' + verb, NavUpdate );
-	liking = 1;
-	force_update = true;
-	update_item = ident.toString();
+
+	dolike(ident, verb, un);
 }
 
 // Decodes a hexadecimally encoded binary string

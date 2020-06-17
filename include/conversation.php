@@ -34,6 +34,7 @@ use Friendica\Model\Contact;
 use Friendica\Model\Item;
 use Friendica\Model\Profile;
 use Friendica\Model\Tag;
+use Friendica\Model\Verb;
 use Friendica\Object\Post;
 use Friendica\Object\Thread;
 use Friendica\Protocol\Activity;
@@ -376,17 +377,17 @@ function conversation(App $a, array $items, $mode, $update, $preview = false, $o
 				. "<script> var profile_uid = " . $_SESSION['uid']
 				. "; var netargs = '" . substr(DI::args()->getCommand(), 8)
 				. '?f='
-				. (!empty($_GET['cid'])    ? '&cid='    . rawurlencode($_GET['cid'])    : '')
-				. (!empty($_GET['search']) ? '&search=' . rawurlencode($_GET['search']) : '')
-				. (!empty($_GET['star'])   ? '&star='   . rawurlencode($_GET['star'])   : '')
-				. (!empty($_GET['order'])  ? '&order='  . rawurlencode($_GET['order'])  : '')
-				. (!empty($_GET['bmark'])  ? '&bmark='  . rawurlencode($_GET['bmark'])  : '')
-				. (!empty($_GET['liked'])  ? '&liked='  . rawurlencode($_GET['liked'])  : '')
-				. (!empty($_GET['conv'])   ? '&conv='   . rawurlencode($_GET['conv'])   : '')
-				. (!empty($_GET['nets'])   ? '&nets='   . rawurlencode($_GET['nets'])   : '')
-				. (!empty($_GET['cmin'])   ? '&cmin='   . rawurlencode($_GET['cmin'])   : '')
-				. (!empty($_GET['cmax'])   ? '&cmax='   . rawurlencode($_GET['cmax'])   : '')
-				. (!empty($_GET['file'])   ? '&file='   . rawurlencode($_GET['file'])   : '')
+				. (!empty($_GET['contactid']) ? '&contactid=' . rawurlencode($_GET['contactid']) : '')
+				. (!empty($_GET['search'])    ? '&search='    . rawurlencode($_GET['search'])    : '')
+				. (!empty($_GET['star'])      ? '&star='      . rawurlencode($_GET['star'])      : '')
+				. (!empty($_GET['order'])     ? '&order='     . rawurlencode($_GET['order'])     : '')
+				. (!empty($_GET['bmark'])     ? '&bmark='     . rawurlencode($_GET['bmark'])     : '')
+				. (!empty($_GET['liked'])     ? '&liked='     . rawurlencode($_GET['liked'])     : '')
+				. (!empty($_GET['conv'])      ? '&conv='      . rawurlencode($_GET['conv'])      : '')
+				. (!empty($_GET['nets'])      ? '&nets='      . rawurlencode($_GET['nets'])      : '')
+				. (!empty($_GET['cmin'])      ? '&cmin='      . rawurlencode($_GET['cmin'])      : '')
+				. (!empty($_GET['cmax'])      ? '&cmax='      . rawurlencode($_GET['cmax'])      : '')
+				. (!empty($_GET['file'])      ? '&file='      . rawurlencode($_GET['file'])      : '')
 
 				. "'; </script>\r\n";
 		}
@@ -670,7 +671,7 @@ function conversation(App $a, array $items, $mode, $update, $preview = false, $o
 
 				$item['pagedrop'] = $page_dropping;
 
-				if ($item['id'] == $item['parent']) {
+				if ($item['gravity'] == GRAVITY_PARENT) {
 					$item_object = new Post($item);
 					$conv->addParent($item_object);
 				}
@@ -759,7 +760,11 @@ function conversation_fetch_comments($thread_items, $pinned) {
  * @throws \Friendica\Network\HTTPException\InternalServerErrorException
  */
 function conversation_add_children(array $parents, $block_authors, $order, $uid) {
-	$max_comments = DI::config()->get('system', 'max_comments', 100);
+	if (count($parents) > 1) {
+		$max_comments = DI::config()->get('system', 'max_comments', 100);
+	} else {
+		$max_comments = DI::config()->get('system', 'max_display_comments', 1000);
+	}
 
 	$params = ['order' => ['uid', 'commented' => true]];
 
@@ -769,11 +774,9 @@ function conversation_add_children(array $parents, $block_authors, $order, $uid)
 
 	$items = [];
 
-	$follow = Item::activityToIndex(Activity::FOLLOW);
-
 	foreach ($parents AS $parent) {
-		$condition = ["`item`.`parent-uri` = ? AND `item`.`uid` IN (0, ?) AND (`activity` != ? OR `activity` IS NULL)",
-			$parent['uri'], $uid, $follow];
+		$condition = ["`item`.`parent-uri` = ? AND `item`.`uid` IN (0, ?) AND (`vid` != ? OR `vid` IS NULL)",
+			$parent['uri'], $uid, Verb::getID(Activity::FOLLOW)];
 		$items = conversation_fetch_items($parent, $items, $condition, $block_authors, $params);
 	}
 
@@ -800,7 +803,7 @@ function conversation_add_children(array $parents, $block_authors, $order, $uid)
  */
 function conversation_fetch_items(array $parent, array $items, array $condition, bool $block_authors, array $params) {
 	if ($block_authors) {
-		$condition[0] .= "AND NOT `author`.`hidden`";
+		$condition[0] .= " AND NOT `author`.`hidden`";
 	}
 
 	$thread_items = Item::selectForUser(local_user(), array_merge(Item::DISPLAY_FIELDLIST, ['contact-uid', 'gravity']), $condition, $params);
@@ -824,7 +827,7 @@ function item_photo_menu($item) {
 	$block_link = '';
 	$ignore_link = '';
 
-	if (local_user() && local_user() == $item['uid'] && $item['parent'] == $item['id'] && !$item['self']) {
+	if (local_user() && local_user() == $item['uid'] && $item['gravity'] == GRAVITY_PARENT && !$item['self']) {
 		$sub_link = 'javascript:dosubthread(' . $item['id'] . '); return false;';
 	}
 
@@ -949,7 +952,7 @@ function builtin_activity_puller($item, &$conv_responses) {
 				return;
 		}
 
-		if (!empty($item['verb']) && DI::activity()->match($item['verb'], $verb) && ($item['id'] != $item['parent'])) {
+		if (!empty($item['verb']) && DI::activity()->match($item['verb'], $verb) && ($item['gravity'] != GRAVITY_PARENT)) {
 			$author = ['uid' => 0, 'id' => $item['author-id'],
 				'network' => $item['author-network'], 'url' => $item['author-link']];
 			$url = Contact::magicLinkByContact($author);
@@ -1219,7 +1222,7 @@ function get_item_children(array &$item_list, array $parent, $recursive = true)
 {
 	$children = [];
 	foreach ($item_list as $i => $item) {
-		if ($item['id'] != $item['parent']) {
+		if ($item['gravity'] != GRAVITY_PARENT) {
 			if ($recursive) {
 				// Fallback to parent-uri if thr-parent is not set
 				$thr_parent = $item['thr-parent'];
@@ -1367,7 +1370,7 @@ function conv_sort(array $item_list, $order)
 
 	// Extract the top level items
 	foreach ($item_array as $item) {
-		if ($item['id'] == $item['parent']) {
+		if ($item['gravity'] == GRAVITY_PARENT) {
 			$parents[] = $item;
 		}
 	}

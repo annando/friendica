@@ -843,6 +843,7 @@ class Contact
 			// create an unfollow slap
 			$item = [];
 			$item['verb'] = Activity::O_UNFOLLOW;
+			$item['gravity'] = GRAVITY_ACTIVITY;
 			$item['follow'] = $contact["url"];
 			$item['body'] = '';
 			$item['title'] = '';
@@ -1168,7 +1169,7 @@ class Contact
 		if (!DBA::isResult($r)) {
 			$data = Probe::uri($addr);
 
-			$profile = self::getDetailsByURL($data['url'], $uid);
+			$profile = self::getDetailsByURL($data['url'], $uid, $data);
 		} else {
 			$profile = $r[0];
 		}
@@ -1530,10 +1531,6 @@ class Contact
 
 		if (empty($data)) {
 			$data = Probe::uri($url, "", $uid);
-			// Ensure that there is a gserver entry
-			if (!empty($data['baseurl']) && ($data['network'] != Protocol::PHANTOM)) {
-				GServer::check($data['baseurl']);
-			}
 		}
 
 		// Take the default values when probing failed
@@ -1544,6 +1541,14 @@ class Contact
 		if (empty($data) || ($data['network'] == Protocol::PHANTOM)) {
 			Logger::info('No valid network found', ['url' => $url, 'data' => $data, 'callstack' => System::callstack(20)]);
 			return 0;
+		}
+
+		if (!empty($data['baseurl'])) {
+			$data['baseurl'] = GServer::cleanURL($data['baseurl']);
+		}
+
+		if (!empty($data['baseurl']) && empty($data['gsid'])) {
+			$data['gsid'] = GServer::getID($data['baseurl']);
 		}
 
 		if (!$contact_id && !empty($data['alias']) && ($data['alias'] != $url) && !$in_loop) {
@@ -1575,6 +1580,7 @@ class Contact
 				'confirm'   => $data['confirm'] ?? '',
 				'poco'      => $data['poco'] ?? '',
 				'baseurl'   => $data['baseurl'] ?? '',
+				'gsid'      => $data['gsid'] ?? null,
 				'name-date' => DateTimeFormat::utcNow(),
 				'uri-date'  => DateTimeFormat::utcNow(),
 				'avatar-date' => DateTimeFormat::utcNow(),
@@ -1627,7 +1633,7 @@ class Contact
 				}
 			}
 		} else {
-			$fields = ['url', 'nurl', 'addr', 'alias', 'name', 'nick', 'keywords', 'location', 'about', 'avatar-date', 'baseurl'];
+			$fields = ['url', 'nurl', 'addr', 'alias', 'name', 'nick', 'keywords', 'location', 'about', 'avatar-date', 'baseurl', 'gsid'];
 			$contact = DBA::selectFirst('contact', $fields, ['id' => $contact_id]);
 
 			// This condition should always be true
@@ -1641,7 +1647,7 @@ class Contact
 				'updated' => DateTimeFormat::utcNow()
 			];
 
-			$fields = ['addr', 'alias', 'name', 'nick', 'keywords', 'location', 'about', 'baseurl'];
+			$fields = ['addr', 'alias', 'name', 'nick', 'keywords', 'location', 'about', 'baseurl', 'gsid'];
 
 			foreach ($fields as $field) {
 				$updated[$field] = ($data[$field] ?? '') ?: $contact[$field];
@@ -1756,7 +1762,6 @@ class Contact
 	 * Returns posts from a given contact url
 	 *
 	 * @param string $contact_url Contact URL
-	 *
 	 * @param bool   $thread_mode
 	 * @param int    $update
 	 * @return string posts in HTML
@@ -1764,9 +1769,21 @@ class Contact
 	 */
 	public static function getPostsFromUrl($contact_url, $thread_mode = false, $update = 0)
 	{
-		$a = DI::app();
+		return self::getPostsFromId(self::getIdForURL($contact_url), $thread_mode, $update);
+	}
 
-		$cid = self::getIdForURL($contact_url);
+	/**
+	 * Returns posts from a given contact id
+	 *
+	 * @param integer $cid
+	 * @param bool    $thread_mode
+	 * @param integer $update
+	 * @return string posts in HTML
+	 * @throws \Exception
+	 */
+	public static function getPostsFromId($cid, $thread_mode = false, $update = 0)
+	{
+		$a = DI::app();
 
 		$contact = DBA::selectFirst('contact', ['contact-type', 'network'], ['id' => $cid]);
 		if (!DBA::isResult($contact)) {
@@ -2080,9 +2097,9 @@ class Contact
 		// These fields aren't updated by this routine:
 		// 'xmpp', 'sensitive'
 
-		$fields = ['uid', 'avatar', 'name', 'nick', 'location', 'keywords', 'about',
+		$fields = ['uid', 'avatar', 'name', 'nick', 'location', 'keywords', 'about', 'subscribe',
 			'unsearchable', 'url', 'addr', 'batch', 'notify', 'poll', 'request', 'confirm', 'poco',
-			'network', 'alias', 'baseurl', 'forum', 'prv', 'contact-type', 'pubkey'];
+			'network', 'alias', 'baseurl', 'gsid', 'forum', 'prv', 'contact-type', 'pubkey'];
 		$contact = DBA::selectFirst('contact', $fields, ['id' => $id]);
 		if (!DBA::isResult($contact)) {
 			return false;
@@ -2256,19 +2273,19 @@ class Contact
 	 * $return['message'] error text if success is false.
 	 *
 	 * Takes a $uid and a url/handle and adds a new contact
-	 * @param int    $uid
-	 * @param string $url
+	 *
+	 * @param array  $user        The user the contact should be created for
+	 * @param string $url         The profile URL of the contact
 	 * @param bool   $interactive
 	 * @param string $network
 	 * @return array
 	 * @throws HTTPException\InternalServerErrorException
+	 * @throws HTTPException\NotFoundException
 	 * @throws \ImagickException
 	 */
-	public static function createFromProbe($uid, $url, $interactive = false, $network = '')
+	public static function createFromProbe(array $user, $url, $interactive = false, $network = '')
 	{
 		$result = ['cid' => -1, 'success' => false, 'message' => ''];
-
-		$a = DI::app();
 
 		// remove ajax junk, e.g. Twitter
 		$url = str_replace('/#!/', '/', $url);
@@ -2300,7 +2317,7 @@ class Contact
 		if (!empty($arr['contact']['name'])) {
 			$ret = $arr['contact'];
 		} else {
-			$ret = Probe::uri($url, $network, $uid, false);
+			$ret = Probe::uri($url, $network, $user['uid'], false);
 		}
 
 		if (($network != '') && ($ret['network'] != $network)) {
@@ -2312,10 +2329,10 @@ class Contact
 		// the poll url is more reliable than the profile url, as we may have
 		// indirect links or webfinger links
 
-		$condition = ['uid' => $uid, 'poll' => [$ret['poll'], Strings::normaliseLink($ret['poll'])], 'network' => $ret['network'], 'pending' => false];
+		$condition = ['uid' => $user['uid'], 'poll' => [$ret['poll'], Strings::normaliseLink($ret['poll'])], 'network' => $ret['network'], 'pending' => false];
 		$contact = DBA::selectFirst('contact', ['id', 'rel'], $condition);
 		if (!DBA::isResult($contact)) {
-			$condition = ['uid' => $uid, 'nurl' => Strings::normaliseLink($url), 'network' => $ret['network'], 'pending' => false];
+			$condition = ['uid' => $user['uid'], 'nurl' => Strings::normaliseLink($url), 'network' => $ret['network'], 'pending' => false];
 			$contact = DBA::selectFirst('contact', ['id', 'rel'], $condition);
 		}
 
@@ -2324,9 +2341,9 @@ class Contact
 		if (($protocol === Protocol::DFRN) && !DBA::isResult($contact)) {
 			if ($interactive) {
 				if (strlen(DI::baseUrl()->getUrlPath())) {
-					$myaddr = bin2hex(DI::baseUrl() . '/profile/' . $a->user['nickname']);
+					$myaddr = bin2hex(DI::baseUrl() . '/profile/' . $user['nickname']);
 				} else {
-					$myaddr = bin2hex($a->user['nickname'] . '@' . DI::baseUrl()->getHostname());
+					$myaddr = bin2hex($user['nickname'] . '@' . DI::baseUrl()->getHostname());
 				}
 
 				DI::baseUrl()->redirect($ret['request'] . "&addr=$myaddr");
@@ -2401,7 +2418,7 @@ class Contact
 
 			// create contact record
 			self::insert([
-				'uid'     => $uid,
+				'uid'     => $user['uid'],
 				'created' => DateTimeFormat::utcNow(),
 				'url'     => $ret['url'],
 				'nurl'    => Strings::normaliseLink($ret['url']),
@@ -2415,6 +2432,7 @@ class Contact
 				'nick'    => $ret['nick'],
 				'network' => $ret['network'],
 				'baseurl' => $ret['baseurl'],
+				'gsid'    => $ret['gsid'] ?? null,
 				'protocol' => $protocol,
 				'pubkey'  => $ret['pubkey'],
 				'rel'     => $new_relation,
@@ -2428,7 +2446,7 @@ class Contact
 			]);
 		}
 
-		$contact = DBA::selectFirst('contact', [], ['url' => $ret['url'], 'network' => $ret['network'], 'uid' => $uid]);
+		$contact = DBA::selectFirst('contact', [], ['url' => $ret['url'], 'network' => $ret['network'], 'uid' => $user['uid']]);
 		if (!DBA::isResult($contact)) {
 			$result['message'] .= DI::l10n()->t('Unable to retrieve contact information.') . EOL;
 			return $result;
@@ -2437,22 +2455,23 @@ class Contact
 		$contact_id = $contact['id'];
 		$result['cid'] = $contact_id;
 
-		Group::addMember(User::getDefaultGroup($uid, $contact["network"]), $contact_id);
+		Group::addMember(User::getDefaultGroup($user['uid'], $contact["network"]), $contact_id);
 
 		// Update the avatar
-		self::updateAvatar($ret['photo'], $uid, $contact_id);
+		self::updateAvatar($ret['photo'], $user['uid'], $contact_id);
 
 		// pull feed and consume it, which should subscribe to the hub.
 
 		Worker::add(PRIORITY_HIGH, "OnePoll", $contact_id, "force");
 
-		$owner = User::getOwnerDataById($uid);
+		$owner = User::getOwnerDataById($user['uid']);
 
 		if (DBA::isResult($owner)) {
 			if (in_array($protocol, [Protocol::OSTATUS, Protocol::DFRN])) {
 				// create a follow slap
 				$item = [];
 				$item['verb'] = Activity::FOLLOW;
+				$item['gravity'] = GRAVITY_ACTIVITY;
 				$item['follow'] = $contact["url"];
 				$item['body'] = '';
 				$item['title'] = '';
@@ -2466,7 +2485,7 @@ class Contact
 					Salmon::slapper($owner, $contact['notify'], $slap);
 				}
 			} elseif ($protocol == Protocol::DIASPORA) {
-				$ret = Diaspora::sendShare($a->user, $contact);
+				$ret = Diaspora::sendShare($owner, $contact);
 				Logger::log('share returns: ' . $ret);
 			} elseif ($protocol == Protocol::ACTIVITYPUB) {
 				$activity_id = ActivityPub\Transmitter::activityIDFromContact($contact_id);
@@ -2475,7 +2494,7 @@ class Contact
 					return false;
 				}
 
-				$ret = ActivityPub\Transmitter::sendActivity('Follow', $contact['url'], $uid, $activity_id);
+				$ret = ActivityPub\Transmitter::sendActivity('Follow', $contact['url'], $user['uid'], $activity_id);
 				Logger::log('Follow returns: ' . $ret);
 			}
 		}
@@ -2660,7 +2679,7 @@ class Contact
 				}
 			} elseif (DBA::isResult($user) && in_array($user['page-flags'], [User::PAGE_FLAGS_SOAPBOX, User::PAGE_FLAGS_FREELOVE, User::PAGE_FLAGS_COMMUNITY])) {
 				if (($user['page-flags'] == User::PAGE_FLAGS_FREELOVE) && ($network != Protocol::DIASPORA)) {
-					self::createFromProbe($importer['uid'], $url, false, $network);
+					self::createFromProbe($importer, $url, false, $network);
 				}
 
 				$condition = ['uid' => $importer['uid'], 'url' => $url, 'pending' => true];

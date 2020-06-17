@@ -29,6 +29,7 @@
  */
 
 use Friendica\App;
+use Friendica\Content\Item as ItemHelper;
 use Friendica\Content\Text\BBCode;
 use Friendica\Core\Hook;
 use Friendica\Core\Logger;
@@ -119,7 +120,7 @@ function item_post(App $a) {
 			// The URI and the contact is taken from the direct parent which needn't to be the top parent
 			$thr_parent_uri = $toplevel_item['uri'];
 
-			if ($toplevel_item['id'] != $toplevel_item['parent']) {
+			if ($toplevel_item['gravity'] != GRAVITY_PARENT) {
 				$toplevel_item = Item::selectFirst([], ['id' => $toplevel_item['parent']]);
 			}
 		}
@@ -245,7 +246,7 @@ function item_post(App $a) {
 		$verb              = $orig_post['verb'];
 		$objecttype        = $orig_post['object-type'];
 		$app               = $orig_post['app'];
-		$categories        = $orig_post['file'];
+		$categories        = $orig_post['file'] ?? '';
 		$title             = Strings::escapeTags(trim($_REQUEST['title']));
 		$body              = trim($body);
 		$private           = $orig_post['private'];
@@ -369,16 +370,16 @@ function item_post(App $a) {
 
 	// Look for any tags and linkify them
 	$inform   = '';
-
-	$tags = BBCode::getTags($body);
-
-	$tagged = [];
-
 	$private_forum = false;
+	$private_id = null;
 	$only_to_forum = false;
 	$forum_contact = [];
 
-	if (count($tags)) {
+	$body = BBCode::performWithEscapedTags($body, ['noparse', 'pre', 'code'], function ($body) use ($profile_uid, $network, $str_contact_allow, &$inform, &$private_forum, &$private_id, &$only_to_forum, &$forum_contact) {
+		$tags = BBCode::getTags($body);
+
+		$tagged = [];
+
 		foreach ($tags as $tag) {
 			$tag_type = substr($tag, 0, 1);
 
@@ -386,41 +387,35 @@ function item_post(App $a) {
 				continue;
 			}
 
-			/*
-			 * If we already tagged 'Robert Johnson', don't try and tag 'Robert'.
+			/* If we already tagged 'Robert Johnson', don't try and tag 'Robert'.
 			 * Robert Johnson should be first in the $tags array
 			 */
-			$fullnametagged = false;
-			/// @TODO $tagged is initialized above if () block and is not filled, maybe old-lost code?
 			foreach ($tagged as $nextTag) {
 				if (stristr($nextTag, $tag . ' ')) {
-					$fullnametagged = true;
-					break;
+					continue 2;
 				}
 			}
-			if ($fullnametagged) {
-				continue;
-			}
 
-			$success = handle_tag($body, $inform, local_user() ? local_user() : $profile_uid, $tag, $network);
+			$success = ItemHelper::replaceTag($body, $inform, local_user() ? local_user() : $profile_uid, $tag, $network);
 			if ($success['replaced']) {
 				$tagged[] = $tag;
 			}
 			// When the forum is private or the forum is addressed with a "!" make the post private
-			if (is_array($success['contact']) && (!empty($success['contact']['prv']) || ($tag_type == Tag::TAG_CHARACTER[Tag::EXCLUSIVE_MENTION]))) {
+			if (!empty($success['contact']['prv']) || ($tag_type == Tag::TAG_CHARACTER[Tag::EXCLUSIVE_MENTION])) {
 				$private_forum = $success['contact']['prv'];
 				$only_to_forum = ($tag_type == Tag::TAG_CHARACTER[Tag::EXCLUSIVE_MENTION]);
 				$private_id = $success['contact']['id'];
 				$forum_contact = $success['contact'];
-			} elseif (is_array($success['contact']) && !empty($success['contact']['forum']) &&
-				($str_contact_allow == '<' . $success['contact']['id'] . '>')) {
+			} elseif (!empty($success['contact']['forum']) && ($str_contact_allow == '<' . $success['contact']['id'] . '>')) {
 				$private_forum = false;
 				$only_to_forum = true;
 				$private_id = $success['contact']['id'];
 				$forum_contact = $success['contact'];
 			}
 		}
-	}
+
+		return $body;
+	});
 
 	$original_contact_id = $contact_id;
 
@@ -642,7 +637,7 @@ function item_post(App $a) {
 
 	// Check for hashtags in the body and repair or add hashtag links
 	if ($preview || $orig_post) {
-		Item::setHashtags($datarray);
+		$datarray['body'] = Item::setHashtags($datarray['body']);
 	}
 
 	// preview mode - prepare the body for display and send it via json
@@ -650,6 +645,7 @@ function item_post(App $a) {
 		// We set the datarray ID to -1 because in preview mode the dataray
 		// doesn't have an ID.
 		$datarray["id"] = -1;
+		$datarray["uri-id"] = -1;
 		$datarray["item_id"] = -1;
 		$datarray["author-network"] = Protocol::DFRN;
 
@@ -871,124 +867,4 @@ function item_content(App $a)
 	}
 
 	return $o;
-}
-
-/**
- * This function removes the tag $tag from the text $body and replaces it with
- * the appropriate link.
- *
- * @param App     $a
- * @param string  $body     the text to replace the tag in
- * @param string  $inform   a comma-seperated string containing everybody to inform
- * @param integer $profile_uid
- * @param string  $tag      the tag to replace
- * @param string  $network  The network of the post
- *
- * @return array|bool ['replaced' => $replaced, 'contact' => $contact];
- * @throws ImagickException
- * @throws HTTPException\InternalServerErrorException
- */
-function handle_tag(&$body, &$inform, $profile_uid, $tag, $network = "")
-{
-	$replaced = false;
-
-	//is it a person tag?
-	if (Tag::isType($tag, Tag::MENTION, Tag::IMPLICIT_MENTION, Tag::EXCLUSIVE_MENTION)) {
-		$tag_type = substr($tag, 0, 1);
-		//is it already replaced?
-		if (strpos($tag, '[url=')) {
-			// Checking for the alias that is used for OStatus
-			$pattern = "/[@!]\[url\=(.*?)\](.*?)\[\/url\]/ism";
-			if (preg_match($pattern, $tag, $matches)) {
-				$data = Contact::getDetailsByURL($matches[1]);
-
-				if ($data["alias"] != "") {
-					$newtag = '@[url=' . $data["alias"] . ']' . $data["nick"] . '[/url]';
-				}
-			}
-
-			return $replaced;
-		}
-
-		//get the person's name
-		$name = substr($tag, 1);
-
-		// Sometimes the tag detection doesn't seem to work right
-		// This is some workaround
-		$nameparts = explode(" ", $name);
-		$name = $nameparts[0];
-
-		// Try to detect the contact in various ways
-		if (strpos($name, 'http://')) {
-			// At first we have to ensure that the contact exists
-			Contact::getIdForURL($name);
-
-			// Now we should have something
-			$contact = Contact::getDetailsByURL($name);
-		} elseif (strpos($name, '@')) {
-			// This function automatically probes when no entry was found
-			$contact = Contact::getDetailsByAddr($name);
-		} else {
-			$contact = false;
-			$fields = ['id', 'url', 'nick', 'name', 'alias', 'network', 'forum', 'prv'];
-
-			if (strrpos($name, '+')) {
-				// Is it in format @nick+number?
-				$tagcid = intval(substr($name, strrpos($name, '+') + 1));
-				$contact = DBA::selectFirst('contact', $fields, ['id' => $tagcid, 'uid' => $profile_uid]);
-			}
-
-			// select someone by nick or attag in the current network
-			if (!DBA::isResult($contact) && ($network != "")) {
-				$condition = ["(`nick` = ? OR `attag` = ?) AND `network` = ? AND `uid` = ?",
-						$name, $name, $network, $profile_uid];
-				$contact = DBA::selectFirst('contact', $fields, $condition);
-			}
-
-			//select someone by name in the current network
-			if (!DBA::isResult($contact) && ($network != "")) {
-				$condition = ['name' => $name, 'network' => $network, 'uid' => $profile_uid];
-				$contact = DBA::selectFirst('contact', $fields, $condition);
-			}
-
-			// select someone by nick or attag in any network
-			if (!DBA::isResult($contact)) {
-				$condition = ["(`nick` = ? OR `attag` = ?) AND `uid` = ?", $name, $name, $profile_uid];
-				$contact = DBA::selectFirst('contact', $fields, $condition);
-			}
-
-			// select someone by name in any network
-			if (!DBA::isResult($contact)) {
-				$condition = ['name' => $name, 'uid' => $profile_uid];
-				$contact = DBA::selectFirst('contact', $fields, $condition);
-			}
-		}
-
-		// Check if $contact has been successfully loaded
-		if (DBA::isResult($contact)) {
-			if (strlen($inform) && (isset($contact["notify"]) || isset($contact["id"]))) {
-				$inform .= ',';
-			}
-
-			if (isset($contact["id"])) {
-				$inform .= 'cid:' . $contact["id"];
-			} elseif (isset($contact["notify"])) {
-				$inform  .= $contact["notify"];
-			}
-
-			$profile = $contact["url"];
-			$newname = ($contact["name"] ?? '') ?: $contact["nick"];
-		}
-
-		//if there is an url for this persons profile
-		if (isset($profile) && ($newname != "")) {
-			$replaced = true;
-			// create profile link
-			$profile = str_replace(',', '%2c', $profile);
-			$newtag = $tag_type.'[url=' . $profile . ']' . $newname . '[/url]';
-			$body = str_replace($tag_type . $name, $newtag, $body);
-		}
-	}
-
-	return ['replaced' => $replaced, 'contact' => $contact];
 }

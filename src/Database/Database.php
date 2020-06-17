@@ -21,8 +21,10 @@
 
 namespace Friendica\Database;
 
+use Exception;
 use Friendica\Core\Config\Cache;
 use Friendica\Core\System;
+use Friendica\DI;
 use Friendica\Network\HTTPException\InternalServerErrorException;
 use Friendica\Util\DateTimeFormat;
 use Friendica\Util\Profiler;
@@ -63,6 +65,7 @@ class Database
 	private $affected_rows  = 0;
 	protected $in_transaction = false;
 	protected $in_retrial     = false;
+	protected $testmode       = false;
 	private $relation       = [];
 
 	public function __construct(Cache $configCache, Profiler $profiler, LoggerInterface $logger, array $server = [])
@@ -132,8 +135,9 @@ class Database
 		}
 
 		$this->emulate_prepares = (bool)$this->configCache->get('database', 'emulate_prepares');
+		$this->pdo_emulate_prepares = (bool)$this->configCache->get('database', 'pdo_emulate_prepares');
 
-		if (class_exists('\PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
+		if (!$this->configCache->get('database', 'disable_pdo') && class_exists('\PDO') && in_array('mysql', PDO::getAvailableDrivers())) {
 			$this->driver = 'pdo';
 			$connect      = "mysql:host=" . $server . ";dbname=" . $db;
 
@@ -147,7 +151,7 @@ class Database
 
 			try {
 				$this->connection = @new PDO($connect, $user, $pass);
-				$this->connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+				$this->connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->pdo_emulate_prepares);
 				$this->connected = true;
 			} catch (PDOException $e) {
 				$this->connected = false;
@@ -181,6 +185,10 @@ class Database
 		return $this->connected;
 	}
 
+	public function setTestmode(bool $test)
+	{
+		$this->testmode = $test;
+	}
 	/**
 	 * Sets the logger for DBA
 	 *
@@ -311,7 +319,7 @@ class Database
 		}
 
 		$watchlist = explode(',', $this->configCache->get('system', 'db_log_index_watch'));
-		$blacklist = explode(',', $this->configCache->get('system', 'db_log_index_blacklist'));
+		$denylist = explode(',', $this->configCache->get('system', 'db_log_index_denylist'));
 
 		while ($row = $this->fetch($r)) {
 			if ((intval($this->configCache->get('system', 'db_loglimit_index')) > 0)) {
@@ -325,7 +333,7 @@ class Database
 				$log = true;
 			}
 
-			if (in_array($row['key'], $blacklist) || ($row['key'] == "")) {
+			if (in_array($row['key'], $denylist) || ($row['key'] == "")) {
 				$log = false;
 			}
 
@@ -341,7 +349,7 @@ class Database
 	}
 
 	/**
-	 * Removes every not whitelisted character from the identifier string
+	 * Removes every not allowlisted character from the identifier string
 	 *
 	 * @param string $identifier
 	 *
@@ -497,6 +505,7 @@ class Database
 			$sql = "/*" . System::callstack() . " */ " . $sql;
 		}
 
+		$is_error            = false;
 		$this->error         = '';
 		$this->errorno       = 0;
 		$this->affected_rows = 0;
@@ -526,6 +535,7 @@ class Database
 						$this->error   = $errorInfo[2];
 						$this->errorno = $errorInfo[1];
 						$retval        = false;
+						$is_error      = true;
 						break;
 					}
 					$this->affected_rows = $retval->rowCount();
@@ -538,6 +548,7 @@ class Database
 					$this->error   = $errorInfo[2];
 					$this->errorno = $errorInfo[1];
 					$retval        = false;
+					$is_error      = true;
 					break;
 				}
 
@@ -555,6 +566,7 @@ class Database
 					$this->error   = $errorInfo[2];
 					$this->errorno = $errorInfo[1];
 					$retval        = false;
+					$is_error      = true;
 				} else {
 					$retval              = $stmt;
 					$this->affected_rows = $retval->rowCount();
@@ -573,6 +585,7 @@ class Database
 						$this->error   = $this->connection->error;
 						$this->errorno = $this->connection->errno;
 						$retval        = false;
+						$is_error      = true;
 					} else {
 						if (isset($retval->num_rows)) {
 							$this->affected_rows = $retval->num_rows;
@@ -589,6 +602,7 @@ class Database
 					$this->error   = $stmt->error;
 					$this->errorno = $stmt->errno;
 					$retval        = false;
+					$is_error      = true;
 					break;
 				}
 
@@ -616,6 +630,7 @@ class Database
 					$this->error   = $this->connection->error;
 					$this->errorno = $this->connection->errno;
 					$retval        = false;
+					$is_error      = true;
 				} else {
 					$stmt->store_result();
 					$retval              = $stmt;
@@ -624,15 +639,29 @@ class Database
 				break;
 		}
 
+		// See issue https://github.com/friendica/friendica/issues/8572
+		// Ensure that we always get an error message on an error.
+		if ($is_error && empty($this->errorno)) {
+			$this->errorno = -1;
+		}
+
+		if ($is_error && empty($this->error)) {
+			$this->error = 'Unknown database error';
+		}
+
 		// We are having an own error logging in the function "e"
 		if (($this->errorno != 0) && !$called_from_e) {
 			// We have to preserve the error code, somewhere in the logging it get lost
 			$error   = $this->error;
 			$errorno = $this->errorno;
 
+			if ($this->testmode) {
+				throw new Exception(DI::l10n()->t('Database error %d "%s" at "%s"', $errorno, $error, $this->replaceParameters($sql, $args)));
+			}
+
 			$this->logger->error('DB Error', [
-				'code'      => $this->errorno,
-				'error'     => $this->error,
+				'code'      => $errorno,
+				'error'     => $error,
 				'callstack' => System::callstack(8),
 				'params'    => $this->replaceParameters($sql, $args),
 			]);
@@ -643,21 +672,21 @@ class Database
 					// It doesn't make sense to continue when the database connection was lost
 					if ($this->in_retrial) {
 						$this->logger->notice('Giving up retrial because of database error', [
-							'code'  => $this->errorno,
-							'error' => $this->error,
+							'code'  => $errorno,
+							'error' => $error,
 						]);
 					} else {
 						$this->logger->notice('Couldn\'t reconnect after database error', [
-							'code'  => $this->errorno,
-							'error' => $this->error,
+							'code'  => $errorno,
+							'error' => $error,
 						]);
 					}
 					exit(1);
 				} else {
 					// We try it again
 					$this->logger->notice('Reconnected after database error', [
-						'code'  => $this->errorno,
-						'error' => $this->error,
+						'code'  => $errorno,
+						'error' => $error,
 					]);
 					$this->in_retrial = true;
 					$ret              = $this->p($sql, $args);
@@ -729,9 +758,13 @@ class Database
 			$error   = $this->error;
 			$errorno = $this->errorno;
 
+			if ($this->testmode) {
+				throw new Exception(DI::l10n()->t('Database error %d "%s" at "%s"', $errorno, $error, $this->replaceParameters($sql, $params)));
+			}
+
 			$this->logger->error('DB Error', [
-				'code'      => $this->errorno,
-				'error'     => $this->error,
+				'code'      => $errorno,
+				'error'     => $error,
 				'callstack' => System::callstack(8),
 				'params'    => $this->replaceParameters($sql, $params),
 			]);
@@ -740,8 +773,8 @@ class Database
 			// A reconnect like in $this->p could be dangerous with modifications
 			if ($errorno == 2006) {
 				$this->logger->notice('Giving up because of database error', [
-					'code'  => $this->errorno,
-					'error' => $this->error,
+					'code'  => $errorno,
+					'error' => $error,
 				]);
 				exit(1);
 			}
@@ -1014,7 +1047,7 @@ class Database
 		$success = $this->e("LOCK TABLES " . DBA::buildTableString($table) . " WRITE");
 
 		if ($this->driver == 'pdo') {
-			$this->connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+			$this->connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->pdo_emulate_prepares);
 		}
 
 		if (!$success) {
@@ -1047,7 +1080,7 @@ class Database
 		$success = $this->e("UNLOCK TABLES");
 
 		if ($this->driver == 'pdo') {
-			$this->connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+			$this->connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, $this->pdo_emulate_prepares);
 			$this->e("SET autocommit=1");
 		} else {
 			$this->connection->autocommit(true);

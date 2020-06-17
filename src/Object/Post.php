@@ -214,7 +214,7 @@ class Post
 			$pinned = DI::l10n()->t('pinned item');
 		}
 
-		if ($origin && ($item['id'] != $item['parent']) && ($item['network'] == Protocol::ACTIVITYPUB)) {
+		if ($origin && ($item['gravity'] != GRAVITY_PARENT) && ($item['network'] == Protocol::ACTIVITYPUB)) {
 			// ActivityPub doesn't allow removal of remote comments
 			$delete = DI::l10n()->t('Delete locally');
 		} else {
@@ -380,8 +380,11 @@ class Post
 		}
 
 		// Disable features that aren't available in several networks
-		if ($buttons["dislike"] && !in_array($item["network"], [Protocol::ACTIVITYPUB, Protocol::DFRN, Protocol::DIASPORA])) {
-			$buttons["dislike"] = false;
+		if (!in_array($item["network"], [Protocol::ACTIVITYPUB, Protocol::DFRN, Protocol::DIASPORA])) {
+			if ($buttons["dislike"]) {
+				$buttons["dislike"] = false;
+			}
+
 			$isevent = false;
 			$tagger = '';
 		}

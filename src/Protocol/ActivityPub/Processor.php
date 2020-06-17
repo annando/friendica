@@ -94,39 +94,54 @@ class Processor
 		}
 
 		foreach ($activity['attachments'] as $attach) {
-			$filetype = strtolower(substr($attach['mediaType'], 0, strpos($attach['mediaType'], '/')));
-			if ($filetype == 'image') {
-				if (!empty($activity['source']) && strpos($activity['source'], $attach['url'])) {
-					continue;
-				}
+			switch ($attach['type']) {
+				case 'link':
+					// Only one [attachment] tag is allowed
+					$existingAttachmentPos = strpos($item['body'], '[attachment');
+					if ($existingAttachmentPos !== false) {
+						$linkTitle = $attach['title'] ?: $attach['url'];
+						// Additional link attachments are prepended before the existing [attachment] tag
+						$item['body'] = substr_replace($item['body'], "\n[bookmark=" . $attach['url'] . ']' . $linkTitle . "[/bookmark]\n", $existingAttachmentPos, 0);
+					} else {
+						// Strip the link preview URL from the end of the body if any
+						$quotedUrl = preg_quote($attach['url'], '#');
+						$item['body'] = preg_replace("#\s*(?:\[bookmark={$quotedUrl}].+?\[/bookmark]|\[url={$quotedUrl}].+?\[/url]|\[url]{$quotedUrl}\[/url]|{$quotedUrl})\s*$#", '', $item['body']);
+						$item['body'] .= "\n[attachment type='link' url='" . $attach['url'] . "' title='" . htmlspecialchars($attach['title'] ?? '', ENT_QUOTES) . "' image='" . ($attach['image'] ?? '') . "']" . ($attach['desc'] ?? '') . '[/attachment]';
+					}
+					break;
+				default:
+					$filetype = strtolower(substr($attach['mediaType'], 0, strpos($attach['mediaType'], '/')));
+					if ($filetype == 'image') {
+						if (!empty($activity['source']) && strpos($activity['source'], $attach['url'])) {
+							continue 2;
+						}
 
-				if (empty($attach['name'])) {
-					$item['body'] .= "\n[img]" . $attach['url'] . '[/img]';
-				} else {
-					$item['body'] .= "\n[img=" . $attach['url'] . ']' . $attach['name'] . '[/img]';
-				}
-			} elseif ($filetype == 'audio') {
-				if (!empty($activity['source']) && strpos($activity['source'], $attach['url'])) {
-					continue;
-				}
+						if (empty($attach['name'])) {
+							$item['body'] .= "\n[img]" . $attach['url'] . '[/img]';
+						} else {
+							$item['body'] .= "\n[img=" . $attach['url'] . ']' . $attach['name'] . '[/img]';
+						}
+					} elseif ($filetype == 'audio') {
+						if (!empty($activity['source']) && strpos($activity['source'], $attach['url'])) {
+							continue 2;
+						}
 
-				$item['body'] .= "\n[audio]" . $attach['url'] . '[/audio]';
-			} elseif ($filetype == 'video') {
-				if (!empty($activity['source']) && strpos($activity['source'], $attach['url'])) {
-					continue;
-				}
+						$item['body'] .= "\n[audio]" . $attach['url'] . '[/audio]';
+					} elseif ($filetype == 'video') {
+						if (!empty($activity['source']) && strpos($activity['source'], $attach['url'])) {
+							continue 2;
+						}
 
-				$item['body'] .= "\n[video]" . $attach['url'] . '[/video]';
-			} else {
-				if (!empty($item["attach"])) {
-					$item["attach"] .= ',';
-				} else {
-					$item["attach"] = '';
-				}
-				if (!isset($attach['length'])) {
-					$attach['length'] = "0";
-				}
-				$item["attach"] .= '[attach]href="'.$attach['url'].'" length="'.$attach['length'].'" type="'.$attach['mediaType'].'" title="'.($attach['name'] ?? '') .'"[/attach]';
+						$item['body'] .= "\n[video]" . $attach['url'] . '[/video]';
+					} else {
+						if (!empty($item["attach"])) {
+							$item["attach"] .= ',';
+						} else {
+							$item["attach"] = '';
+						}
+
+						$item["attach"] .= '[attach]href="' . $attach['url'] . '" length="' . ($attach['length'] ?? '0') . '" type="' . $attach['mediaType'] . '" title="' . ($attach['name'] ?? '') . '"[/attach]';
+					}
 			}
 		}
 
@@ -644,7 +659,7 @@ class Processor
 					$title = $matches[3];
 				}
 
-				$title = trim(HTML::toPlaintext(BBCode::convert($title, false, 2, true), 0));
+				$title = trim(HTML::toPlaintext(BBCode::convert($title, false, BBCode::API, true), 0));
 
 				if (strlen($title) > 20) {
 					$title = substr($title, 0, 20) . '...';
@@ -974,7 +989,7 @@ class Processor
 		$parent_author = Contact::getDetailsByURL($parent['author-link'], 0);
 
 		$implicit_mentions = [];
-		if (empty($parent_author)) {
+		if (empty($parent_author['url'])) {
 			Logger::notice('Author public contact unknown.', ['author-link' => $parent['author-link'], 'item-id' => $parent['id']]);
 		} else {
 			$implicit_mentions[] = $parent_author['url'];
@@ -988,7 +1003,7 @@ class Processor
 
 		foreach ($parent_terms as $term) {
 			$contact = Contact::getDetailsByURL($term['url'], 0);
-			if (!empty($contact)) {
+			if (!empty($contact['url'])) {
 				$implicit_mentions[] = $contact['url'];
 				$implicit_mentions[] = $contact['nurl'];
 				$implicit_mentions[] = $contact['alias'];

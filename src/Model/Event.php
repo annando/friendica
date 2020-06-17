@@ -24,6 +24,7 @@ namespace Friendica\Model;
 use Friendica\Content\Text\BBCode;
 use Friendica\Core\Hook;
 use Friendica\Core\Logger;
+use Friendica\Core\Protocol;
 use Friendica\Core\Renderer;
 use Friendica\Core\System;
 use Friendica\Database\DBA;
@@ -370,6 +371,7 @@ class Event
 				$item_arr['origin']        = $event['cid'] === 0 ? 1 : 0;
 				$item_arr['body']          = self::getBBCode($event);
 				$item_arr['event-id']      = $event['id'];
+				$item_arr['network']       = Protocol::DFRN;
 
 				$item_arr['object']  = '<object><type>' . XML::escape(Activity\ObjectType::EVENT) . '</type><title></title><id>' . XML::escape($event['uri']) . '</id>';
 				$item_arr['object'] .= '<content>' . XML::escape(self::getBBCode($event)) . '</content>';
@@ -611,7 +613,7 @@ class Event
 
 			$title = BBCode::convert(Strings::escapeHtml($event['summary']));
 			if (!$title) {
-				list($title, $_trash) = explode("<br", BBCode::convert(Strings::escapeHtml($event['desc'])), 2);
+				list($title, $_trash) = explode("<br", BBCode::convert(Strings::escapeHtml($event['desc'])), BBCode::API);
 			}
 
 			$author_link = $event['author-link'];

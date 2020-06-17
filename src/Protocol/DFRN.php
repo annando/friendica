@@ -951,7 +951,7 @@ class DFRN
 				$htmlbody = "[b]" . $item['title'] . "[/b]\n\n" . $htmlbody;
 			}
 
-			$htmlbody = BBCode::convert($htmlbody, false, 7);
+			$htmlbody = BBCode::convert($htmlbody, false, BBCode::OSTATUS);
 		}
 
 		$author = self::addEntryAuthor($doc, "author", $item["author-link"], $item);
@@ -960,7 +960,7 @@ class DFRN
 		$dfrnowner = self::addEntryAuthor($doc, "dfrn:owner", $item["owner-link"], $item);
 		$entry->appendChild($dfrnowner);
 
-		if (($item['parent'] != $item['id']) || ($item['parent-uri'] !== $item['uri']) || (($item['thr-parent'] !== '') && ($item['thr-parent'] !== $item['uri']))) {
+		if ($item['gravity'] != GRAVITY_PARENT) {
 			$parent_item = (($item['thr-parent']) ? $item['thr-parent'] : $item['parent-uri']);
 			$parent = Item::selectFirst(['guid', 'plink'], ['uri' => $parent_item, 'uid' => $item['uid']]);
 			$attributes = ["ref" => $parent_item, "type" => "text/html",
@@ -1059,7 +1059,7 @@ class DFRN
 
 		if ($item['object-type'] != "") {
 			XML::addElement($doc, $entry, "activity:object-type", $item['object-type']);
-		} elseif ($item['id'] == $item['parent']) {
+		} elseif ($item['gravity'] == GRAVITY_PARENT) {
 			XML::addElement($doc, $entry, "activity:object-type", Activity\ObjectType::NOTE);
 		} else {
 			XML::addElement($doc, $entry, "activity:object-type", Activity\ObjectType::COMMENT);
@@ -2110,7 +2110,7 @@ class DFRN
 				$author = DBA::selectFirst('contact', ['name', 'thumb', 'url'], ['id' => $item['author-id']]);
 
 				$parent = Item::selectFirst(['id'], ['uri' => $item['parent-uri'], 'uid' => $importer["importer_uid"]]);
-				$item["parent"] = $parent['id'];
+				$item['parent'] = $parent['id'];
 
 				// send a notification
 				notification(
@@ -2129,7 +2129,7 @@ class DFRN
 					"verb"         => $item["verb"],
 					"otype"        => "person",
 					"activity"     => $verb,
-					"parent"       => $item["parent"]]
+					"parent"       => $item['parent']]
 				);
 			}
 		}
@@ -2384,7 +2384,11 @@ class DFRN
 		// We store the data from "dfrn:diaspora_signature" in a different table, this is done in "Item::insert"
 		$dsprsig = XML::unescape(XML::getFirstNodeValue($xpath, "dfrn:diaspora_signature/text()", $entry));
 		if ($dsprsig != "") {
-			$item["dsprsig"] = $dsprsig;
+			$signature = json_decode(base64_decode($dsprsig));
+			// We don't store the old style signatures anymore that also contained the "signature" and "signer"
+			if (!empty($signature->signed_text) && empty($signature->signature) && empty($signature->signer)) {
+				$item["diaspora_signed_text"] = $signature->signed_text;
+			}
 		}
 
 		$item["verb"] = XML::getFirstNodeValue($xpath, "activity:verb/text()", $entry);
@@ -2424,7 +2428,8 @@ class DFRN
 				if (($term != "") && ($scheme != "")) {
 					$parts = explode(":", $scheme);
 					if ((count($parts) >= 4) && (array_shift($parts) == "X-DFRN")) {
-						$termurl = implode(":", $parts);
+						$termurl = array_pop($parts);
+						$termurl = array_pop($parts) . $termurl;
 						Tag::store($item['uri-id'], Tag::IMPLICIT_MENTION, $term, $termurl);
 					}
 				}
@@ -2584,7 +2589,7 @@ class DFRN
 			// Turn this into a wall post.
 			$notify = Item::isRemoteSelf($importer, $item);
 
-			$posted_id = Item::insert($item, false, $notify);
+			$posted_id = Item::insert($item, $notify);
 
 			if ($notify) {
 				$posted_id = $notify;
@@ -2629,7 +2634,7 @@ class DFRN
 		}
 
 		$condition = ['uri' => $uri, 'uid' => $importer["importer_uid"]];
-		$item = Item::selectFirst(['id', 'parent', 'contact-id', 'file', 'deleted'], $condition);
+		$item = Item::selectFirst(['id', 'parent', 'contact-id', 'file', 'deleted', 'gravity'], $condition);
 		if (!DBA::isResult($item)) {
 			Logger::log("Item with uri " . $uri . " for user " . $importer["importer_uid"] . " wasn't found.", Logger::DEBUG);
 			return;
@@ -2641,13 +2646,13 @@ class DFRN
 		}
 
 		// When it is a starting post it has to belong to the person that wants to delete it
-		if (($item['id'] == $item['parent']) && ($item['contact-id'] != $importer["id"])) {
+		if (($item['gravity'] == GRAVITY_PARENT) && ($item['contact-id'] != $importer["id"])) {
 			Logger::log("Item with uri " . $uri . " don't belong to contact " . $importer["id"] . " - ignoring deletion.", Logger::DEBUG);
 			return;
 		}
 
 		// Comments can be deleted by the thread owner or comment owner
-		if (($item['id'] != $item['parent']) && ($item['contact-id'] != $importer["id"])) {
+		if (($item['gravity'] != GRAVITY_PARENT) && ($item['contact-id'] != $importer["id"])) {
 			$condition = ['id' => $item['parent'], 'contact-id' => $importer["id"]];
 			if (!Item::exists($condition)) {
 				Logger::log("Item with uri " . $uri . " wasn't found or mustn't be deleted by contact " . $importer["id"] . " - ignoring deletion.", Logger::DEBUG);
