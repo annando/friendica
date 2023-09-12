@@ -22,6 +22,7 @@
 namespace Friendica\Module\Special;
 
 use Friendica\App\Arguments;
+use Friendica\App\Mode;
 use Friendica\App\Request;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
@@ -36,6 +37,8 @@ use Psr\Log\LoggerInterface;
  */
 class HTTPException
 {
+	/** @var Mode */
+	protected $mode;
 	/** @var L10n */
 	protected $l10n;
 	/** @var LoggerInterface */
@@ -49,8 +52,9 @@ class HTTPException
 	/** @var string */
 	protected $requestId;
 
-	public function __construct(L10n $l10n, LoggerInterface $logger, Arguments $args, UserSession $session, Request $request, array $server = [])
+	public function __construct(Mode $mode, L10n $l10n, LoggerInterface $logger, Arguments $args, UserSession $session, Request $request, array $server = [])
 	{
+		$this->mode        = $mode;
 		$this->logger      = $logger;
 		$this->l10n        = $l10n;
 		$this->args        = $args;
@@ -127,6 +131,9 @@ class HTTPException
 	public function content(\Friendica\Network\HTTPException $e): string
 	{
 		if ($e->getCode() >= 400) {
+			if ($this->mode->isBackend()) {
+				$this->rawContent($e);
+			}
 			$this->logger->debug('Exit with error',
 				[
 					'code'        => $e->getCode(),
@@ -134,6 +141,7 @@ class HTTPException
 					'query'       => $this->args->getQueryString(),
 					'callstack'   => System::callstack(20),
 					'method'      => $this->args->getMethod(),
+					'accept'      => $this->server['HTTP_ACCEPT'] ?? '',
 					'agent'       => $this->server['HTTP_USER_AGENT'] ?? ''
 				]);
 		}

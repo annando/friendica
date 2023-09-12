@@ -42,7 +42,8 @@ class Mode
 	const DAEMON = 2;
 	const WORKER = 3;
 
-	const BACKEND_CONTENT_TYPES = ['application/jrd+json', 'text/xml',
+	const BACKEND_CONTENT_TYPES = ['application/jrd+json', 'text/xml', 'application/json',
+		'application/rdf+xml', 'application/ld+json', 'application/xrd+xml',
 		'application/rss+xml', 'application/atom+xml', 'application/activity+json'];
 
 	/**
