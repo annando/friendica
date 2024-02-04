@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -28,6 +28,8 @@ use Friendica\Model\User;
 
 class Unfollow
 {
+	const WORKER_DEFER_LIMIT = 5;
+
 	/**
 	 * Issue asynchronous unfollow message to remote servers.
 	 * The local relationship has already been updated, so we can't use the user-specific contact.
@@ -51,7 +53,7 @@ class Unfollow
 
 		$result = Protocol::unfollow($contact, $owner);
 		if ($result === false) {
-			Worker::defer();
+			Worker::defer(self::WORKER_DEFER_LIMIT);
 		}
 	}
 }

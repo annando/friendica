@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -66,11 +66,11 @@ class Apps extends BaseApi
 
 			if (!empty($request['redirect_uris']) && is_array($request['redirect_uris'])) {
 				$request['redirect_uris'] = $request['redirect_uris'][0];
-			}	
+			}
 		}
 
 		if (empty($request['client_name']) || empty($request['redirect_uris'])) {
-			DI::mstdnError()->UnprocessableEntity(DI::l10n()->t('Missing parameters'));
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity($this->t('Missing parameters')));
 		}
 
 		$client_id     = bin2hex(random_bytes(32));
@@ -92,9 +92,9 @@ class Apps extends BaseApi
 		}
 
 		if (!DBA::insert('application', $fields)) {
-			DI::mstdnError()->InternalError();
+			$this->logAndJsonError(500, $this->errorFactory->InternalError());
 		}
 
-		System::jsonExit(DI::mstdnApplication()->createFromApplicationId(DBA::lastInsertId())->toArray());
+		$this->jsonExit(DI::mstdnApplication()->createFromApplicationId(DBA::lastInsertId())->toArray());
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -229,8 +229,8 @@ class Photo
 
 		return DBA::toArray(
 			DBA::p(
-				"SELECT `resource-id`, ANY_VALUE(`id`) AS `id`, ANY_VALUE(`filename`) AS `filename`, ANY_VALUE(`type`) AS `type`,
-					min(`scale`) AS `hiq`, max(`scale`) AS `loq`, ANY_VALUE(`desc`) AS `desc`, ANY_VALUE(`created`) AS `created`
+				"SELECT `resource-id`, MIN(`id`) AS `id`, MIN(`filename`) AS `filename`, MIN(`type`) AS `type`,
+					min(`scale`) AS `hiq`, max(`scale`) AS `loq`, MIN(`desc`) AS `desc`, MIN(`created`) AS `created`
 					FROM `photo` WHERE `uid` = ? AND NOT `photo-type` IN (?, ?) $sqlExtra
 					GROUP BY `resource-id` $sqlExtra2",
 				$values
@@ -589,7 +589,7 @@ class Photo
 		$photo_failure = false;
 
 		if (!Network::isValidHttpUrl($image_url)) {
-			Logger::warning('Invalid image url', ['image_url' => $image_url, 'uid' => $uid, 'cid' => $cid, 'callstack' => System::callstack(20)]);
+			Logger::warning('Invalid image url', ['image_url' => $image_url, 'uid' => $uid, 'cid' => $cid]);
 			return false;
 		}
 
@@ -597,7 +597,7 @@ class Photo
 		if (!empty($image_url)) {
 			$ret = DI::httpClient()->get($image_url, HttpClientAccept::IMAGE);
 			Logger::debug('Got picture', ['Content-Type' => $ret->getHeader('Content-Type'), 'url' => $image_url]);
-			$img_str = $ret->getBody();
+			$img_str = $ret->getBodyString();
 			$type = $ret->getContentType();
 		} else {
 			$img_str = '';
@@ -751,7 +751,7 @@ class Photo
 			if (!DI::config()->get('system', 'no_count', false)) {
 				/// @todo This query needs to be renewed. It is really slow
 				// At this time we just store the data in the cache
-				$albums = DBA::toArray(DBA::p("SELECT COUNT(DISTINCT `resource-id`) AS `total`, `album`, ANY_VALUE(`created`) AS `created`
+				$albums = DBA::toArray(DBA::p("SELECT COUNT(DISTINCT `resource-id`) AS `total`, `album`, MIN(`created`) AS `created`
 					FROM `photo`
 					WHERE `uid` = ? AND `photo-type` IN (?, ?, ?) $sql_extra
 					GROUP BY `album` ORDER BY `created` DESC",
@@ -762,9 +762,10 @@ class Photo
 				));
 			} else {
 				// This query doesn't do the count and is much faster
-				$albums = DBA::toArray(DBA::p("SELECT DISTINCT(`album`), '' AS `total`
+				$albums = DBA::toArray(DBA::p("SELECT '' AS `total`, `album`, MIN(`created`) AS `created`
 					FROM `photo` USE INDEX (`uid_album_scale_created`)
-					WHERE `uid` = ? AND `photo-type` IN (?, ?, ?) $sql_extra",
+					WHERE `uid` = ? AND `photo-type` IN (?, ?, ?) $sql_extra
+					GROUP BY `album` ORDER BY `created` DESC",
 					$uid,
 					self::DEFAULT,
 					$banner_type,
@@ -1001,7 +1002,7 @@ class Photo
 		$filesize = strlen($image->asString());
 		$width    = $image->getWidth();
 		$height   = $image->getHeight();
-	
+
 		if ($maximagesize && ($filesize > $maximagesize)) {
 			// Scale down to multiples of 640 until the maximum size isn't exceeded anymore
 			foreach ([5120, 2560, 1280, 640, 320] as $pixels) {
@@ -1014,8 +1015,8 @@ class Photo
 				}
 			}
 		}
-	
-		return $image;	
+
+		return $image;
 	}
 
 	/**
@@ -1031,7 +1032,7 @@ class Photo
 			$image->scaleDown($max_length);
 			Logger::info('File upload: Scaling picture to new size', ['max-length' => $max_length]);
 		}
-		
+
 		return self::resizeToFileSize($image, Strings::getBytesFromShorthand(DI::config()->get('system', 'maximagesize')));
 	}
 
@@ -1047,7 +1048,7 @@ class Photo
 		if (!empty($image_url)) {
 			$ret = DI::httpClient()->get($image_url, HttpClientAccept::IMAGE);
 			Logger::debug('Got picture', ['Content-Type' => $ret->getHeader('Content-Type'), 'url' => $image_url]);
-			$img_str = $ret->getBody();
+			$img_str = $ret->getBodyString();
 			$type = $ret->getContentType();
 		} else {
 			$img_str = '';
@@ -1255,16 +1256,16 @@ class Photo
 			return -1;
 		}
 
-		if ($width > 640 || $height > 640) {
-			$image->scaleDown(640);
+		if ($width > Proxy::PIXEL_MEDIUM || $height > Proxy::PIXEL_MEDIUM) {
+			$image->scaleDown(Proxy::PIXEL_MEDIUM);
 		}
 
-		if ($width > 320 || $height > 320) {
+		if ($width > Proxy::PIXEL_SMALL || $height > Proxy::PIXEL_SMALL) {
 			$result = self::store($image, $uid, 0, $resource_id, $filename, $album, 1, self::DEFAULT, $allow_cid, $allow_gid, $deny_cid, $deny_gid, $description);
 			if ($result) {
 				$preview = 1;
 			}
-			$image->scaleDown(320);
+			$image->scaleDown(Proxy::PIXEL_SMALL);
 			$result = self::store($image, $uid, 0, $resource_id, $filename, $album, 2, self::DEFAULT, $allow_cid, $allow_gid, $deny_cid, $deny_gid, $description);
 			if ($result && ($preview == 0)) {
 				$preview = 2;

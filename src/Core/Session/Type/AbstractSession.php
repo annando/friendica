@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -79,7 +79,7 @@ class AbstractSession implements IHandleSessions
 	 */
 	public function setMultiple(array $values)
 	{
-		$_SESSION = $values + $_SESSION;
+		$_SESSION = $values + ($_SESSION ?? []);
 	}
 
 	/**

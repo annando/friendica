@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -24,6 +24,7 @@ namespace Friendica\Protocol;
 use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
 use Friendica\Core\System;
+use Friendica\DI;
 use Friendica\Model\APContact;
 use Friendica\Model\Contact;
 use Friendica\Model\User;
@@ -103,19 +104,6 @@ class ActivityPub
 		}
 
 		return $isrequest;
-	}
-
-	/**
-	 * Fetches ActivityPub content from the given url
-	 *
-	 * @param string  $url content url
-	 * @param integer $uid User ID for the signature
-	 * @return array
-	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
-	 */
-	public static function fetchContent(string $url, int $uid = 0): array
-	{
-		return HTTPSignature::fetch($url, $uid);
 	}
 
 	private static function getAccountType(array $apcontact): int
@@ -216,7 +204,7 @@ class ActivityPub
 	 */
 	public static function fetchOutbox(string $url, int $uid)
 	{
-		$data = self::fetchContent($url, $uid);
+		$data = HTTPSignature::fetch($url, $uid);
 		if (empty($data)) {
 			return;
 		}
@@ -241,13 +229,21 @@ class ActivityPub
 	/**
 	 * Fetch items from AP endpoints
 	 *
-	 * @param string $url  Address of the endpoint
-	 * @param integer $uid Optional user id
+	 * @param string $url              Address of the endpoint
+	 * @param integer $uid             Optional user id
+	 * @param integer $start_timestamp Internally used parameter to stop fetching after some time
 	 * @return array Endpoint items
 	 */
-	public static function fetchItems(string $url, int $uid = 0): array
+	public static function fetchItems(string $url, int $uid = 0, int $start_timestamp = 0): array
 	{
-		$data = self::fetchContent($url, $uid);
+		$start_timestamp = $start_timestamp ?: time();
+
+		if ((time() - $start_timestamp) > 60) {
+			Logger::info('Fetch time limit reached', ['url' => $url, 'uid' => $uid]);
+			return [];
+		}
+
+		$data = HTTPSignature::fetch($url, $uid);
 		if (empty($data)) {
 			return [];
 		}
@@ -257,13 +253,13 @@ class ActivityPub
 		} elseif (!empty($data['first']['orderedItems'])) {
 			$items = $data['first']['orderedItems'];
 		} elseif (!empty($data['first']) && is_string($data['first']) && ($data['first'] != $url)) {
-			return self::fetchItems($data['first'], $uid);
+			return self::fetchItems($data['first'], $uid, $start_timestamp);
 		} else {
 			return [];
 		}
 
 		if (!empty($data['next']) && is_string($data['next'])) {
-			$items = array_merge($items, self::fetchItems($data['next'], $uid));
+			$items = array_merge($items, self::fetchItems($data['next'], $uid, $start_timestamp));
 		}
 
 		return $items;
@@ -299,7 +295,7 @@ class ActivityPub
 			return false;
 		}
 
-		if (empty($apcontact['gsid'] || empty($apcontact['baseurl']))) {
+		if (empty($apcontact['gsid']) || empty($apcontact['baseurl'])) {
 			Logger::debug('No server found', ['uid' => $uid, 'signer' => $signer, 'called_by' => $called_by]);
 			return false;
 		}
@@ -310,7 +306,18 @@ class ActivityPub
 			return false;
 		}
 
-		// @todo Look for user blocked domains
+		$limited = DI::config()->get('system', 'limited_servers');
+		if (!empty($limited)) {
+			$servers = explode(',', str_replace(' ', '', $limited));
+			$host = parse_url($apcontact['baseurl'], PHP_URL_HOST);
+			if (!empty($host) && in_array($host, $servers)) {
+				return false;
+			}
+		}
+
+		if (DI::userGServer()->isIgnoredByUser($uid, $apcontact['gsid'])) {
+			return false;
+		}
 
 		Logger::debug('Server is an accepted requester', ['uid' => $uid, 'id' => $apcontact['gsid'], 'url' => $apcontact['baseurl'], 'signer' => $signer, 'called_by' => $called_by]);
 

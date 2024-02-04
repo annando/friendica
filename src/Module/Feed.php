@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -71,6 +71,6 @@ class Feed extends BaseModule
 
 		$feed = ProtocolFeed::atom($owner, $last_update, 10, $type);
 
-		System::httpExit($feed, Response::TYPE_ATOM);
+		$this->httpExit($feed, Response::TYPE_ATOM);
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -33,7 +33,7 @@ class Notification extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$Notifies = DI::notify()->selectAllForUser($uid, 50);
@@ -56,6 +56,6 @@ class Notification extends BaseApi
 			$result = false;
 		}
 
-		$this->response->exit('notes', ['note' => $result], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('notes', ['note' => $result], $this->parameters['extension'] ?? null);
 	}
 }

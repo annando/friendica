@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -49,6 +49,6 @@ class Followers extends BaseModule
 
 		$followers = ActivityPub\Transmitter::getContacts($owner, [Contact::FOLLOWER, Contact::FRIEND], 'followers', $page, (string)HTTPSignature::getSigner('', $_SERVER));
 
-		System::jsonExit($followers, 'application/activity+json');
+		$this->jsonExit($followers, 'application/activity+json');
 	}
 }

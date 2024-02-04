@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -132,10 +132,10 @@ class Circle extends BaseModule
 			}
 
 			DI::sysmsg()->addInfo($message);
-			System::jsonExit(['status' => 'OK', 'message' => $message]);
+			$this->jsonExit(['status' => 'OK', 'message' => $message]);
 		} catch (\Exception $e) {
 			DI::sysmsg()->addNotice($e->getMessage());
-			System::jsonError($e->getCode(), ['status' => 'error', 'message' => $e->getMessage()]);
+			$this->jsonError($e->getCode(), ['status' => 'error', 'message' => $e->getMessage()]);
 		}
 	}
 

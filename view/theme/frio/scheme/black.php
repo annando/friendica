@@ -19,4 +19,5 @@ $background_color = '#000000';
 $contentbg_transp = '0';
 $font_color = '#cccccc';
 $font_color_darker = '#acacac';
+$font_color_lighter = '#444444';
 $background_image = '';

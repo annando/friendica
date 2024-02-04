@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -76,7 +76,9 @@ class Cron
 		Worker::add(Worker::PRIORITY_LOW, 'UpdateGServers');
 
 		// run the process to update server directories in the background
-		Worker::add(Worker::PRIORITY_LOW, 'UpdateServerDirectories');
+		if (DI::config()->get('system', 'poco_discovery')) {
+			Worker::add(Worker::PRIORITY_LOW, 'UpdateServerDirectories');
+		}
 
 		// Expire and remove user entries
 		Worker::add(Worker::PRIORITY_MEDIUM, 'ExpireAndRemoveUsers');
@@ -120,6 +122,8 @@ class Cron
 			Worker::add(Worker::PRIORITY_LOW, 'ExpirePosts');
 
 			Worker::add(Worker::PRIORITY_LOW, 'ExpireActivities');
+
+			Worker::add(Worker::PRIORITY_LOW, 'ExpireSearchIndex');
 
 			Worker::add(Worker::PRIORITY_LOW, 'RemoveUnusedTags');
 

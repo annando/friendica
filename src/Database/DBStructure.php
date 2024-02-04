@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -284,7 +284,7 @@ class DBStructure
 					echo $sql;
 				}
 				if ($action) {
-					$r = DBA::e(str_replace('\\', '\\\\', $sql));
+					$r = DBA::e($sql);
 					if (!DBA::isResult($r)) {
 						$errors .= self::printUpdateError($name);
 					}
@@ -493,7 +493,7 @@ class DBStructure
 						DI::config()->set('system', 'maintenance_reason', DI::l10n()->t('%s: updating %s table.', DateTimeFormat::utcNow() . ' ' . date('e'), $name));
 					}
 
-					$r = DBA::e(str_replace('\\', '\\\\', $sql3));
+					$r = DBA::e($sql3);
 					if (!DBA::isResult($r)) {
 						$errors .= self::printUpdateError($sql3);
 					}

@@ -213,6 +213,7 @@ details summary {
 	text-shadow: none;
 	border-radius: 3px;
 	margin-bottom: 0;
+	margin-top: 2px;
 	font-size: 14px;
 	font-weight: 600;
 	padding: 8px 16px;
@@ -1303,7 +1304,7 @@ aside #follow-sidebar .form-group-search .form-button-search {
 	padding: 2px 8px;
 }
 
-div#sidebar-circle-header h3, 
+div#sidebar-circle-header h3,
 div#sidebar-group-header h3 {
 	float: left;
 }
@@ -1412,6 +1413,9 @@ section #jotOpen {
 		max-height: calc(100vh - 62px);
 	}
 }
+#jot-modal #jot-modal-body {
+	overflow: auto;
+}
 #jot-modal #jot-sections,
 #jot-modal #jot-modal-body,
 #jot-modal #profile-jot-form,
@@ -1422,7 +1426,6 @@ section #jotOpen {
 #jot-modal #item-Q0,
 #jot-modal #profile-jot-acl-wrapper,
 #jot-modal #acl-wrapper {
-	overflow: hidden;
 	display: flex;
 	flex: auto;
 	flex-direction: column;
@@ -1603,6 +1606,9 @@ textarea.comment-edit-text:focus + .comment-edit-form .preview {
 	box-shadow: 2px 2px 5px 0px rgba(0, 0, 0, 0.2);
 }
 .fbrowser.photo .photo-album-image-wrapper .caption {
+	pointer-events: none;
+}
+.fbrowser.photo .photo-album-image-wrapper .jg-caption {
 	pointer-events: none;
 }
 .fbrowser .profile-rotator-wrapper {
@@ -1984,6 +1990,12 @@ code > .hl-main {
 .wall-item-actions button {
 	color: $font_color_darker;
 	background-color: transparent;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+.wall-item-actions button:disabled,
+button[disabled] {
+  	color: $font_color_lighter;
 }
 .wall-item-actions .active {
 	font-weight: bold;
@@ -2210,13 +2222,19 @@ img.acpopup-img {
 .wall-item-container.thread_level_4,
 .wall-item-container.thread_level_5,
 .wall-item-container.thread_level_6,
-.wall-item-container.thread_level_7 {
+.wall-item-container.thread_level_7,
+.wall-item-container.thread_level_8,
+.wall-item-container.thread_level_9 {
 	margin-left: 15px;
 }
 
-/* Birthday */
+/* Birthday and Event Reminders  */
 #birthday-notice,
-#birthday-wrapper {
+#birthday-wrapper,
+#rfic-desc,
+#remote-friends-in-common,
+#event-notice,
+#event-wrapper {
 	margin-bottom: 5px;
 	padding: 10px;
 	border: none;
@@ -2225,6 +2243,20 @@ img.acpopup-img {
 	-webkit-box-shadow: 0 0 3px #dadada;
 	-moz-box-shadow: 0 0 3px #dadada;
 	border-radius: 4px;
+	cursor: pointer;
+}
+#remote-friends-in-common {
+	background-color: rgba(247, 247, 247, $contentbg_transp)
+	border-radius: 4px;
+	color: #444;
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	grid-gap: 10px;
+	margin-bottom: 15px;
+	padding: 10px;
+}
+#remote-friends-in-common-wrapper{
+	display: none;
 }
 
 /* Menubar Tabs */
@@ -2639,7 +2671,7 @@ ul li:hover .contact-wrapper .contact-action-link:hover {
 }
 #circle-update-wrapper .viewcontact_wrapper .contact-circle-link {
 	opacity: 0.8;
-	font-size: 20px;
+	font-size: 15px;
 }
 #circle-update-wrapper .viewcontact_wrapper .contact-action-link:hover {
 	opacity: 1;
@@ -2753,6 +2785,11 @@ ul li:hover .contact-wrapper .contact-action-link:hover {
 .photo-album-actions .photos-order-link {
 	float: right;
 }
+
+#photo-edit-submit-button {
+	margin-top: 15px;
+}
+
 /* Events page */
 
 .fc .fc-month-view .fc-content .fc-title .item-desc:hover {
@@ -3069,7 +3106,7 @@ details.profile-jot-net[open] summary:before {
 	content: "\f0da"; /* Right Plain Pointer */
 }
 .widget > .fakelink > h3:before,
-#sidebar-circle-header > .fakelink > h3:before, 
+#sidebar-circle-header > .fakelink > h3:before,
 #sidebar-group-header > .fakelink > h3:before {
 	font-family: ForkAwesome;
 	content: "\f0d7"; /* Bottom Plain Pointer */
@@ -3468,8 +3505,30 @@ body .tread-wrapper .hovercard:hover .hover-card-content a {
  * some temporary workarounds until this will solved
  * elsewhere (e.g. new templates)
  */
+
 section .profile-match-wrapper {
 	float: left;
+}
+
+.profile-match-photo {
+	align-items: center;
+	display: flex;
+	justify-content: center;
+}
+
+.profile-match-name {
+	align-items: center;
+	display: flex;
+	justify-content: center;
+	text-align: center;
+}
+
+.profile-match-break {
+	display: none;
+}
+
+.profile-match-end {
+	display: none;
 }
 
 /**
@@ -3774,10 +3833,6 @@ section .profile-match-wrapper {
 		margin-bottom: 5px;
 	}
 
-	.panel .panel-body {
-		padding: 10px;
-	}
-
 	.toplevel_item > .wall-item-container {
 		padding: 0;
 	}
@@ -3894,7 +3949,9 @@ section .profile-match-wrapper {
 	.wall-item-container.thread_level_4,
 	.wall-item-container.thread_level_5,
 	.wall-item-container.thread_level_6,
-	.wall-item-container.thread_level_7 {
+	.wall-item-container.thread_level_7,
+	.wall-item-container.thread_level_8,
+	.wall-item-container.thread_level_9 {
 		margin-left: 5px;
 	}
 }

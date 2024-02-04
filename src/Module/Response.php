@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -89,7 +89,7 @@ class Response implements ICanCreateResponses
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setType(string $type, ?string $content_type = null): void
+	public function setType(string $type = Response::TYPE_HTML, ?string $content_type = null): void
 	{
 		if (!in_array($type, static::ALLOWED_TYPES)) {
 			throw new InternalServerErrorException('wrong type');

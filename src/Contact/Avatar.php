@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -80,7 +80,7 @@ class Avatar
 			return $fields;
 		}
 
-		$img_str = $fetchResult->getBody();
+		$img_str = $fetchResult->getBodyString();
 		if (empty($img_str)) {
 			Logger::debug('Avatar is invalid', ['avatar' => $avatar]);
 			return $fields;

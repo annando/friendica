@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -32,13 +32,13 @@ class VerifyCredentials extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$application = self::getCurrentApplication();
 
 		if (empty($application['id'])) {
-			DI::mstdnError()->Unauthorized();
+			$this->logAndJsonError(401, $this->errorFactory->Unauthorized());
 		}
 
-		System::jsonExit(DI::mstdnApplication()->createFromApplicationId($application['id']));
+		$this->jsonExit(DI::mstdnApplication()->createFromApplicationId($application['id']));
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -33,11 +33,11 @@ class Follow extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_FOLLOW);
+		$this->checkAllowedScope(self::SCOPE_FOLLOW);
 		$uid = self::getCurrentUserID();
 
 		if (empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		$request = $this->getRequest([
@@ -54,6 +54,6 @@ class Follow extends BaseApi
 
 		Contact::update(['notify_new_posts' => $request['notify']], ['id' => $result['cid']]);
 
-		System::jsonExit(DI::mstdnRelationship()->createFromContactId($result['cid'], $uid)->toArray());
+		$this->jsonExit(DI::mstdnRelationship()->createFromContactId($result['cid'], $uid)->toArray());
 	}
 }

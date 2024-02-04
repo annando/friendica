@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -39,7 +39,7 @@ class Community extends CommunityModule
 		$this->parseRequest($request);
 
 		$o = '';
-		if (!empty($request['force'])) {
+		if ($this->update || $this->force) {
 			$o = DI::conversation()->render($this->getCommunityItems(), Conversation::MODE_COMMUNITY, true, false, 'commented', DI::userSession()->getLocalUserId());
 		}
 

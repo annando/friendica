@@ -1,15 +1,13 @@
 matrix:
   include:
-    - PHP_MAJOR_VERSION: 7.3
-      PHP_VERSION: 7.3.33
     - PHP_MAJOR_VERSION: 7.4
       PHP_VERSION: 7.4.33
     - PHP_MAJOR_VERSION: 8.0
-      PHP_VERSION: 8.0.29
+      PHP_VERSION: 8.0.30
     - PHP_MAJOR_VERSION: 8.1
-      PHP_VERSION: 8.1.21
+      PHP_VERSION: 8.1.23
     - PHP_MAJOR_VERSION: 8.2
-      PHP_VERSION: 8.2.8
+      PHP_VERSION: 8.2.11
 
 # This forces PHP Unit executions at the "opensocial" labeled location (because of much more power...)
 labels:
@@ -69,9 +67,9 @@ steps:
       - if [ "${PHP_MAJOR_VERSION}" = "7.4" -a "${CI_REPO}" = "friendica/friendica" ]; then
           phpenmod xdebug;
           export XDEBUG_MODE=coverage;
-          phpunit --configuration tests/phpunit.xml --coverage-clover clover.xml;
+          phpunit --configuration tests/phpunit.xml -d memory_limit=-1 --coverage-clover clover.xml;
         else
-          phpunit --configuration tests/phpunit.xml;
+          phpunit --configuration tests/phpunit.xml -d memory_limit=-1;
         fi
   codecov:
     image: friendicaci/codecov

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -70,7 +70,7 @@ interface ICanCreateResponses
 	 *
 	 * @throws InternalServerErrorException
 	 */
-	public function setType(string $type, ?string $content_type = null): void;
+	public function setType(string $type = ICanCreateResponses::TYPE_HTML, ?string $content_type = null): void;
 
 	/**
 	 * Sets the status and the reason for the response

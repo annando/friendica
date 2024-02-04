@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -32,19 +32,21 @@ class Emoji extends BaseFactory
 	}
 
 	/**
+	 * Creates an emoji collection from shortcode => image mappings.
+	 *
 	 * @param array $smilies
 	 *
 	 * @return Emojis
 	 */
-	public function createCollectionFromSmilies(array $smilies): Emojis
+	public function createCollectionFromArray(array $smilies): Emojis
 	{
 		$prototype = null;
 
 		$emojis = [];
 
-		foreach ($smilies['texts'] as $key => $shortcode) {
-			if (preg_match('/src="(.+?)"/', $smilies['icons'][$key], $matches)) {
-				$url = $matches[1];
+		foreach ($smilies as $shortcode => $url) {
+			if ($shortcode !== '' && $url !== '') {
+				$shortcode = trim($shortcode, ':');
 
 				if ($prototype === null) {
 					$prototype = $this->create($shortcode, $url);
@@ -52,9 +54,27 @@ class Emoji extends BaseFactory
 				} else {
 					$emojis[] = \Friendica\Object\Api\Mastodon\Emoji::createFromPrototype($prototype, $shortcode, $url);
 				}
-			};
+			}
 		}
 
 		return new Emojis($emojis);
+	}
+
+	/**
+	 * @param array $smilies as is returned by Smilies::getList()
+	 *
+	 * @return Emojis
+	 */
+	public function createCollectionFromSmilies(array $smilies): Emojis
+	{
+		$emojis = [];
+		$icons = $smilies['icons'];
+		foreach ($smilies['texts'] as $i => $name) {
+			$url = $icons[$i];
+			if (preg_match('/src="(.+?)"/', $url, $matches)) {
+				$emojis[$name] = $matches[1];
+			}
+		}
+		return self::createCollectionFromArray($emojis);
 	}
 }

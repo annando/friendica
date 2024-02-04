@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -134,6 +134,6 @@ class Notify extends BaseEntity
 	 */
 	public static function formatMessage(string $name, string $message): string
 	{
-		return str_replace('{0}', '<span class="contactname">' . BBCode::toPlaintext($name, false) . '</span>', htmlspecialchars($message));
+		return str_replace('{0}', '<span class="contactname">' . htmlspecialchars(BBCode::toPlaintext($name, false)) . '</span>', htmlspecialchars($message));
 	}
 }

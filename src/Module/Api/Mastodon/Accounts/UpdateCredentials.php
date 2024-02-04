@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -36,7 +36,7 @@ class UpdateCredentials extends BaseApi
 {
 	protected function patch(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		$owner = User::getOwnerDataById($uid);
@@ -105,6 +105,6 @@ class UpdateCredentials extends BaseApi
 		}
 
 		$account = DI::mstdnAccount()->createFromContactId($cdata['user'], $uid);
-		$this->response->exitWithJson($account->toArray());
+		$this->response->addJsonContent($account->toArray());
 	}
 }

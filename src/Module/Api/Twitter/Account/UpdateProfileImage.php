@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -35,7 +35,7 @@ class UpdateProfileImage extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_WRITE);
+		$this->checkAllowedScope(BaseApi::SCOPE_WRITE);
 		$uid = BaseApi::getCurrentUserID();
 
 		// get mediadata from image or media (Twitter call api/account/update_profile_image provides image)
@@ -67,6 +67,6 @@ class UpdateProfileImage extends BaseApi
 		// "uid" is only needed for some internal stuff, so remove it from here
 		unset($user_info['uid']);
 
-		$this->response->exit('user', ['user' => $user_info], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('user', ['user' => $user_info], $this->parameters['extension'] ?? null);
 	}
 }

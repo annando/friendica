@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -34,6 +34,10 @@ class Registrations extends BaseDataTransferObject
 	protected $enabled;
 	/** @var bool */
 	protected $approval_required;
+	/** @var string|null */
+	protected $message;
+	/** @var string|null */
+	protected $url;
 
 	/**
 	 * @param bool $enabled

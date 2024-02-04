@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -46,6 +46,6 @@ class Featured extends BaseModule
 
 		$featured = ActivityPub\Transmitter::getFeatured($owner, $page);
 
-		System::jsonExit($featured, 'application/activity+json');
+		$this->jsonExit($featured, 'application/activity+json');
 	}
 }

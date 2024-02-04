@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -35,7 +35,7 @@ class Update extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_WRITE);
+		$this->checkAllowedScope(BaseApi::SCOPE_WRITE);
 		$uid = BaseApi::getCurrentUserID();
 
 		// params
@@ -84,6 +84,6 @@ class Update extends BaseApi
 		// return success message incl. missing users in array
 		$status  = ($erroraddinguser ? 'missing user' : 'ok');
 		$success = ['success' => true, 'gid' => $gid, 'name' => $name, 'status' => $status, 'wrong users' => $errorusers];
-		$this->response->exit('group_update', ['$result' => $success], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('group_update', ['$result' => $success], $this->parameters['extension'] ?? null);
 	}
 }

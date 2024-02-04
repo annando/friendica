@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -41,7 +41,7 @@ class ThemeDetails extends BaseModule
 			$version     = $info['version']     ?? '';
 			$credits     = $info['credits']     ?? '';
 
-			System::jsonExit([
+			$this->jsonExit([
 				'img'     => Theme::getScreenshot($theme),
 				'desc'    => $description,
 				'version' => $version,

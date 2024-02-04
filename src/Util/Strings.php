@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -23,7 +23,6 @@ namespace Friendica\Util;
 
 use Friendica\Content\ContactSelector;
 use Friendica\Core\Logger;
-use Friendica\Core\System;
 use ParagonIE\ConstantTime\Base64;
 
 /**
@@ -511,7 +510,7 @@ class Strings
 		);
 
 		if (is_null($return)) {
-			Logger::notice('Received null value from preg_replace_callback', ['text' => $text, 'regex' => $regex, 'blocks' => $blocks, 'executionId' => $executionId, 'callstack' => System::callstack(10)]);
+			Logger::notice('Received null value from preg_replace_callback', ['text' => $text, 'regex' => $regex, 'blocks' => $blocks, 'executionId' => $executionId]);
 		}
 
 		$text = $callback($return ?? $text) ?? '';
@@ -578,5 +577,37 @@ class Strings
 		}
 
 		return $styled_url;
+	}
+
+	/**
+	 * Sort a comma separated list of hashtags, convert them to lowercase and remove duplicates
+	 *
+	 * @param string $tag_list
+	 * @return string
+	 */
+	public static function cleanTags(string $tag_list): string
+	{
+		$tags = [];
+
+		$tagitems = explode(',', str_replace([' ', ';', '#'], ',', mb_strtolower($tag_list)));
+		foreach ($tagitems as $tag) {
+			if (!empty($tag)) {
+				$tags[] = preg_replace('#\s#u', '', $tag);
+			}
+		}
+		$tags = array_unique($tags);
+		asort($tags);
+		return implode(',', $tags);
+	}
+
+	/**
+	 * Get a tag array out of a comma separated list of tags
+	 *
+	 * @param string $tag_list
+	 * @return array
+	 */
+	public static function getTagArrayByString(string $tag_list): array
+	{
+		return explode(',', self::cleanTags($tag_list));
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -47,12 +47,12 @@ class Statuses extends BaseApi
 		$uid = self::getCurrentUserID();
 
 		if (empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		$id = $this->parameters['id'];
 		if (!DBA::exists('contact', ['id' => $id, 'uid' => 0])) {
-			DI::mstdnError()->RecordNotFound();
+			$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 		}
 
 		$request = $this->getRequest([
@@ -74,8 +74,10 @@ class Statuses extends BaseApi
 		} elseif ($request['only_media']) {
 			$condition = ['author-id' => $id, 'private' => [Item::PUBLIC, Item::UNLISTED], 'type' => [Post\Media::AUDIO, Post\Media::IMAGE, Post\Media::VIDEO]];
 		} elseif (!$uid) {
-			$condition = ['author-id' => $id, 'private' => [Item::PUBLIC, Item::UNLISTED],
-				'uid' => 0, 'network' => Protocol::FEDERATED];
+			$condition = [
+				'author-id' => $id, 'private' => [Item::PUBLIC, Item::UNLISTED],
+				'uid' => 0, 'network' => Protocol::FEDERATED
+			];
 		} else {
 			$condition = ["`author-id` = ? AND (`uid` = 0 OR (`uid` = ? AND NOT `global`))", $id, $uid];
 		}
@@ -85,11 +87,15 @@ class Statuses extends BaseApi
 
 		if (!$request['pinned'] && !$request['only_media']) {
 			if ($request['exclude_replies']) {
-				$condition = DBA::mergeConditions($condition, ["(`gravity` = ? OR (`gravity` = ? AND `vid` = ? AND `protocol` != ?))",
-					Item::GRAVITY_PARENT, Item::GRAVITY_ACTIVITY, Verb::getID(Activity::ANNOUNCE), Conversation::PARCEL_DIASPORA]);
+				$condition = DBA::mergeConditions($condition, [
+					"(`gravity` = ? OR (`gravity` = ? AND `vid` = ? AND `protocol` != ?))",
+					Item::GRAVITY_PARENT, Item::GRAVITY_ACTIVITY, Verb::getID(Activity::ANNOUNCE), Conversation::PARCEL_DIASPORA
+				]);
 			} else {
-				$condition = DBA::mergeConditions($condition, ["(`gravity` IN (?, ?) OR (`gravity` = ? AND `vid` = ? AND `protocol` != ?))",
-					Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT, Item::GRAVITY_ACTIVITY, Verb::getID(Activity::ANNOUNCE), Conversation::PARCEL_DIASPORA]);
+				$condition = DBA::mergeConditions($condition, [
+					"(`gravity` IN (?, ?) OR (`gravity` = ? AND `vid` = ? AND `protocol` != ?))",
+					Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT, Item::GRAVITY_ACTIVITY, Verb::getID(Activity::ANNOUNCE), Conversation::PARCEL_DIASPORA
+				]);
 			}
 		} elseif ($request['exclude_replies']) {
 			$condition = DBA::mergeConditions($condition, ['gravity' => Item::GRAVITY_PARENT]);
@@ -100,7 +106,7 @@ class Statuses extends BaseApi
 		} elseif ($request['only_media']) {
 			$items = DBA::select('media-view', ['uri-id'], $condition, $params);
 		} else {
-			$items = Post::selectForUser($uid, ['uri-id'], $condition, $params);
+			$items = Post::selectTimelineForUser($uid, ['uri-id'], $condition, $params);
 		}
 
 		$display_quotes = self::appSupportsQuotes();
@@ -122,6 +128,6 @@ class Statuses extends BaseApi
 		}
 
 		self::setLinkHeader($request['friendica_order'] != TimelineOrderByTypes::ID);
-		System::jsonExit($statuses);
+		$this->jsonExit($statuses);
 	}
 }

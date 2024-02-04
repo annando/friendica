@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -209,6 +209,7 @@ $options = [
 	'$login_bg_image'              => $login_bg_image,
 	'$login_bg_color'              => $login_bg_color,
 	'$font_color_darker'           => $font_color_darker ?? '#222',
+	'$font_color_lighter'          => $font_color_lighter ?? '#aaa',
 	'$font_color'                  => $font_color ?? '#444',
 ];
 

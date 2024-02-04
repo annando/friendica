@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -80,6 +80,7 @@ class Receiver
 	const COMPLETION_RELAY    = 2;
 	const COMPLETION_MANUAL   = 3;
 	const COMPLETION_AUTO     = 4;
+	const COMPLETION_ASYNC    = 5;
 
 	/**
 	 * Checks incoming message from the inbox
@@ -107,7 +108,7 @@ class Receiver
 		if (empty($apcontact)) {
 			Logger::notice('Unable to retrieve AP contact for actor - message is discarded', ['actor' => $actor]);
 			return;
-		} elseif (APContact::isRelay($apcontact)) {
+		} elseif (APContact::isRelay($apcontact) && self::isRelayPost($ldactivity)) {
 			self::processRelayPost($ldactivity, $actor);
 			return;
 		} else {
@@ -115,7 +116,7 @@ class Receiver
 		}
 
 		$sig_contact = HTTPSignature::getKeyIdContact($header);
-		if (APContact::isRelay($sig_contact)) {
+		if (APContact::isRelay($sig_contact) && self::isRelayPost($ldactivity)) {
 			Logger::info('Message from a relay', ['url' => $sig_contact['url']]);
 			self::processRelayPost($ldactivity, $sig_contact['url']);
 			return;
@@ -169,6 +170,34 @@ class Receiver
 	}
 
 	/**
+	 * Check if the activity is a post rhat can be send via a relay
+	 *
+	 * @param array $activity
+	 * @return boolean
+	 */
+	private static function isRelayPost(array $activity): bool
+	{
+		$type = JsonLD::fetchElement($activity, '@type');
+		if (!$type) {
+			return false;
+		}
+
+		$object_type = JsonLD::fetchElement($activity, 'as:object', '@type') ?? '';
+
+		$object_id = JsonLD::fetchElement($activity, 'as:object', '@id');
+		if (empty($object_id)) {
+			return false;
+		}
+
+		$handle = ($type == 'as:Announce');
+
+		if (!$handle && in_array($type, ['as:Create', 'as:Update'])) {
+			$handle = in_array($object_type, self::CONTENT_TYPES);
+		}
+		return $handle;
+	}
+
+	/**
 	 * Process incoming posts from relays
 	 *
 	 * @param array  $activity
@@ -191,34 +220,6 @@ class Receiver
 			return;
 		}
 
-		$handle = ($type == 'as:Announce');
-
-		if (!$handle && in_array($type, ['as:Create', 'as:Update'])) {
-			$handle = in_array($object_type, self::CONTENT_TYPES);
-		}
-
-		if (!$handle) {
-			$trust_source = false;
-			$object_data = self::prepareObjectData($activity, 0, false, $trust_source);
-
-			if (!$trust_source) {
-				Logger::notice('Activity trust could not be achieved.',  ['type' => $type, 'object_type' => $object_type, 'object_id' => $object_id, 'actor' => $actor, 'activity' => $activity]);
-				return;
-			}
-
-			if (empty($object_data)) {
-				Logger::notice('No object data found', ['type' => $type, 'object_type' => $object_type, 'object_id' => $object_id, 'actor' => $actor, 'activity' => $activity]);
-				return;
-			}
-
-			if (self::routeActivities($object_data, $type, true)) {
-				Logger::debug('Handled activity', ['type' => $type, 'object_type' => $object_type, 'object_id' => $object_id, 'actor' => $actor]);
-			} else {
-				Logger::info('Unhandled activity', ['type' => $type, 'object_type' => $object_type, 'object_id' => $object_id, 'actor' => $actor, 'activity' => $activity]);
-			}
-			return;
-		}
-
 		$contact = Contact::getByURL($actor);
 		if (empty($contact)) {
 			Logger::info('Relay contact not found', ['actor' => $actor]);
@@ -230,7 +231,7 @@ class Receiver
 			return;
 		}
 
-		Logger::debug('Got relayed message id', ['id' => $object_id, 'actor' => $actor]);
+		Logger::debug('Process post from relay server', ['type' => $type, 'object_type' => $object_type, 'object_id' => $object_id, 'actor' => $actor]);
 
 		$item_id = Item::searchByLink($object_id);
 		if ($item_id) {
@@ -238,10 +239,21 @@ class Receiver
 			return;
 		}
 
-		$id = Processor::fetchMissingActivity($object_id, [], $actor, self::COMPLETION_RELAY);
-		if (empty($id)) {
-			Logger::notice('Relayed message had not been fetched', ['id' => $object_id, 'actor' => $actor]);
-			return;
+		if (!DI::config()->get('system', 'decoupled_receiver')) {
+			$id = Processor::fetchMissingActivity($object_id, [], $actor, self::COMPLETION_RELAY);
+			if (!empty($id)) {
+				Logger::notice('Relayed message is fetched', ['result' => $id, 'id' => $object_id, 'actor' => $actor]);
+			} else {
+				Logger::notice('Relayed message had not been fetched', ['id' => $object_id, 'actor' => $actor, 'activity' => $activity]);
+			}
+		} elseif (!Fetch::hasWorker($object_id)) {
+			Logger::notice('Fetching is done by worker.', ['id' => $object_id]);
+			Fetch::add($object_id);
+			$activity['recursion-depth'] = 0;
+			$wid = Worker::add(Worker::PRIORITY_HIGH, 'FetchMissingActivity', $object_id, [], $actor, self::COMPLETION_RELAY);
+			Fetch::setWorkerId($object_id, $wid);
+		} else {
+			Logger::debug('Activity will already be fetched via a worker.', ['url' => $object_id]);
 		}
 	}
 
@@ -424,11 +436,11 @@ class Receiver
 
 			$object_data['object_id'] = $object_id;
 
-			// Test if it is an answer to a mail
-			if (DBA::exists('mail', ['uri' => $object_data['reply-to-id']])) {
+			// Test if it is a direct message
+			if (self::checkForDirectMessage($object_data, $activity)) {
 				$object_data['directmessage'] = true;
-			} else {
-				$object_data['directmessage'] = JsonLD::fetchElement($activity, 'litepub:directMessage');
+			} elseif (!empty(JsonLD::fetchElement($activity['as:object'], 'misskey:_misskey_talk'))) {
+				$object_data = self::setChatData($object_data, $receivers);
 			}
 		} elseif (in_array($type, array_merge(self::ACTIVITY_TYPES, ['as:Announce', 'as:Follow'])) && in_array($object_type, self::CONTENT_TYPES)) {
 			// Create a mostly empty array out of the activity data (instead of the object).
@@ -486,24 +498,82 @@ class Receiver
 		$object_data['receiver'] = array_replace($object_data['receiver'] ?? [], $receivers);
 		$object_data['reception_type'] = array_replace($object_data['reception_type'] ?? [], $reception_types);
 
-//		This check here interferes with Hubzilla posts where the author host differs from the host the post was created
-//		$author = $object_data['author'] ?? $actor;
-//		if (!empty($author) && !empty($object_data['id'])) {
-//			$author_host = parse_url($author, PHP_URL_HOST);
-//			$id_host = parse_url($object_data['id'], PHP_URL_HOST);
-//			if ($author_host == $id_host) {
-//				Logger::info('Valid hosts', ['type' => $type, 'host' => $id_host]);
-//			} else {
-//				Logger::notice('Differing hosts on author and id', ['type' => $type, 'author' => $author_host, 'id' => $id_host]);
-//				$trust_source = false;
-//			}
-//		}
-
 		$account = Contact::selectFirstAccount(['platform'], ['nurl' => Strings::normaliseLink($actor)]);
 		$platform = $account['platform'] ?? '';
 
 		Logger::info('Processing', ['type' => $object_data['type'], 'object_type' => $object_data['object_type'], 'id' => $object_data['id'], 'actor' => $actor, 'platform' => $platform]);
 
+		return $object_data;
+	}
+
+	/**
+	 * Check if the received message is a direct message
+	 *
+	 * @param array $object_data
+	 * @param array $activity
+	 * @return boolean
+	 */
+	private static function checkForDirectMessage(array $object_data, array $activity): bool
+	{
+		if (DBA::exists('mail', ['uri' => $object_data['reply-to-id']])) {
+			return true;
+		}
+
+		if ($object_data['id'] != $object_data['reply-to-id']) {
+			return false;
+		}
+
+		if (JsonLD::fetchElement($activity, 'litepub:directMessage')) {
+			return true;
+		}
+
+		if (!empty($object_data['attachments'])) {
+			return false;
+		}
+
+		if (!empty($object_data['receiver_urls']['as:cc']) || empty($object_data['receiver_urls']['as:to'])) {
+			return false;
+		}
+
+		if ((count($object_data['receiver_urls']['as:to']) != 1) || !User::getIdForURL($object_data['receiver_urls']['as:to'][0])) {
+			return false;
+		}
+
+		$mentions = 0;
+		foreach ($object_data['tags'] as $mention) {
+			if ($mention['type'] != 'Mention') {
+				continue;
+			}
+			if (!User::getIdForURL($mention['href'])) {
+				return false;
+			}
+			++$mentions;
+		}
+
+		if ($mentions > 1) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private static function setChatData(array $object_data, array $receivers): array
+	{
+		if (count($receivers) != 1) {
+			return $object_data;
+		}
+
+		$user = User::getById(array_key_first($receivers), ['language']);
+		$l10n = DI::l10n()->withLang($user['language']);
+		$object_data['name'] = $l10n->t('Chat');
+
+		$mail = DBA::selectFirst('mail', ['uri'], ['uid' => array_key_first($receivers), 'title' => $object_data['name']], ['order' => ['id' => true]]);
+		if (!empty($mail['uri'])) {
+			$object_data['reply-to-id'] = $mail['uri'];
+		}
+
+		$object_data['directmessage'] = true;
+		Logger::debug('Got Misskey Chat');
 		return $object_data;
 	}
 
@@ -601,7 +671,7 @@ class Receiver
 		// $trust_source is called by reference and is set to true if the content was retrieved successfully
 		$object_data = self::prepareObjectData($activity, $uid, $push, $trust_source, $original_actor);
 		if (empty($object_data)) {
-			Logger::info('No object data found', ['activity' => $activity, 'callstack' => System::callstack(20)]);
+			Logger::info('No object data found', ['activity' => $activity]);
 			return true;
 		}
 
@@ -646,7 +716,7 @@ class Receiver
 			self::addArrivedId($object_data['object_id']);
 		}
 
-		$decouple = DI::config()->get('system', 'decoupled_receiver') && !in_array($completion, [self::COMPLETION_MANUAL, self::COMPLETION_ANNOUNCE]);
+		$decouple = DI::config()->get('system', 'decoupled_receiver') && !in_array($completion, [self::COMPLETION_MANUAL, self::COMPLETION_ANNOUNCE]) && empty($object_data['directmessage']);
 
 		if ($decouple && ($trust_source || DI::config()->get('debug', 'ap_inbox_store_untrusted'))) {
 			$object_data = Queue::add($object_data, $type, $uid, $http_signer, $push, $trust_source);
@@ -657,7 +727,7 @@ class Receiver
 			return true;
 		}
 
-		if (!empty($object_data['entry-id']) && $decouple && ($push || ($completion == self::COMPLETION_RELAY))) {
+		if (!empty($object_data['entry-id']) && $decouple && ($push || in_array($completion, [self::COMPLETION_RELAY, self::COMPLETION_ASYNC]))) {
 			if (Queue::isProcessable($object_data['entry-id'])) {
 				// We delay by 5 seconds to allow to accumulate all receivers
 				$delayed = date(DateTimeFormat::MYSQL, time() + 5);
@@ -977,7 +1047,7 @@ class Receiver
 	 * @param boolean $unknown      "true" if the activity is unknown, "false" if it is unhandled
 	 * @param string  $type         Activity type
 	 * @param array   $object_data  Preprocessed array that is generated out of the received activity
- 	 * @param array   $activity     Array with activity data
+	 * @param array   $activity     Array with activity data
 	 * @param string  $body         The unprocessed body
 	 * @param integer $uid          User ID
 	 * @param boolean $trust_source Do we trust the source?
@@ -1014,7 +1084,7 @@ class Receiver
 	 *
 	 * @return int   user id
 	 */
-	public static function getBestUserForActivity(array $activity, string $actor = ''): int
+	private static function getBestUserForActivity(array $activity, string $actor): int
 	{
 		$uid = 0;
 		$actor = $actor ?: JsonLD::fetchElement($activity, 'as:actor', '@id') ?? '';
@@ -1053,7 +1123,7 @@ class Receiver
 
 			foreach ($receiver_list as $receiver) {
 				if ($receiver == 'Public') {
-					Logger::warning('Not compacted public collection found', ['activity' => $activity, 'callstack' => System::callstack(20)]);
+					Logger::warning('Not compacted public collection found', ['activity' => $activity]);
 					$receiver = ActivityPub::PUBLIC_COLLECTION;
 				}
 				if ($receiver == self::PUBLIC_COLLECTION) {
@@ -1114,10 +1184,19 @@ class Receiver
 			$isGroup  = false;
 		}
 
+		$parent_followers = '';
+		$parent = Post::selectFirstPost(['parent-author-link'], ['uri' => $reply]);
+		if (!empty($parent['parent-author-link'])) {
+			$parent_profile = APContact::getByURL($parent['parent-author-link']);
+			if (!in_array($parent_profile['followers'] ?? '', ['', $followers])) {
+				$parent_followers = $parent_profile['followers'];
+			}
+		}
+
 		// We have to prevent false follower assumptions upon thread completions
 		$follower_target = empty($activity['thread-completion']) ? self::TARGET_FOLLOWER : self::TARGET_UNKNOWN;
 
-		foreach (['as:to', 'as:cc', 'as:bto', 'as:bcc','as:audience'] as $element) {
+		foreach (['as:to', 'as:cc', 'as:bto', 'as:bcc', 'as:audience'] as $element) {
 			$receiver_list = JsonLD::fetchElementArray($activity, $element, '@id');
 			if (empty($receiver_list)) {
 				continue;
@@ -1134,8 +1213,13 @@ class Receiver
 				}
 
 				// Fetch the receivers for the public and the followers collection
-				if ((($receiver == $followers) || (($receiver == self::PUBLIC_COLLECTION) && !$isGroup) || ($isGroup && ($element == 'as:audience'))) && !empty($actor)) {
-					$receivers = self::getReceiverForActor($actor, $tags, $receivers, $follower_target, $profile);
+				if ((($receiver == $followers) || (($receiver == self::PUBLIC_COLLECTION) && !$isGroup) || ($isGroup && ($element == 'as:audience'))) && !empty($profile)) {
+					$receivers = self::getReceiverForActor($tags, $receivers, $follower_target, $profile);
+					continue;
+				}
+
+				if ($receiver == $parent_followers) {
+					$receivers = self::getReceiverForActor([], $receivers, $follower_target, $parent_profile);
 					continue;
 				}
 
@@ -1188,6 +1272,11 @@ class Receiver
 			}
 		}
 
+		if (empty($receivers) && !empty($parent['parent-author-link'])) {
+			$uid = User::getIdForURL($parent['parent-author-link']);
+			$receivers[$uid] = ['uid' => $uid, 'type' => self::TARGET_BTO];
+		}
+
 		if (!empty($reply) && (!empty($receivers[0]) || !empty($receivers[-1]))) {
 			$parents = Post::select(['uid'], DBA::mergeConditions(['uri' => $reply], ["`uid` != ?", 0]));
 			while ($parent = Post::fetch($parents)) {
@@ -1210,7 +1299,7 @@ class Receiver
 		} elseif (empty($receivers) && in_array($activity_type, ['as:Delete', 'as:Undo'])) {
 			$receivers[0] = ['uid' => 0, 'type' => self::TARGET_GLOBAL];
 		} elseif (empty($receivers)) {
-			Logger::notice('Post has got no receivers', ['fetch_unlisted' => $fetch_unlisted, 'actor' => $actor, 'id' => JsonLD::fetchElement($activity, '@id'), 'type' => $activity_type, 'callstack' => System::callstack(20)]);
+			Logger::notice('Post has got no receivers', ['fetch_unlisted' => $fetch_unlisted, 'actor' => $actor, 'id' => JsonLD::fetchElement($activity, '@id'), 'type' => $activity_type]);
 		}
 
 		return $receivers;
@@ -1219,7 +1308,6 @@ class Receiver
 	/**
 	 * Fetch the receiver list of a given actor
 	 *
-	 * @param string  $actor
 	 * @param array   $tags
 	 * @param array   $receivers
 	 * @param integer $target_type
@@ -1228,41 +1316,20 @@ class Receiver
 	 * @return array with receivers (user id)
 	 * @throws \Exception
 	 */
-	private static function getReceiverForActor(string $actor, array $tags, array $receivers, int $target_type, array $profile): array
+	private static function getReceiverForActor(array $tags, array $receivers, int $target_type, array $profile): array
 	{
 		$basecondition = ['rel' => [Contact::SHARING, Contact::FRIEND, Contact::FOLLOWER],
 			'network' => Protocol::FEDERATED, 'archive' => false, 'pending' => false];
 
-		if (!empty($profile['uri-id'])) {
-			$condition = DBA::mergeConditions($basecondition, ["`uri-id` = ? AND `uid` != ?", $profile['uri-id'], 0]);
-			$contacts = DBA::select('contact', ['uid', 'rel'], $condition);
-			while ($contact = DBA::fetch($contacts)) {
-				if (empty($receivers[$contact['uid']]) && self::isValidReceiverForActor($contact, $tags)) {
-					$receivers[$contact['uid']] = ['uid' => $contact['uid'], 'type' => $target_type];
-				}
+		$condition = DBA::mergeConditions($basecondition, ["`uri-id` = ? AND `uid` != ?", $profile['uri-id'], 0]);
+		$contacts = DBA::select('contact', ['uid', 'rel'], $condition);
+		while ($contact = DBA::fetch($contacts)) {
+			if (empty($receivers[$contact['uid']]) && self::isValidReceiverForActor($contact, $tags)) {
+				$receivers[$contact['uid']] = ['uid' => $contact['uid'], 'type' => $target_type];
 			}
-			DBA::close($contacts);
-		} else {
-			// This part will only be called while post update 1426 wasn't finished
-			$condition = DBA::mergeConditions($basecondition, ["`nurl` = ? AND `uid` != ?", Strings::normaliseLink($actor), 0]);
-			$contacts = DBA::select('contact', ['uid', 'rel'], $condition);
-			while ($contact = DBA::fetch($contacts)) {
-				if (empty($receivers[$contact['uid']]) && self::isValidReceiverForActor($contact, $tags)) {
-					$receivers[$contact['uid']] = ['uid' => $contact['uid'], 'type' => $target_type];
-				}
-			}
-			DBA::close($contacts);
-
-			// The queries are split because of performance issues
-			$condition = DBA::mergeConditions($basecondition, ["`alias` IN (?, ?) AND `uid` != ?", Strings::normaliseLink($actor), $actor, 0]);
-			$contacts = DBA::select('contact', ['uid', 'rel'], $condition);
-			while ($contact = DBA::fetch($contacts)) {
-				if (empty($receivers[$contact['uid']]) && self::isValidReceiverForActor($contact, $tags)) {
-					$receivers[$contact['uid']] = ['uid' => $contact['uid'], 'type' => $target_type];
-				}
-			}
-			DBA::close($contacts);
 		}
+		DBA::close($contacts);
+
 		return $receivers;
 	}
 
@@ -1498,9 +1565,11 @@ class Receiver
 				continue;
 			}
 
-			$element = ['type' => str_replace('as:', '', JsonLD::fetchElement($tag, '@type') ?? ''),
+			$element = [
+				'type' => str_replace('as:', '', JsonLD::fetchElement($tag, '@type') ?? ''),
 				'href' => JsonLD::fetchElement($tag, 'as:href', '@id'),
-				'name' => JsonLD::fetchElement($tag, 'as:name', '@value')];
+				'name' => JsonLD::fetchElement($tag, 'as:name', '@value')
+			];
 
 			if (empty($element['type'])) {
 				continue;
@@ -1531,8 +1600,10 @@ class Receiver
 			}
 
 			$url = JsonLD::fetchElement($emoji['as:icon'], 'as:url', '@id');
-			$element = ['name' => JsonLD::fetchElement($emoji, 'as:name', '@value'),
-				'href' => $url];
+			$element = [
+				'name' => JsonLD::fetchElement($emoji, 'as:name', '@value'),
+				'href' => $url
+			];
 
 			$emojilist[] = $element;
 		}
@@ -1877,11 +1948,27 @@ class Receiver
 		$object_data['receiver']       = $receivers;
 		$object_data['reception_type'] = $reception_types;
 
+		if (!empty($object['pixelfed:capabilities'])) {
+			$object_data['capabilities'] = self::getCapabilities($object);
+		}
+
 		$object_data['unlisted'] = in_array(-1, $object_data['receiver']);
 		unset($object_data['receiver'][-1]);
 		unset($object_data['reception_type'][-1]);
 
 		return $object_data;
+	}
+
+	private static function getCapabilities($object) {
+		$capabilities = [];
+		foreach (['pixelfed:canAnnounce', 'pixelfed:canLike', 'pixelfed:canReply'] as $element) {
+			$capabilities_list = JsonLD::fetchElementArray($object['pixelfed:capabilities'], $element, '@id');
+			if (empty($capabilities_list)) {
+				continue;
+			}
+			$capabilities[$element] = $capabilities_list;
+		}
+		return $capabilities;
 	}
 
 	/**
@@ -1969,6 +2056,7 @@ class Receiver
 		$object_data['tags'] = self::processTags(JsonLD::fetchElementArray($object, 'as:tag') ?? []);
 		$object_data['emojis'] = self::processEmojis(JsonLD::fetchElementArray($object, 'as:tag', null, '@type', 'toot:Emoji') ?? []);
 		$object_data['languages'] = self::processLanguages(JsonLD::fetchElementArray($object, 'sc:inLanguage') ?? []);
+		$object_data['transmitted-languages'] = Processor::getPostLanguages($object);
 		$object_data['generator'] = JsonLD::fetchElement($object, 'as:generator', 'as:name', '@type', 'as:Application');
 		$object_data['generator'] = JsonLD::fetchElement($object_data, 'generator', '@value');
 		$object_data['alternate-url'] = JsonLD::fetchElement($object, 'as:url', '@id');
@@ -1989,6 +2077,11 @@ class Receiver
 		if (in_array($object_data['object_type'], ['as:Audio', 'as:Video'])) {
 			$object_data['alternate-url'] = self::extractAlternateUrl($object['as:url'] ?? []) ?: $object_data['alternate-url'];
 			$object_data['attachments'] = array_merge($object_data['attachments'], self::processAttachmentUrls($object['as:url'] ?? []));
+		}
+
+		$object_data['can-comment'] = JsonLD::fetchElement($object, 'pt:commentsEnabled', '@value');
+		if (is_null($object_data['can-comment'])) {
+			$object_data['can-comment'] = JsonLD::fetchElement($object, 'pixelfed:commentsEnabled', '@value');
 		}
 
 		// Support for quoted posts (Pleroma, Fedibird and Misskey)

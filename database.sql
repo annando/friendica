@@ -1,6 +1,6 @@
 -- ------------------------------------------
--- Friendica 2023.09-dev (Giant Rhubarb)
--- DB_UPDATE_VERSION 1532
+-- Friendica 2024.03-dev (Yellow Archangel)
+-- DB_UPDATE_VERSION 1550
 -- ------------------------------------------
 
 
@@ -73,8 +73,6 @@ CREATE TABLE IF NOT EXISTS `user` (
 	`blockwall` boolean NOT NULL DEFAULT '0' COMMENT 'Prohibit contacts to post to the profile page of the user',
 	`hidewall` boolean NOT NULL DEFAULT '0' COMMENT 'Hide profile details from unknown viewers',
 	`blocktags` boolean NOT NULL DEFAULT '0' COMMENT 'Prohibit contacts to tag the post of this user',
-	`unkmail` boolean NOT NULL DEFAULT '0' COMMENT 'Permit unknown people to send private mails to this user',
-	`cntunkmail` int unsigned NOT NULL DEFAULT 10 COMMENT '',
 	`notify-flags` smallint unsigned NOT NULL DEFAULT 65535 COMMENT 'email notification options',
 	`page-flags` tinyint unsigned NOT NULL DEFAULT 0 COMMENT 'page/profile type',
 	`account-type` tinyint unsigned NOT NULL DEFAULT 0 COMMENT '',
@@ -491,6 +489,30 @@ CREATE TABLE IF NOT EXISTS `cache` (
 	 PRIMARY KEY(`k`),
 	 INDEX `k_expires` (`k`,`expires`)
 ) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Stores temporary data';
+
+--
+-- TABLE channel
+--
+CREATE TABLE IF NOT EXISTS `channel` (
+	`id` int unsigned NOT NULL auto_increment COMMENT '',
+	`uid` mediumint unsigned NOT NULL COMMENT 'User id',
+	`label` varchar(64) NOT NULL COMMENT 'Channel label',
+	`description` varchar(64) COMMENT 'Channel description',
+	`circle` int COMMENT 'Circle or channel that this channel is based on',
+	`access-key` varchar(1) COMMENT 'Access key',
+	`include-tags` varchar(1023) COMMENT 'Comma separated list of tags that will be included in the channel',
+	`exclude-tags` varchar(1023) COMMENT 'Comma separated list of tags that aren\'t allowed in the channel',
+	`min-size` int unsigned COMMENT 'Minimum post size',
+	`max-size` int unsigned COMMENT 'Maximum post size',
+	`full-text-search` varchar(1023) COMMENT 'Full text search pattern, see https://mariadb.com/kb/en/full-text-index-overview/#in-boolean-mode',
+	`media-type` smallint unsigned COMMENT 'Filtered media types',
+	`languages` mediumtext COMMENT 'Desired languages',
+	`publish` boolean COMMENT 'publish channel content',
+	`valid` boolean COMMENT 'Set, when the full-text-search is valid',
+	 PRIMARY KEY(`id`),
+	 INDEX `uid` (`uid`),
+	FOREIGN KEY (`uid`) REFERENCES `user` (`uid`) ON UPDATE RESTRICT ON DELETE CASCADE
+) DEFAULT COLLATE utf8mb4_general_ci COMMENT='User defined Channels';
 
 --
 -- TABLE config
@@ -1218,6 +1240,23 @@ CREATE TABLE IF NOT EXISTS `post-category` (
 ) DEFAULT COLLATE utf8mb4_general_ci COMMENT='post relation to categories';
 
 --
+-- TABLE post-counts
+--
+CREATE TABLE IF NOT EXISTS `post-counts` (
+	`uri-id` int unsigned NOT NULL COMMENT 'Id of the item-uri table entry that contains the item uri',
+	`vid` smallint unsigned NOT NULL COMMENT 'Id of the verb table entry that contains the activity verbs',
+	`reaction` varchar(4) NOT NULL COMMENT 'Emoji Reaction',
+	`parent-uri-id` int unsigned COMMENT 'Id of the item-uri table that contains the parent uri',
+	`count` int unsigned DEFAULT 0 COMMENT 'Number of activities',
+	 PRIMARY KEY(`uri-id`,`vid`,`reaction`),
+	 INDEX `vid` (`vid`),
+	 INDEX `parent-uri-id` (`parent-uri-id`),
+	FOREIGN KEY (`uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+	FOREIGN KEY (`vid`) REFERENCES `verb` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+	FOREIGN KEY (`parent-uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
+) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Original remote activity';
+
+--
 -- TABLE post-collection
 --
 CREATE TABLE IF NOT EXISTS `post-collection` (
@@ -1256,7 +1295,6 @@ CREATE TABLE IF NOT EXISTS `post-content` (
 	 PRIMARY KEY(`uri-id`),
 	 INDEX `plink` (`plink`(191)),
 	 INDEX `resource-id` (`resource-id`),
-	 FULLTEXT INDEX `title-content-warning-body` (`title`,`content-warning`,`body`),
 	 INDEX `quote-uri-id` (`quote-uri-id`),
 	FOREIGN KEY (`uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
 	FOREIGN KEY (`quote-uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
@@ -1308,13 +1346,17 @@ CREATE TABLE IF NOT EXISTS `post-engagement` (
 	`owner-id` int unsigned NOT NULL DEFAULT 0 COMMENT 'Item owner',
 	`contact-type` tinyint NOT NULL DEFAULT 0 COMMENT 'Person, organisation, news, community, relay',
 	`media-type` tinyint NOT NULL DEFAULT 0 COMMENT 'Type of media in a bit array (1 = image, 2 = video, 4 = audio',
-	`language` varbinary(128) COMMENT 'Language information about this post',
+	`language` char(2) COMMENT 'Language information about this post in the ISO 639-1 format',
+	`searchtext` mediumtext COMMENT 'Simplified text for the full text search',
+	`size` int unsigned COMMENT 'Body size',
 	`created` datetime COMMENT '',
+	`restricted` boolean NOT NULL DEFAULT '0' COMMENT 'If true, this post is either unlisted or not from a federated network',
 	`comments` mediumint unsigned COMMENT 'Number of comments',
 	`activities` mediumint unsigned COMMENT 'Number of activities (like, dislike, ...)',
 	 PRIMARY KEY(`uri-id`),
 	 INDEX `owner-id` (`owner-id`),
 	 INDEX `created` (`created`),
+	 FULLTEXT INDEX `searchtext` (`searchtext`),
 	FOREIGN KEY (`uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
 	FOREIGN KEY (`owner-id`) REFERENCES `contact` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Engagement data per post';
@@ -1421,6 +1463,26 @@ CREATE TABLE IF NOT EXISTS `post-question-option` (
 ) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Question option';
 
 --
+-- TABLE post-searchindex
+--
+CREATE TABLE IF NOT EXISTS `post-searchindex` (
+	`uri-id` int unsigned NOT NULL COMMENT 'Id of the item-uri table entry that contains the item uri',
+	`owner-id` int unsigned NOT NULL DEFAULT 0 COMMENT 'Item owner',
+	`media-type` tinyint NOT NULL DEFAULT 0 COMMENT 'Type of media in a bit array (1 = image, 2 = video, 4 = audio',
+	`language` char(2) COMMENT 'Language information about this post in the ISO 639-1 format',
+	`searchtext` mediumtext COMMENT 'Simplified text for the full text search',
+	`size` int unsigned COMMENT 'Body size',
+	`created` datetime COMMENT '',
+	`restricted` boolean NOT NULL DEFAULT '0' COMMENT 'If true, this post is either unlisted or not from a federated network',
+	 PRIMARY KEY(`uri-id`),
+	 INDEX `owner-id` (`owner-id`),
+	 INDEX `created` (`created`),
+	 FULLTEXT INDEX `searchtext` (`searchtext`),
+	FOREIGN KEY (`uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+	FOREIGN KEY (`owner-id`) REFERENCES `contact` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE
+) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Content for all posts';
+
+--
 -- TABLE post-tag
 --
 CREATE TABLE IF NOT EXISTS `post-tag` (
@@ -1512,7 +1574,8 @@ CREATE TABLE IF NOT EXISTS `post-user` (
 	 INDEX `event-id` (`event-id`),
 	 INDEX `psid` (`psid`),
 	 INDEX `author-id_uid` (`author-id`,`uid`),
-	 INDEX `author-id_received` (`author-id`,`received`),
+	 INDEX `author-id_created` (`author-id`,`created`),
+	 INDEX `owner-id_created` (`owner-id`,`created`),
 	 INDEX `parent-uri-id_uid` (`parent-uri-id`,`uid`),
 	 INDEX `uid_wall_received` (`uid`,`wall`,`received`),
 	 INDEX `uid_contactid` (`uid`,`contact-id`),
@@ -1572,11 +1635,18 @@ CREATE TABLE IF NOT EXISTS `post-thread-user` (
 	 INDEX `psid` (`psid`),
 	 INDEX `post-user-id` (`post-user-id`),
 	 INDEX `commented` (`commented`),
+	 INDEX `received` (`received`),
+	 INDEX `author-id_created` (`author-id`,`created`),
+	 INDEX `owner-id_created` (`owner-id`,`created`),
 	 INDEX `uid_received` (`uid`,`received`),
 	 INDEX `uid_wall_received` (`uid`,`wall`,`received`),
 	 INDEX `uid_commented` (`uid`,`commented`),
+	 INDEX `uid_created` (`uid`,`created`),
 	 INDEX `uid_starred` (`uid`,`starred`),
 	 INDEX `uid_mention` (`uid`,`mention`),
+	 INDEX `contact-id_commented` (`contact-id`,`commented`),
+	 INDEX `contact-id_received` (`contact-id`,`received`),
+	 INDEX `contact-id_created` (`contact-id`,`created`),
 	FOREIGN KEY (`uri-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
 	FOREIGN KEY (`conversation-id`) REFERENCES `item-uri` (`id`) ON UPDATE RESTRICT ON DELETE CASCADE,
 	FOREIGN KEY (`owner-id`) REFERENCES `contact` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -1663,7 +1733,6 @@ CREATE TABLE IF NOT EXISTS `profile` (
 	`net-publish` boolean NOT NULL DEFAULT '0' COMMENT 'publish profile in global directory',
 	 PRIMARY KEY(`id`),
 	 INDEX `uid_is-default` (`uid`,`is-default`),
-	 FULLTEXT INDEX `pub_keywords` (`pub_keywords`),
 	FOREIGN KEY (`uid`) REFERENCES `user` (`uid`) ON UPDATE RESTRICT ON DELETE CASCADE
 ) DEFAULT COLLATE utf8mb4_general_ci COMMENT='user profiles data';
 
@@ -1733,14 +1802,14 @@ CREATE TABLE IF NOT EXISTS `report` (
 	`cid` int unsigned NOT NULL COMMENT 'Reported contact',
 	`gsid` int unsigned COMMENT 'Reported contact server',
 	`comment` text COMMENT 'Report',
-	`category-id` int unsigned NOT NULL DEFAULT 1 COMMENT 'Report category, one of Entity\Report::CATEGORY_*',
+	`category-id` int unsigned NOT NULL DEFAULT 1 COMMENT 'Report category, one of Entity Report::CATEGORY_*',
 	`forward` boolean COMMENT 'Forward the report to the remote server',
 	`public-remarks` text COMMENT 'Remarks shared with the reporter',
 	`private-remarks` text COMMENT 'Remarks shared with the moderation team',
 	`last-editor-uid` mediumint unsigned COMMENT 'Last editor user',
 	`assigned-uid` mediumint unsigned COMMENT 'Assigned moderator user',
-	`status` tinyint unsigned NOT NULL COMMENT 'Status of the report, one of Entity\Report::STATUS_*',
-	`resolution` tinyint unsigned COMMENT 'Resolution of the report, one of Entity\Report::RESOLUTION_*',
+	`status` tinyint unsigned NOT NULL COMMENT 'Status of the report, one of Entity Report::STATUS_*',
+	`resolution` tinyint unsigned COMMENT 'Resolution of the report, one of Entity Report::RESOLUTION_*',
 	`created` datetime(6) NOT NULL DEFAULT '0001-01-01 00:00:00.000000' COMMENT '',
 	`edited` datetime(6) COMMENT 'Last time the report has been edited',
 	 PRIMARY KEY(`id`),
@@ -1845,6 +1914,16 @@ CREATE TABLE IF NOT EXISTS `subscription` (
 ) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Push Subscription for the API';
 
 --
+-- TABLE check-full-text-search
+--
+CREATE TABLE IF NOT EXISTS `check-full-text-search` (
+	`pid` int unsigned NOT NULL COMMENT 'The ID of the process',
+	`searchtext` mediumtext COMMENT 'Simplified text for the full text search',
+	 PRIMARY KEY(`pid`),
+	 FULLTEXT INDEX `searchtext` (`searchtext`)
+) DEFAULT COLLATE utf8mb4_general_ci COMMENT='Check for a full text search match in user defined channels before storing the message in the system';
+
+--
 -- TABLE userd
 --
 CREATE TABLE IF NOT EXISTS `userd` (
@@ -1866,6 +1945,7 @@ CREATE TABLE IF NOT EXISTS `user-contact` (
 	`collapsed` boolean COMMENT 'Posts from this contact are collapsed',
 	`hidden` boolean COMMENT 'This contact is hidden from the others',
 	`is-blocked` boolean COMMENT 'User is blocked by this contact',
+	`channel-frequency` tinyint unsigned COMMENT 'Controls the frequency of the appearance of this contact in channels',
 	`pending` boolean COMMENT '',
 	`rel` tinyint unsigned COMMENT 'The kind of the relation between the user and the contact',
 	`info` mediumtext COMMENT '',
@@ -1968,6 +2048,65 @@ CREATE VIEW `circle-member-view` AS SELECT
 			INNER JOIN `group` ON `group_member`.`gid` = `group`.`id`;
 
 --
+-- VIEW post-counts-view
+--
+DROP VIEW IF EXISTS `post-counts-view`;
+CREATE VIEW `post-counts-view` AS SELECT 
+	`post-counts`.`uri-id` AS `uri-id`,
+	`post-counts`.`vid` AS `vid`,
+	`verb`.`name` AS `verb`,
+	`post-counts`.`reaction` AS `reaction`,
+	`post-counts`.`parent-uri-id` AS `parent-uri-id`,
+	`post-counts`.`count` AS `count`
+	FROM `post-counts`
+			INNER JOIN `verb` ON `verb`.`id` = `post-counts`.`vid`;
+
+--
+-- VIEW post-timeline-view
+--
+DROP VIEW IF EXISTS `post-timeline-view`;
+CREATE VIEW `post-timeline-view` AS SELECT 
+	`post-user`.`uid` AS `uid`,
+	`post-user`.`uri-id` AS `uri-id`,
+	`post-user`.`gravity` AS `gravity`,
+	`post-user`.`created` AS `created`,
+	`post-user`.`edited` AS `edited`,
+	`post-thread-user`.`commented` AS `commented`,
+	`post-user`.`received` AS `received`,
+	`post-thread-user`.`changed` AS `changed`,
+	`post-user`.`private` AS `private`,
+	`post-user`.`visible` AS `visible`,
+	`post-user`.`deleted` AS `deleted`,
+	`post-user`.`origin` AS `origin`,
+	`post-user`.`global` AS `global`,
+	`post-user`.`network` AS `network`,
+	`post-user`.`protocol` AS `protocol`,
+	`post-user`.`vid` AS `vid`,
+	`post-user`.`contact-id` AS `contact-id`,
+	`contact`.`blocked` AS `contact-blocked`,
+	`contact`.`readonly` AS `contact-readonly`,
+	`contact`.`pending` AS `contact-pending`,
+	`contact`.`rel` AS `contact-rel`,
+	`contact`.`uid` AS `contact-uid`,
+	`contact`.`self` AS `self`,
+	`post-user`.`author-id` AS `author-id`,
+	`author`.`blocked` AS `author-blocked`,
+	`author`.`hidden` AS `author-hidden`,
+	`author`.`gsid` AS `author-gsid`,
+	`post-user`.`owner-id` AS `owner-id`,
+	`owner`.`blocked` AS `owner-blocked`,
+	`owner`.`gsid` AS `owner-gsid`,
+	`post-user`.`causer-id` AS `causer-id`,
+	`causer`.`blocked` AS `causer-blocked`,
+	`causer`.`gsid` AS `causer-gsid`
+	FROM `post-user`
+			LEFT JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
+			STRAIGHT_JOIN `contact` ON `contact`.`id` = `post-user`.`contact-id`
+			STRAIGHT_JOIN `contact` AS `author` ON `author`.`id` = `post-user`.`author-id`
+			STRAIGHT_JOIN `contact` AS `owner` ON `owner`.`id` = `post-user`.`owner-id`
+			LEFT JOIN `contact` AS `causer` ON `causer`.`id` = `post-user`.`causer-id`;
+
+--
 -- VIEW post-user-view
 --
 DROP VIEW IF EXISTS `post-user-view`;
@@ -2067,6 +2206,7 @@ CREATE VIEW `post-user-view` AS SELECT
 	`author`.`blocked` AS `author-blocked`,
 	`author`.`hidden` AS `author-hidden`,
 	`author`.`updated` AS `author-updated`,
+	`author`.`contact-type` AS `author-contact-type`,
 	`author`.`gsid` AS `author-gsid`,
 	`author`.`baseurl` AS `author-baseurl`,
 	`post-user`.`owner-id` AS `owner-id`,
@@ -2251,6 +2391,7 @@ CREATE VIEW `post-thread-user-view` AS SELECT
 	`author`.`blocked` AS `author-blocked`,
 	`author`.`hidden` AS `author-hidden`,
 	`author`.`updated` AS `author-updated`,
+	`author`.`contact-type` AS `author-contact-type`,
 	`author`.`gsid` AS `author-gsid`,
 	`post-thread-user`.`owner-id` AS `owner-id`,
 	`owner`.`uri-id` AS `owner-uri-id`,
@@ -2419,6 +2560,7 @@ CREATE VIEW `post-view` AS SELECT
 	`author`.`blocked` AS `author-blocked`,
 	`author`.`hidden` AS `author-hidden`,
 	`author`.`updated` AS `author-updated`,
+	`author`.`contact-type` AS `author-contact-type`,
 	`author`.`gsid` AS `author-gsid`,
 	`post`.`owner-id` AS `owner-id`,
 	`owner`.`uri-id` AS `owner-uri-id`,
@@ -2564,6 +2706,7 @@ CREATE VIEW `post-thread-view` AS SELECT
 	`author`.`blocked` AS `author-blocked`,
 	`author`.`hidden` AS `author-hidden`,
 	`author`.`updated` AS `author-updated`,
+	`author`.`contact-type` AS `author-contact-type`,
 	`author`.`gsid` AS `author-gsid`,
 	`post-thread`.`owner-id` AS `owner-id`,
 	`owner`.`uri-id` AS `owner-uri-id`,
@@ -2846,8 +2989,6 @@ CREATE VIEW `owner-view` AS SELECT
 	`user`.`blockwall` AS `blockwall`,
 	`user`.`hidewall` AS `hidewall`,
 	`user`.`blocktags` AS `blocktags`,
-	`user`.`unkmail` AS `unkmail`,
-	`user`.`cntunkmail` AS `cntunkmail`,
 	`user`.`notify-flags` AS `notify-flags`,
 	`user`.`page-flags` AS `page-flags`,
 	`user`.`account-type` AS `account-type`,

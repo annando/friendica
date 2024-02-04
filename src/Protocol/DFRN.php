@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -1012,7 +1012,7 @@ class DFRN
 		$content_type = ($public_batch ? 'application/magic-envelope+xml' : 'application/json');
 
 		$postResult = DI::httpClient()->post($dest_url, $envelope, ['Content-Type' => $content_type]);
-		$xml = $postResult->getBody();
+		$xml = $postResult->getBodyString();
 
 		$curl_stat = $postResult->getReturnCode();
 		if (!empty($contact['gsid']) && ($postResult->isTimeout() || empty($curl_stat))) {

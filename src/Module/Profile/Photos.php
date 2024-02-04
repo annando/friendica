@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -322,12 +322,12 @@ class Photos extends \Friendica\Module\BaseProfile
 		$photos = $this->database->toArray($this->database->p(
 			"SELECT
 				`resource-id`,
-				ANY_VALUE(`id`) AS `id`,
-				ANY_VALUE(`filename`) AS `filename`,
-				ANY_VALUE(`type`) AS `type`,
-				ANY_VALUE(`album`) AS `album`,
-				max(`scale`) AS `scale`,
-				ANY_VALUE(`created`) AS `created`
+				MIN(`id`) AS `id`,
+				MIN(`filename`) AS `filename`,
+				MIN(`type`) AS `type`,
+				MIN(`album`) AS `album`,
+				MAX(`scale`) AS `scale`,
+				MIN(`created`) AS `created`
 			FROM `photo`
 			WHERE `uid` = ?
 			  AND `photo-type` = ?

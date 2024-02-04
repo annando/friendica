@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -37,7 +37,7 @@ class Search extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_READ);
+		$this->checkAllowedScope(BaseApi::SCOPE_READ);
 		$uid = BaseApi::getCurrentUserID();
 
 		$userlist = [];
@@ -69,6 +69,6 @@ class Search extends BaseApi
 			throw new BadRequestException('No search term specified.');
 		}
 
-		$this->response->exit('users', $userlist, $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('users', $userlist, $this->parameters['extension'] ?? null);
 	}
 }

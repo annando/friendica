@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -46,6 +46,7 @@ class OptimizeTables
 		DBA::optimizeTable('parsed_url');
 		DBA::optimizeTable('session');
 		DBA::optimizeTable('post-engagement');
+		DBA::optimizeTable('check-full-text-search');
 
 		if (DI::config()->get('system', 'optimize_all_tables')) {
 			DBA::optimizeTable('apcontact');

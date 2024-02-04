@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -39,9 +39,9 @@ class Polls extends BaseApi
 		$uid = self::getCurrentUserID();
 
 		if (empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
-		System::jsonExit(DI::mstdnPoll()->createFromId($this->parameters['id'], $uid));
+		$this->jsonExit(DI::mstdnPoll()->createFromId($this->parameters['id'], $uid));
 	}
 }

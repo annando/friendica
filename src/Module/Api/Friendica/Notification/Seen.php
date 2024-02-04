@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -40,7 +40,7 @@ class Seen extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_WRITE);
+		$this->checkAllowedScope(BaseApi::SCOPE_WRITE);
 		$uid = BaseApi::getCurrentUserID();
 
 		if (DI::args()->getArgc() !== 4) {
@@ -70,13 +70,13 @@ class Seen extends BaseApi
 					// we found the item, return it to the user
 					$ret  = [DI::twitterStatus()->createFromUriId($item['uri-id'], $item['uid'], $include_entities)->toArray()];
 					$data = ['status' => $ret];
-					$this->response->exit('statuses', $data, $this->parameters['extension'] ?? null);
+					$this->response->addFormattedContent('statuses', $data, $this->parameters['extension'] ?? null);
 					return;
 				}
 				// the item can't be found, but we set the notification as seen, so we count this as a success
 			}
 
-			$this->response->exit('statuses', ['result' => 'success'], $this->parameters['extension'] ?? null);
+			$this->response->addFormattedContent('statuses', ['result' => 'success'], $this->parameters['extension'] ?? null);
 		} catch (NotFoundException $e) {
 			throw new BadRequestException('Invalid argument', $e);
 		} catch (Exception $e) {

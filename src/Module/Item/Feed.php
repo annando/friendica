@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -86,6 +86,6 @@ class Feed extends BaseModule
 			throw new HTTPException\InternalServerErrorException($this->t('The feed for this item is unavailable.', ['uri-id' => $uriId]));
 		}
 
-		System::httpExit($xml, Response::TYPE_ATOM);
+		$this->httpExit($xml, Response::TYPE_ATOM);
 	}
 }

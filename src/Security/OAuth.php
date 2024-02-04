@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -131,8 +131,7 @@ class OAuth
 		}
 
 		if (!empty($redirect_uri)) {
-			$uri = new Uri($redirect_uri);
-			$redirect_uri = $uri->getScheme() . '://' . $uri->getHost() . $uri->getPath();
+			$redirect_uri = strtok($redirect_uri, '?');
 			$condition = DBA::mergeConditions($condition, ["`redirect_uri` LIKE ?", '%' . $redirect_uri . '%']);
 		}
 

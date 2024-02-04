@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -39,20 +39,17 @@ class PushSubscription extends BaseApi
 {
 	/** @var SubscriptionFactory */
 	protected $subscriptionFac;
-	/** @var Error */
-	protected $errorFac;
 
-	public function __construct(App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, SubscriptionFactory $subscriptionFac, Error $errorFac, array $server, array $parameters = [])
+	public function __construct(\Friendica\Factory\Api\Mastodon\Error $errorFactory, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, SubscriptionFactory $subscriptionFac, array $server, array $parameters = [])
 	{
-		parent::__construct($app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
+		parent::__construct($errorFactory, $app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 
 		$this->subscriptionFac = $subscriptionFac;
-		$this->errorFac        = $errorFac;
 	}
 
 	protected function post(array $request = []): void
 	{
-		self::checkAllowedScope(self::SCOPE_PUSH);
+		$this->checkAllowedScope(self::SCOPE_PUSH);
 		$uid         = self::getCurrentUserID();
 		$application = self::getCurrentApplication();
 
@@ -81,12 +78,12 @@ class PushSubscription extends BaseApi
 		$this->logger->info('Subscription stored', ['ret' => $ret, 'subscription' => $subscription]);
 
 		$subscriptionObj = $this->subscriptionFac->createForApplicationIdAndUserId($application['id'], $uid);
-		$this->response->exitWithJson($subscriptionObj->toArray());
+		$this->response->addJsonContent($subscriptionObj->toArray());
 	}
 
 	public function put(array $request = []): void
 	{
-		self::checkAllowedScope(self::SCOPE_PUSH);
+		$this->checkAllowedScope(self::SCOPE_PUSH);
 		$uid         = self::getCurrentUserID();
 		$application = self::getCurrentApplication();
 
@@ -97,7 +94,7 @@ class PushSubscription extends BaseApi
 		$subscription = Subscription::select($application['id'], $uid, ['id']);
 		if (empty($subscription)) {
 			$this->logger->info('Subscription not found', ['application-id' => $application['id'], 'uid' => $uid]);
-			$this->errorFac->RecordNotFound();
+			$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 		}
 
 		$fields = [
@@ -120,12 +117,12 @@ class PushSubscription extends BaseApi
 		]);
 
 		$subscriptionObj = $this->subscriptionFac->createForApplicationIdAndUserId($application['id'], $uid);
-		$this->response->exitWithJson($subscriptionObj->toArray());
+		$this->response->addJsonContent($subscriptionObj->toArray());
 	}
 
 	protected function delete(array $request = []): void
 	{
-		self::checkAllowedScope(self::SCOPE_PUSH);
+		$this->checkAllowedScope(self::SCOPE_PUSH);
 		$uid         = self::getCurrentUserID();
 		$application = self::getCurrentApplication();
 
@@ -137,23 +134,23 @@ class PushSubscription extends BaseApi
 			'uid'            => $uid,
 		]);
 
-		$this->response->exitWithJson([]);
+		$this->response->addJsonContent([]);
 	}
 
 	protected function rawContent(array $request = []): void
 	{
-		self::checkAllowedScope(self::SCOPE_PUSH);
+		$this->checkAllowedScope(self::SCOPE_PUSH);
 		$uid         = self::getCurrentUserID();
 		$application = self::getCurrentApplication();
 
 		if (!Subscription::exists($application['id'], $uid)) {
 			$this->logger->info('Subscription not found', ['application-id' => $application['id'], 'uid' => $uid]);
-			$this->errorFac->RecordNotFound();
+			$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 		}
 
 		$this->logger->info('Fetch subscription', ['application-id' => $application['id'], 'uid' => $uid]);
 
 		$subscriptionObj = $this->subscriptionFac->createForApplicationIdAndUserId($application['id'], $uid);
-		$this->response->exitWithJson($subscriptionObj->toArray());
+		$this->response->addJsonContent($subscriptionObj->toArray());
 	}
 }

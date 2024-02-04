@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -535,6 +535,7 @@ class Widget
 			['ref' => 'organisation', 'name' => DI::l10n()->t('Organisations')],
 			['ref' => 'news', 'name' => DI::l10n()->t('News')],
 			['ref' => 'community', 'name' => DI::l10n()->t('Groups')],
+			['ref' => 'relay', 'name' => DI::l10n()->t('Relays')],
 		];
 
 		return self::filter(
@@ -560,12 +561,30 @@ class Widget
 	{
 		$channels = [];
 
-		foreach (DI::TimelineFactory()->getChannelsForUser($uid) as $channel) {
-			$channels[] = ['ref' => $channel->code, 'name' => $channel->label];
+		$enabled = DI::pConfig()->get($uid, 'system', 'enabled_timelines', []);
+
+		foreach (DI::NetworkFactory()->getTimelines('') as $channel) {
+			if (empty($enabled) || in_array($channel->code, $enabled)) {
+				$channels[] = ['ref' => $channel->code, 'name' => $channel->label];
+			}
 		}
 
-		foreach (DI::TimelineFactory()->getCommunities(true) as $community) {
-			$channels[] = ['ref' => $community->code, 'name' => $community->label];
+		foreach (DI::ChannelFactory()->getTimelines($uid) as $channel) {
+			if (empty($enabled) || in_array($channel->code, $enabled)) {
+				$channels[] = ['ref' => $channel->code, 'name' => $channel->label];
+			}
+		}
+
+		foreach (DI::userDefinedChannel()->selectByUid($uid) as $channel) {
+			if (empty($enabled) || in_array($channel->code, $enabled)) {
+				$channels[] = ['ref' => $channel->code, 'name' => $channel->label];
+			}
+		}
+
+		foreach (DI::CommunityFactory()->getTimelines(true) as $community) {
+			if (empty($enabled) || in_array($community->code, $enabled)) {
+				$channels[] = ['ref' => $community->code, 'name' => $community->label];
+			}
 		}
 
 		return self::filter(

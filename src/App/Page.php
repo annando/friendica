@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -36,6 +36,7 @@ use Friendica\Core\System;
 use Friendica\Core\Theme;
 use Friendica\Module\Response;
 use Friendica\Network\HTTPException;
+use Friendica\Util\Images;
 use Friendica\Util\Network;
 use Friendica\Util\Profiler;
 use Friendica\Util\Strings;
@@ -282,7 +283,7 @@ class Page implements ArrayAccess
 			'$stylesheets'     => $this->stylesheets,
 
 			// Dropzone
-			'$max_imagesize' => round(\Friendica\Util\Strings::getBytesFromShorthand($config->get('system', 'maximagesize')) / 1000000, 1),
+			'$max_imagesize' => round(Images::getMaxUploadBytes() / 1000000, 0),
 
 		]) . $this->page['htmlhead'];
 	}
@@ -402,36 +403,6 @@ class Page implements ArrayAccess
 	}
 
 	/**
-	 * Directly exit with the current response (include setting all headers)
-	 *
-	 * @param ResponseInterface $response
-	 */
-	public function exit(ResponseInterface $response)
-	{
-		header(sprintf("HTTP/%s %s %s",
-			$response->getProtocolVersion(),
-			$response->getStatusCode(),
-			$response->getReasonPhrase())
-		);
-
-		foreach ($response->getHeaders() as $key => $header) {
-			if (is_array($header)) {
-				$header_str = implode(',', $header);
-			} else {
-				$header_str = $header;
-			}
-
-			if (empty($key)) {
-				header($header_str);
-			} else {
-				header("$key: $header_str");
-			}
-		}
-
-		echo $response->getBody();
-	}
-
-	/**
 	 * Executes the creation of the current page and prints it to the screen
 	 *
 	 * @param App                         $app      The Friendica App
@@ -526,7 +497,9 @@ class Page implements ArrayAccess
 			}
 
 			if ($_GET["mode"] == "raw") {
-				System::httpExit(substr($target->saveHTML(), 6, -8), Response::TYPE_HTML);
+				$response->withBody(Utils::streamFor($target->saveHTML()));
+				System::echoResponse($response);
+				System::exit();
 			}
 		}
 

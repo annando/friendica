@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -601,7 +601,7 @@ class Worker
 		$rest    = round(max(0, $up_duration - (self::$db_duration + self::$lock_duration)), 2);
 		$exec    = round($duration, 2);
 
-		Logger::info('Performance:', ['state' => self::$state, 'count' => $dbcount, 'stat' => $dbstat, 'write' => $dbwrite, 'lock' => $dblock, 'total' => $dbtotal, 'rest' => $rest, 'exec' => $exec]);
+		Logger::info('Performance:', ['function' => $funcname, 'state' => self::$state, 'count' => $dbcount, 'stat' => $dbstat, 'write' => $dbwrite, 'lock' => $dblock, 'total' => $dbtotal, 'rest' => $rest, 'exec' => $exec]);
 
 		self::coolDown();
 
@@ -622,7 +622,7 @@ class Worker
 			Logger::info('Longer than 2 minutes.', ['priority' => $queue['priority'], 'id' => $queue['id'], 'duration' => round($duration/60, 3)]);
 		}
 
-		Logger::info('Process done.', ['priority' => $queue['priority'], 'id' => $queue['id'], 'duration' => round($duration, 3)]);
+		Logger::info('Process done.', ['function' => $funcname, 'priority' => $queue['priority'], 'retrial' => $queue['retrial'], 'id' => $queue['id'], 'duration' => round($duration, 3)]);
 
 		DI::profiler()->saveLog(DI::logger(), 'ID ' . $queue['id'] . ': ' . $funcname);
 	}
@@ -1276,7 +1276,7 @@ class Worker
 		$added = 0;
 
 		if (!is_int($priority) || !in_array($priority, self::PRIORITIES)) {
-			Logger::warning('Invalid priority', ['priority' => $priority, 'command' => $command, 'callstack' => System::callstack(20)]);
+			Logger::warning('Invalid priority', ['priority' => $priority, 'command' => $command]);
 			$priority = self::PRIORITY_MEDIUM;
 		}
 
@@ -1379,10 +1379,11 @@ class Worker
 	/**
 	 * Defers the current worker entry
 	 *
+	 * @param int $worker_defer_limit Maximum defer limit 
 	 * @return boolean had the entry been deferred?
 	 * @throws \Exception
 	 */
-	public static function defer(): bool
+	public static function defer(int $worker_defer_limit = 0): bool
 	{
 		$queue = DI::app()->getQueue();
 
@@ -1394,6 +1395,10 @@ class Worker
 		$priority = $queue['priority'];
 
 		$max_level = DI::config()->get('system', 'worker_defer_limit');
+
+		if ($worker_defer_limit) {
+			$max_level = min($worker_defer_limit, $max_level);
+		}
 
 		$new_retrial = self::getNextRetrial($queue, $max_level);
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -21,13 +21,12 @@
 
 namespace Friendica\Module\Special;
 
-use Friendica\App\Arguments;
-use Friendica\App\Mode;
-use Friendica\App\Request;
+use Friendica\App;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Model\UserSession;
 use Friendica\Core\System;
+use Friendica\Module\Response;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -43,7 +42,7 @@ class HTTPException
 	protected $l10n;
 	/** @var LoggerInterface */
 	protected $logger;
-	/** @var Arguments */
+	/** @var App\Arguments */
 	protected $args;
 	/** @var bool */
 	protected $isSiteAdmin;
@@ -52,7 +51,7 @@ class HTTPException
 	/** @var string */
 	protected $requestId;
 
-	public function __construct(Mode $mode, L10n $l10n, LoggerInterface $logger, Arguments $args, UserSession $session, Request $request, array $server = [])
+	public function __construct(L10n $l10n, LoggerInterface $logger, App\Arguments $args, UserSession $session, App\Request $request, array $server = [])
 	{
 		$this->mode        = $mode;
 		$this->logger      = $logger;
@@ -117,7 +116,13 @@ class HTTPException
 			}
 		}
 
-		System::httpError($e->getCode(), $e->getDescription(), $content);
+		// We can't use a constructor parameter for this response object because we
+		// are in an Exception context where we don't want an existing Response.
+		$response = new Response();
+		$response->setStatus($e->getCode(), $e->getDescription());
+		$response->addContent($content);
+		System::echoResponse($response->generate());
+		System::exit();
 	}
 
 	/**
@@ -139,7 +144,6 @@ class HTTPException
 					'code'        => $e->getCode(),
 					'description' => $e->getDescription(),
 					'query'       => $this->args->getQueryString(),
-					'callstack'   => System::callstack(20),
 					'method'      => $this->args->getMethod(),
 					'accept'      => $this->server['HTTP_ACCEPT'] ?? '',
 					'agent'       => $this->server['HTTP_USER_AGENT'] ?? ''

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -99,7 +99,7 @@ class Posts extends BaseModule
 
 		$o = Contact::getTabsHTML($contact, Contact::TAB_POSTS);
 
-		$o .= Model\Contact::getPostsFromId($contact['id']);
+		$o .= Model\Contact::getPostsFromId($contact['id'], $this->userSession->getLocalUserId(), false, $request['last_created'] ?? '');
 
 		return $o;
 	}

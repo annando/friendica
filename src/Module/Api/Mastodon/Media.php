@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -35,7 +35,7 @@ class Media extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -48,22 +48,22 @@ class Media extends BaseApi
 		Logger::info('Photo post', ['request' => $request, 'files' => $_FILES]);
 
 		if (empty($_FILES['file'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		$media = Photo::upload($uid, $_FILES['file'], '', null, null, '', '', $request['description']);
 		if (empty($media)) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		Logger::info('Uploaded photo', ['media' => $media]);
 
-		System::jsonExit(DI::mstdnAttachment()->createFromPhoto($media['id']));
+		$this->jsonExit(DI::mstdnAttachment()->createFromPhoto($media['id']));
 	}
 
 	public function put(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -74,25 +74,25 @@ class Media extends BaseApi
 		], $request);
 
 		if (empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		$photo = Photo::selectFirst(['resource-id'], ['id' => $this->parameters['id'], 'uid' => $uid]);
 		if (empty($photo['resource-id'])) {
 			$media = Post\Media::getById($this->parameters['id']);
 			if (empty($media['uri-id'])) {
-				DI::mstdnError()->RecordNotFound();
+				$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 			}
 			if (!Post::exists(['uri-id' => $media['uri-id'], 'uid' => $uid, 'origin' => true])) {
-				DI::mstdnError()->RecordNotFound();
+				$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 			}
 			Post\Media::updateById(['description' => $request['description']], $this->parameters['id']);
-			System::jsonExit(DI::mstdnAttachment()->createFromId($this->parameters['id']));
+			$this->jsonExit(DI::mstdnAttachment()->createFromId($this->parameters['id']));
 		}
 
 		Photo::update(['desc' => $request['description']], ['resource-id' => $photo['resource-id']]);
 
-		System::jsonExit(DI::mstdnAttachment()->createFromPhoto($this->parameters['id']));
+		$this->jsonExit(DI::mstdnAttachment()->createFromPhoto($this->parameters['id']));
 	}
 
 	/**
@@ -100,18 +100,18 @@ class Media extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		if (empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		$id = $this->parameters['id'];
 		if (!Photo::exists(['id' => $id, 'uid' => $uid])) {
-			DI::mstdnError()->RecordNotFound();
+			$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 		}
 
-		System::jsonExit(DI::mstdnAttachment()->createFromPhoto($id));
+		$this->jsonExit(DI::mstdnAttachment()->createFromPhoto($id));
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -36,7 +36,7 @@ class Delete extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -68,7 +68,7 @@ class Delete extends BaseApi
 		if ($result) {
 			Photo::clearAlbumCache($uid);
 			$answer = ['result' => 'deleted', 'message' => 'album `' . $request['album'] . '` with all containing photos has been deleted.'];
-			$this->response->exit('photoalbum_delete', ['$result' => $answer], $this->parameters['extension'] ?? null);
+			$this->response->addFormattedContent('photoalbum_delete', ['$result' => $answer], $this->parameters['extension'] ?? null);
 		} else {
 			throw new InternalServerErrorException("unknown error - deleting from database failed");
 		}

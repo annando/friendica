@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -24,7 +24,6 @@ namespace Friendica\Model\Contact;
 use Exception;
 use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
-use Friendica\Core\System;
 use Friendica\Database\Database;
 use Friendica\Database\DBA;
 use Friendica\DI;
@@ -37,6 +36,10 @@ use PDOException;
  */
 class User
 {
+	const FREQUENCY_DEFAULT = 0;
+	const FREQUENCY_NEVER   = 1;
+	const FREQUENCY_ALWAYS  = 2;
+	const FREQUENCY_REDUCED = 3;
 	/**
 	 * Insert a user-contact for a given contact array
 	 *
@@ -51,7 +54,7 @@ class User
 		}
 
 		if (empty($contact['uri-id']) && empty($contact['url'])) {
-			Logger::info('Missing contact details', ['contact' => $contact, 'callstack' => System::callstack(20)]);
+			Logger::info('Missing contact details', ['contact' => $contact]);
 			return false;
 		}
 
@@ -312,6 +315,53 @@ class User
 		}
 
 		return $collapsed;
+	}
+
+	/**
+	 * Set the channel post frequency for contact id and user id
+	 *
+	 * @param int $cid       Either public contact id or user's contact id
+	 * @param int $uid       User ID
+	 * @param int $frequency Type of post frequency in channels
+	 * @return void
+	 * @throws \Exception
+	 */
+	public static function setChannelFrequency(int $cid, int $uid, int $frequency)
+	{
+		$cdata = Contact::getPublicAndUserContactID($cid, $uid);
+		if (empty($cdata)) {
+			return;
+		}
+
+		DBA::update('user-contact', ['channel-frequency' => $frequency], ['cid' => $cdata['public'], 'uid' => $uid], true);
+	}
+
+	/**
+	 * Returns the channel frequency state for contact id and user id
+	 *
+	 * @param int $cid Either public contact id or user's contact id
+	 * @param int $uid User ID
+	 * @return int Type of post frequency in channels
+	 * @throws HTTPException\InternalServerErrorException
+	 * @throws \ImagickException
+	 */
+	public static function getChannelFrequency(int $cid, int $uid): int
+	{
+		$cdata = Contact::getPublicAndUserContactID($cid, $uid);
+		if (empty($cdata)) {
+			return false;
+		}
+
+		$frequency = self::FREQUENCY_DEFAULT;
+
+		if (!empty($cdata['public'])) {
+			$public_contact = DBA::selectFirst('user-contact', ['channel-frequency'], ['cid' => $cdata['public'], 'uid' => $uid]);
+			if (DBA::isResult($public_contact)) {
+				$frequency = $public_contact['channel-frequency'] ?? self::FREQUENCY_DEFAULT;
+			}
+		}
+
+		return $frequency;
 	}
 
 	/**

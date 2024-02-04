@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -59,7 +59,7 @@ class Tags extends BaseModule
 		$results = [];
 
 		if (empty($tags)) {
-			System::jsonExit([
+			$this->jsonExit([
 				'total'      => 0,
 				'items_page' => $perPage,
 				'page'       => $page,
@@ -74,7 +74,7 @@ class Tags extends BaseModule
 
 		$totalCount = $this->database->count('owner-view', $condition);
 		if ($totalCount === 0) {
-			System::jsonExit([
+			$this->jsonExit([
 				'total'      => 0,
 				'items_page' => $perPage,
 				'page'       => $page,
@@ -97,7 +97,7 @@ class Tags extends BaseModule
 
 		$this->database->close($searchStmt);
 
-		System::jsonExit([
+		$this->jsonExit([
 			'total'      => $totalCount,
 			'items_page' => $perPage,
 			'page'       => $page,

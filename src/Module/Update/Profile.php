@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -104,9 +104,9 @@ class Profile extends BaseModule
 		$last_updated_array[$last_updated_key] = time();
 		DI::session()->set('last_updated', $last_updated_array);
 
-		if ($is_owner && !$a->getProfileOwner() && !DI::config()->get('theme', 'hide_eventlist')) {
-			$o .= ProfileModel::getBirthdays();
-			$o .= ProfileModel::getEventsReminderHTML();
+		if ($is_owner && !$a->getProfileOwner() && ProfileModel::shouldDisplayEventList(DI::userSession()->getLocalUserId(), DI::mode())) {
+			$o .= ProfileModel::getBirthdays(DI::userSession()->getLocalUserId());
+			$o .= ProfileModel::getEventsReminderHTML(DI::userSession()->getLocalUserId(), DI::userSession()->getPublicContactId());
 		}
 
 		if ($is_owner) {

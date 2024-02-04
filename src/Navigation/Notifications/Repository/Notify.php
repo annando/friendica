@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -226,7 +226,7 @@ class Notify extends BaseRepository
 
 		// Temporary logging for finding the origin
 		if (!isset($params['uid'])) {
-			$this->logger->notice('Missing parameters "uid".', ['params' => $params, 'callstack' => System::callstack()]);
+			$this->logger->notice('Missing parameters "uid".', ['params' => $params]);
 		}
 
 		// Ensure that the important fields are set at any time
@@ -476,7 +476,7 @@ class Notify extends BaseRepository
 							'[url='.$params['source_link'].']'.$params['source_name'].'[/url]'
 						);
 
-						$body = $l10n->t("Full Name:	%s\nSite Location:	%s\nLogin Name:	%s (%s)",
+						$body = $l10n->t("Display Name:	%s\nSite Location:	%s\nLogin Name:	%s (%s)",
 							$params['source_name'],
 							$siteurl, $params['source_mail'],
 							$params['source_nick']
@@ -497,7 +497,7 @@ class Notify extends BaseRepository
 							'[url='.$params['source_link'].']'.$params['source_name'].'[/url]'
 						);
 
-						$body = $l10n->t("Full Name:	%s\nSite Location:	%s\nLogin Name:	%s (%s)",
+						$body = $l10n->t("Display Name:	%s\nSite Location:	%s\nLogin Name:	%s (%s)",
 							$params['source_name'],
 							$siteurl, $params['source_mail'],
 							$params['source_nick']
@@ -663,6 +663,8 @@ class Notify extends BaseRepository
 			}
 
 			$email = $emailBuilder->build();
+
+			$this->logger->debug('Send mail', $datarray);
 
 			// use the Emailer class to send the message
 			return $this->emailer->send($email);

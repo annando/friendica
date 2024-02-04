@@ -7,7 +7,7 @@
 
 				<div class="contact-photo-image-wrapper hidden-xs">
 					<a href="{{if !empty($contact.photo_menu.edit)}}{{$contact.photo_menu.edit.1}}{{else}}{{$contact.url}}{{/if}}">
-						<img class="contact-photo media-object xl" src="{{$contact.thumb}}" {{$contact.sparkle}} alt="{{$contact.name}}" />
+						<img class="contact-photo media-object xl" src="{{$contact.thumb}}" {{$contact.sparkle}} alt="{{$contact.name}}" loading="lazy"/>
 					</a>
 				</div>
 
@@ -15,7 +15,7 @@
 				<button type="button" class="btn btn-default dropdown-toggle visible-xs" id="contact-photo-menu-button-{{$contact.id}}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 					{{* use a smaller picture on very small displays (e.g. mobiles) *}}
 					<div class="contact-photo-image-wrapper visible-xs">
-						<img class="contact-photo-xs media-object" src="{{$contact.thumb}}" {{$contact.sparkle}} alt="{{$contact.name}}" />
+						<img class="contact-photo-xs media-object" src="{{$contact.thumb}}" {{$contact.sparkle}} alt="{{$contact.name}}"  loading="lazy"/>
 
 						{{* Overlay background on hover the avatar picture *}}
 						<div class="contact-photo-overlay">
@@ -76,7 +76,7 @@
 			{{* The button to add or remove contacts from a contact group - group edit page *}}
 			{{if $contact.change_member}}
 			<div class="contact-group-actions pull-right nav-pills preferences">
-				<button type="button" class="contact-action-link btn contact-group-link btn-default" onclick="circleChangeMember({{$contact.change_member.gid}},{{$contact.change_member.cid}},'{{$contact.change_member.sec_token}}'); return true;" data-toggle="tooltip" title="{{$contact.change_member.title}}">
+				<button type="button" class="contact-action-link btn contact-group-link btn-default contact-circle-actions contact-circle-link" onclick="circleChangeMember({{$contact.change_member.gid}},{{$contact.change_member.cid}},'{{$contact.change_member.sec_token}}'); return true;" data-toggle="tooltip" title="{{$contact.change_member.title}}">
 					{{if $contact.label == "members"}}
 					<i class="fa fa-times-circle" aria-hidden="true"></i>
 					{{elseif $contact.label == "contacts"}}

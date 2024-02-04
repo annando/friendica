@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -41,16 +41,16 @@ class Create extends BaseApi
 	private $friendicaPhoto;
 
 
-	public function __construct(FriendicaPhoto $friendicaPhoto, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, array $server, array $parameters = [])
+	public function __construct(FriendicaPhoto $friendicaPhoto, \Friendica\Factory\Api\Mastodon\Error $errorFactory, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, array $server, array $parameters = [])
 	{
-		parent::__construct($app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
+		parent::__construct($errorFactory, $app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 
 		$this->friendicaPhoto = $friendicaPhoto;
 	}
 
 	protected function post(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_WRITE);
+		$this->checkAllowedScope(BaseApi::SCOPE_WRITE);
 		$uid  = BaseApi::getCurrentUserID();
 		$type = $this->getRequestValue($this->parameters, 'extension', 'json');
 
@@ -90,7 +90,7 @@ class Create extends BaseApi
 		if (!empty($photo)) {
 			Photo::clearAlbumCache($uid);
 			$data = ['photo' => $this->friendicaPhoto->createFromId($photo['resource_id'], null, $uid, $type)];
-			$this->response->exit('photo_create', $data, $this->parameters['extension'] ?? null);
+			$this->response->addFormattedContent('photo_create', $data, $this->parameters['extension'] ?? null);
 		} else {
 			throw new HTTPException\InternalServerErrorException('unknown error - uploading photo failed, see Friendica log for more information');
 		}

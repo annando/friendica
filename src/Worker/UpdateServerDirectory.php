@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -36,6 +36,10 @@ class UpdateServerDirectory
 	 */
 	public static function execute(array $gserver)
 	{
+		if (!DI::config()->get('system', 'poco_discovery')) {
+			return;
+		}
+
 		if ($gserver['directory-type'] == GServer::DT_MASTODON) {
 			self::discoverMastodonDirectory($gserver);
 		} elseif (!empty($gserver['poco'])) {

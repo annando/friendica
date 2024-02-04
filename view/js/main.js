@@ -378,16 +378,10 @@ $(function() {
 
 	// Allow folks to stop the ajax page updates with the pause/break key
 	$(document).keydown(function(event) {
-		if (event.keyCode == '8') {
-			var target = event.target || event.srcElement;
-			if (!/input|textarea/i.test(target.nodeName)) {
-				return false;
-			}
-		}
-
-		if (event.keyCode == '19' || (event.ctrlKey && event.which == '32')) {
+		// Pause/Break or Ctrl + Space
+		if (event.which === 19 || (!event.metaKey && !event.shiftKey && !event.altKey && event.ctrlKey && event.which === 32)) {
 			event.preventDefault();
-			if (stopped == false) {
+			if (stopped === false) {
 				stopped = true;
 				if (event.ctrlKey) {
 					totStopped = true;
@@ -608,6 +602,26 @@ function liveUpdate(src) {
 		update_url += '&max_id=' + getUrlParameter('max_id');
 	}
 
+	match = $("span.received").first();
+	if (match.length > 0) {
+		update_url += '&first_received=' + match[0].innerHTML;
+	}
+
+	match = $("span.created").first();
+	if (match.length > 0) {
+		update_url += '&first_created=' + match[0].innerHTML;
+	}
+
+	match = $("span.commented").first();
+	if (match.length > 0) {
+		update_url += '&first_commented=' + match[0].innerHTML;
+	}
+
+	match = $("span.uriid").first();
+	if (match.length > 0) {
+		update_url += '&first_uriid=' + match[0].innerHTML;
+	}
+
 	$.get(update_url, function(data) {
 		in_progress = false;
 		update_item = 0;
@@ -625,6 +639,11 @@ function liveUpdate(src) {
 			$(window).scrollTop($(window).scrollTop() + $("section").height() - orgHeight);
 		});
 	});
+}
+
+function updateItem(itemNo) {
+	force_update = true;
+	update_item = itemNo;
 }
 
 function imgbright(node) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -46,6 +46,7 @@ class Cache extends AbstractSessionHandler
 		return true;
 	}
 
+	#[\ReturnTypeWillChange]
 	public function read($id)
 	{
 		if (empty($id)) {
@@ -77,6 +78,7 @@ class Cache extends AbstractSessionHandler
 	 *
 	 * @return bool Returns false if parameters are missing, true otherwise
 	 */
+	#[\ReturnTypeWillChange]
 	public function write($id, $data): bool
 	{
 		if (!$id) {
@@ -110,6 +112,7 @@ class Cache extends AbstractSessionHandler
 		}
 	}
 
+	#[\ReturnTypeWillChange]
 	public function gc($max_lifetime): bool
 	{
 		return true;

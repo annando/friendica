@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -38,6 +38,6 @@ class Rules extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		System::jsonExit(System::getRules());
+		$this->jsonExit(System::getRules());
 	}
 }

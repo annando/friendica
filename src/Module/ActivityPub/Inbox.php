@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -45,7 +45,7 @@ class Inbox extends BaseApi
 
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid  = self::getCurrentUserID();
 		$page = $request['page'] ?? null;
 
@@ -66,7 +66,7 @@ class Inbox extends BaseApi
 			$inbox = ActivityPub\ClientToServer::getPublicInbox($uid, $page, $request['max_id'] ?? null);
 		}
 
-		System::jsonExit($inbox, 'application/activity+json');
+		$this->jsonExit($inbox, 'application/activity+json');
 	}
 
 	protected function post(array $request = [])

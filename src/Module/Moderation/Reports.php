@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -76,7 +76,7 @@ class Reports extends BaseModeration
 		while ($post = $this->database->fetch($posts)) {
 			if (in_array($post['rid'], array_keys($reports))) {
 				$post['created'] = DateTimeFormat::local($post['created'], DateTimeFormat::MYSQL);
-				$post['body']    = BBCode::toPlaintext($post['body']);
+				$post['body']    = BBCode::toPlaintext($post['body'] ?? '');
 
 				$reports[$post['rid']]['posts'][] = $post;
 			}

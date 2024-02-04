@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -93,9 +93,9 @@ return [
 		'php_path' => 'php',
 	],
 	'system' => [
-		// adjust_poll_frequency (Boolean)
-		// Automatically detect and set the best feed poll frequency.
-		'adjust_poll_frequency' => false,
+		// add_missing_posts (boolean)
+		// Checks for missing entries in "post", "post-thread" or "post-thread-user" and creates them
+		'add_missing_posts' => false,
 
 		// allowed_link_protocols (Array)
 		// Allowed protocols in links URLs, add at your own risk. http(s) is always allowed.
@@ -108,10 +108,6 @@ return [
 		// ap_always_bcc (Boolean)
 		// Addresses non-mentioned ActivityPub receivers by BCC instead of CC. Increases privacy, decreases performance.
 		'ap_always_bcc' => false,
-
-		// archival_days (Integer)
-		// Number of days that we try to deliver content before we archive a contact.
-		'archival_days' => 32,
 
 		// auth_cookie_lifetime (Integer)
 		// Number of days that should pass without any activity before a user who
@@ -138,7 +134,7 @@ return [
 
 		// big_emojis (Boolean)
 		// Display "Emoji Only" posts in big.
-		'big_emojis' => false,
+		'big_emojis' => true,
 
 		// bulk_delivery (Boolean)
 		// Delivers AP messages in a bulk (experimental)
@@ -148,29 +144,13 @@ return [
 		// Deny public access to the local user directory.
 		'block_local_dir' => false,
 
-		// blocked_tags (String)
-		// Comma separated list of hashtags that shouldn't be displayed in the trending tags
-		'blocked_tags' => '',
-
-		// community_no_sharer (Boolean)
-		// Don't display sharing accounts on the global community
-		'community_no_sharer' => false,
-
 		// contact_update_limit (Integer)
 		// How many contacts should be checked at a time?
 		'contact_update_limit' => 100,
 
-		// cron_interval (Integer)
-		// Minimal period in minutes between two calls of the "Cron" worker job.
-		'cron_interval' => 5,
-
 		// cache_driver (database|memcache|memcached|redis|apcu)
 		// Whether to use Memcache, Memcached, Redis or APCu to store temporary cache.
 		'cache_driver' => 'database',
-
-		// decoupled_receiver (Boolean)
-		// Decouple incoming AP posts by doing the processing in the background.
-		'decoupled_receiver' => false,
 
 		// distributed_cache_driver (database|memcache|memcached|redis)
 		// Whether to use database, Memcache, Memcached or Redis as a distributed cache.
@@ -182,11 +162,8 @@ return [
 
 		// config_adapter (jit|preload)
 		// Allow to switch the configuration adapter to improve performances at the cost of memory consumption.
+		// jit is slightly slower, while preload consumes marginally more memory
 		'config_adapter' => 'jit',
-
-		// curl_range_bytes (Integer)
-		// Maximum number of bytes that should be fetched. Default is 0, which mean "no limit".
-		'curl_range_bytes' => 0,
 
 		// crawl_permit_period (Integer)
 		// Period in seconds between allowed searches when the number of free searches is reached and "permit_crawling" is activated.
@@ -274,10 +251,6 @@ return [
 		// Disable the exposition check against the remote haveibeenpwned API on password change.
 		'disable_password_exposed' => false,
 
-		// disable_polling (Boolean)
-		// Disable the polling of DFRN and OStatus contacts through onepoll.php.
-		'disable_polling' => false,
-
 		// display_resharer (Boolean)
 		// Display the first resharer as icon and text on a reshared item.
 		'display_resharer' => false,
@@ -290,17 +263,13 @@ return [
 		// restricts develop log writes to requests originating from this IP address.
 		'dlogip' => '',
 
-		// emoji_activities (Boolean)
-		// Display received activities (like, dislike, reshare) as emojis
-		'emoji_activities' => false,
+		// legacy_activities (Boolean)
+		// Display received activities (like, dislike, reshare) as detailed list
+		'legacy_activities' => true,
 
 		// expire-notify-priority (integer)
 		// Priority for the expiry notification
 		'expire-notify-priority' => Friendica\Core\Worker::PRIORITY_LOW,
-
-		// fetch_by_worker (Boolean)
-		// Fetch missing posts via a background process
-		'fetch_by_worker' => false,
 
 		// fetch_featured_posts (Boolean)
 		// Fetch featured posts from all contacts
@@ -353,36 +322,17 @@ return [
 		// If set true registration is only possible after a current member of the node has sent an invitation.
 		'invitation_only' => false,
 
-		// itemspage_network (Integer)
-		// default number of items per page in stream pages (network, community, profile/contact statuses, search)
-		'itemspage_network' => 40,
-
-		// itemspage_network_mobile (Integer)
-		// default number of items per page in stream pages (network, community, profile/contact statuses, search)
-		// on detected mobile devices
-		'itemspage_network_mobile' => 20,
-
-		// jpeg_quality (Integer)
-		//
-		// Lower numbers save space at cost of image detail
-		// where n is between 1 and 100, and with very poor results below about 50
-		'jpeg_quality' => 100,
-
 		// like_no_comment (Boolean)
 		// Don't update the "commented" value of an item when it is liked.
 		'like_no_comment' => false,
 
-		// local_block (Boolean)
-		// Used in conjunction with "block_public".
-		'local_block' => false,
-
-		// local_search (Boolean)
-		// Blocks search for users who are not logged in to prevent crawlers from blocking your system.
-		'local_search' => false,
+		// limited_servers (String)
+		// A comma separated list of server hostnames that should get limited profile data
+		'limited_servers' => '',
 
 		// local_tags (Boolean)
 		// If activated, all hashtags will point to the local server.
-		'local_tags' => false,
+		'local_tags' => true,
 
 		// lock_driver (semaphore|database|memcache|memcached|redis|apcu)
 		// Whether to use semaphores, the database, Memcache, Memcached, Redis or APCu to handle locks.
@@ -393,11 +343,11 @@ return [
 		// Sets the logging adapter of Friendica globally (monolog, syslog, stream)
 		'logger_config' => 'stream',
 
-		// syslog flags (Integer)
+		// syslog_flags (Integer)
 		// Sets the syslog flags in case 'logger_config' is set to 'syslog'
 		'syslog_flags' => LOG_CONS | LOG_PID | LOG_ODELAY,
 
-		// syslog flags (Integer)
+		// syslog_facility (Integer)
 		// Sets the syslog facility in case 'logger_config' is set to 'syslog'
 		'syslog_facility' => LOG_USER,
 
@@ -411,10 +361,6 @@ return [
 		// The system timezone is used when no timezone is defined here.
 		'maintenance_end' => '03:00 +00:00',
 
-		// max_batch_queue (Integer)
-		// Maximum number of batched queue items for a single contact before subsequent messages are discarded.
-		'max_batch_queue' => 1000,
-
 		// max_connections (Integer)
 		// The maximum number of database connections which can be in use before the worker process is deferred to its next interval.
 		// When the system can't detect the maximum numbers of connection then this value can be used. Use 0 for auto-detection.
@@ -423,10 +369,6 @@ return [
 		// max_connections_level (Integer 0-100)
 		// The maximum percentage of connections that are allowed to let the worker start.
 		'max_connections_level' => 75,
-
-		// max_contact_queue (Integer)
-		// Maximum number of queue items for a single contact before subsequent messages are discarded.
-		'max_contact_queue' => 500,
 
 		// max_csv_file_size (Integer)
 		// When uploading a CSV with account addresses to follow
@@ -457,13 +399,13 @@ return [
 		// Maximum number of concurrent database processes for foreground tasks.
 		'max_processes_frontend' => 20,
 
+		// max_receivers (Integer)
+		// The maximum number of displayed receivers of posts
+		'max_receivers' => 10,
+
 		// max_recursion_depth (Integer)
 		// Maximum recursion depth when fetching posts until the job is delegated to a worker task or finished.
 		'max_recursion_depth' => 50,
-
-		// maximagesize (Integer)
-		// Maximum size in bytes of an uploaded photo.
-		'maximagesize' => 800000,
 
 		// memcache_host (String)
 		// Host name of the memcache daemon.
@@ -478,10 +420,6 @@ return [
 		'memcached_hosts' => [
 			['127.0.0.1', '11211'],
 		],
-
-		// min_poll_interval (Integer)
-		// minimal distance in minutes between two polls for a contact. Reasonable values are between 1 and 59.
-		'min_poll_interval' => 15,
 
 		// minimum_posting_interval (Integer)
 		// Minimum interval between two feed posts per user
@@ -523,24 +461,9 @@ return [
 		// Sets the ImageMagick compression level for PNG images. Values range from 0 (uncompressed) to 9 (most compressed).
 		'png_quality' => 8,
 
-		// process_view (Boolean)
-		// Process the "View" activity that is used by Peertube. View activities are displayed, when "emoji_activities" are enabled.
-		'process_view' => false,
-
 		// profiler (Boolean)
 		// Enable internal timings to help optimize code. Needed for "rendertime" addon.
 		'profiler' => false,
-
-		// pushpoll_frequency (Integer)
-		// Frequency of contact poll for subhub contact using the DFRN or OStatus network.
-		// Available values:
-		// - 5 = every month
-		// - 4 = every week
-		// - 3 = every day
-		// - 2 = twice a day
-		// - 1 = every hour
-		// - 0 = every minute
-		'pushpoll_frequency' => 3,
 
 		// redis_host (String)
 		// Host name or the path to the Unix domain socket of the Redis daemon.
@@ -561,14 +484,6 @@ return [
 		// redistribute_activities (Boolean)
 		// Redistribute incoming activities via ActivityPub
 		'redistribute_activities' => true,
-
-		// relay_deny_languages (Array)
-		// Array of languages (two digit format) that are rejected.
-		'relay_deny_languages' => [],
-
-		// relay_deny_undetected_language (Boolean)
-		// Deny undetected languages
-		'relay_deny_undetected_language' => false,
 
 		// session_handler (database|cache|native)
 		// Whether to use Cache to store session data or to use PHP native session storage.
@@ -636,10 +551,6 @@ return [
 		// Transmit pending events upon accepted contact request for groups
 		'transmit_pending_events' => false,
 
-		// update_active_contacts (Boolean)
-		// When activated, only public contacts will be activated regularly that are used for example in items or tags.
-		'update_active_contacts' => false,
-
 		// username_min_length (Integer)
 		// The minimum character length a username can be.
 		// This length is checked once the username has been trimmed and multiple spaces have been collapsed into one.
@@ -660,10 +571,6 @@ return [
 		// If enabled, it prints out the number of running processes split by priority.
 		'worker_debug' => false,
 
-		// worker_fetch_limit (Integer)
-		// Number of worker tasks that are fetched in a single query.
-		'worker_fetch_limit' => 1,
-
 		// worker_fork (Boolean)
 		// Experimental setting. Use pcntl_fork to spawn a new worker process.
 		// Does not work when "worker_multiple_fetch" is enabled (Needs more testing)
@@ -676,10 +583,6 @@ return [
 		// worker_jpm_range (String)
 		// List of minutes for the jobs per minute (JPM) calculation
 		'worker_jpm_range' => '1, 10, 60',
-
-		// worker_load_cooldown (Integer)
-		// Maximum load that causes a cooldown before each worker function call.
-		'worker_load_cooldown' => 0,
 
 		// worker_load_exponent (Integer)
 		// Default 3, which allows only 25% of the maximum worker queues when server load reaches around 37% of maximum load.
@@ -707,13 +610,15 @@ return [
 		// Does not work when "worker_fork" is enabled (Needs more testing)
 		'worker_multiple_fetch' => false,
 
-		// worker_defer_limit (Integer)
-		// Per default the systems tries delivering for 15 times before dropping it.
-		'worker_defer_limit' => 15,
-
 		// xrd_timeout (Integer)
 		// Timeout in seconds for fetching the XRD links and other requests with an expected shorter timeout
 		'xrd_timeout' => 20,
+	],
+	'performance' => [
+		// max_response_data_size (Integer)
+		// Maximum allowed outgoing HTTP request response data size in Bytes. Does not affect incoming requests to this node.
+		// Warning: Lowering this value can help with some PHP memory exhaustion issues, but can also partially break some federation features e.g. large posts may not be fetched or received from remote servers.
+		'max_response_data_size' => 1000000,
 	],
 	'proxy' => [
 		// forwarded_for_headers (String)
@@ -795,18 +700,5 @@ return [
 		// public (Boolean)
 		// Wether the blocklist is publicly listed under /about (or in any later API)
 		'public' => true,
-	],
-	'channel' => [
-		// engagement_hours (Integer)
-		// Number of hours posts are held in the engagement table
-		'engagement_hours' => 24,
-
-		// interaction_score_days (Integer)
-		// Number of days that are used to calculate the interaction score.
-		'interaction_score_days' => 30,
-
-		// sharer_interaction_days (Integer)
-		// Number of days of the last interaction that are used to define which sharers are used for the "sharers of sharers" channel.
-		'sharer_interaction_days' => 90,
 	],
 ];

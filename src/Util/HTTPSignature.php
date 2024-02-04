@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -420,7 +420,7 @@ class HTTPSignature
 	 * @return array JSON array
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
-	public static function fetch(string $request, int $uid): array
+	public static function fetch(string $request, int $uid = 0): array
 	{
 		try {
 			$curlResult = self::fetchRaw($request, $uid);
@@ -433,11 +433,12 @@ class HTTPSignature
 			return [];
 		}
 
-		if (!$curlResult->isSuccess() || empty($curlResult->getBody())) {
+		if (!$curlResult->isSuccess() || empty($curlResult->getBodyString())) {
+			Logger::debug('Fetching was unsuccessful', ['url' => $request, 'return-code' => $curlResult->getReturnCode(), 'error-number' => $curlResult->getErrorNumber(), 'error' => $curlResult->getError()]);
 			return [];
 		}
 
-		$content = json_decode($curlResult->getBody(), true);
+		$content = json_decode($curlResult->getBodyString(), true);
 		if (empty($content) || !is_array($content)) {
 			return [];
 		}

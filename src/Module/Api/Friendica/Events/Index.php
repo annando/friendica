@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -34,7 +34,7 @@ class Index extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -69,6 +69,6 @@ class Index extends BaseApi
 			];
 		}
 
-		$this->response->exit('events', ['events' => $items], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('events', ['events' => $items], $this->parameters['extension'] ?? null);
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -1388,5 +1388,37 @@ function update_1531()
 	}
 	DBA::close($threads);
 
+	return Update::SUCCESS;
+}
+
+function update_1535()
+{
+	if (DI::config()->get('system', 'compute_group_counts')) {
+		DI::config()->set('system', 'compute_circle_counts', true);
+	}
+	DI::config()->delete('system', 'compute_group_counts');
+	
+	return Update::SUCCESS;
+}
+
+function update_1539()
+{
+	$users = DBA::select('user', ['uid'], ['account-type' => User::ACCOUNT_TYPE_COMMUNITY]);
+	while ($user = DBA::fetch($users)) {
+		User::setCommunityUserSettings($user['uid']);
+	}
+	DBA::close($users);
+
+	return Update::SUCCESS;
+}
+
+function pre_update_1550()
+{
+	if (DBStructure::existsTable('post-engagement') && DBStructure::existsColumn('post-engagement', ['language'])) {
+		DBA::e("ALTER TABLE `post-engagement` DROP `language`");
+	}
+	if (DBStructure::existsTable('post-searchindex') && DBStructure::existsColumn('post-searchindex', ['network'])) {
+		DBA::e("ALTER TABLE `post-searchindex` DROP `network`, DROP `private`");
+	}
 	return Update::SUCCESS;
 }

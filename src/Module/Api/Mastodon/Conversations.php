@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -25,6 +25,7 @@ use Friendica\Core\System;
 use Friendica\Database\DBA;
 use Friendica\DI;
 use Friendica\Module\BaseApi;
+use Friendica\Network\HTTPException\NotFoundException;
 
 /**
  * @see https://docs.joinmastodon.org/methods/timelines/conversations/
@@ -33,17 +34,17 @@ class Conversations extends BaseApi
 {
 	protected function delete(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		if (!empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		DBA::delete('conv', ['id' => $this->parameters['id'], 'uid' => $uid]);
 		DBA::delete('mail', ['convid' => $this->parameters['id'], 'uid' => $uid]);
 
-		System::jsonExit([]);
+		$this->jsonExit([]);
 	}
 
 	/**
@@ -51,7 +52,7 @@ class Conversations extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -83,9 +84,13 @@ class Conversations extends BaseApi
 
 		$conversations = [];
 
-		while ($conv = DBA::fetch($convs)) {
-			self::setBoundaries($conv['id']);
-			$conversations[] = DI::mstdnConversation()->createFromConvId($conv['id']);
+		try {
+			while ($conv = DBA::fetch($convs)) {
+				self::setBoundaries($conv['id']);
+				$conversations[] = DI::mstdnConversation()->createFromConvId($conv['id']);
+			}
+		} catch (NotFoundException $e) {
+			$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 		}
 
 		DBA::close($convs);
@@ -95,6 +100,6 @@ class Conversations extends BaseApi
 		}
 
 		self::setLinkHeader();
-		System::jsonExit($conversations);
+		$this->jsonExit($conversations);
 	}
 }

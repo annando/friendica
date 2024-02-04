@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -657,5 +657,25 @@ class Network
 	{
 		$scheme = parse_url($url, PHP_URL_SCHEME);
 		return !empty($scheme) && in_array($scheme, ['http', 'https']) && parse_url($url, PHP_URL_HOST);
+	}
+
+	/**
+	 * Creates an Uri object out of a given Uri string
+	 *
+	 * @param string|null $uri
+	 * @return UriInterface|null
+	 */
+	public static function createUriFromString(string $uri = null): ?UriInterface
+	{
+		if (empty($uri)) {
+			return null;
+		}
+
+		try {
+			return new Uri($uri);
+		} catch (\Exception $e) {
+			Logger::debug('Invalid URI', ['code' => $e->getCode(), 'message' => $e->getMessage(), 'uri' => $uri]);
+			return null;
+		}
 	}
 }

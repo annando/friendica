@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -54,7 +54,7 @@ class RemoveTag extends BaseModule
 
 	protected function post(array $request = [])
 	{
-		System::httpError($this->removeTag($request));
+		$this->httpError($this->removeTag($request));
 	}
 
 	protected function content(array $request = []): string

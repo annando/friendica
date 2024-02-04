@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -73,18 +73,18 @@ class HttpClient implements ICanSendHttpRequests
 			throw new \InvalidArgumentException('Unable to retrieve the host in URL: ' . $url);
 		}
 
-		if(!filter_var($host, FILTER_VALIDATE_IP) && !@dns_get_record($host . '.', DNS_A + DNS_AAAA)) {
-			$this->logger->debug('URL cannot be resolved.', ['url' => $url, 'callstack' => System::callstack(20)]);
+		if(!filter_var($host, FILTER_VALIDATE_IP) && !@dns_get_record($host . '.', DNS_A) && !@dns_get_record($host . '.', DNS_AAAA)) {
+			$this->logger->debug('URL cannot be resolved.', ['url' => $url]);
 			$this->profiler->stopRecording();
 			return CurlResult::createErrorCurl($this->logger, $url);
 		}
 
 		if (Network::isLocalLink($url)) {
-			$this->logger->info('Local link', ['url' => $url, 'callstack' => System::callstack(20)]);
+			$this->logger->info('Local link', ['url' => $url]);
 		}
 
 		if (strlen($url) > 1000) {
-			$this->logger->debug('URL is longer than 1000 characters.', ['url' => $url, 'callstack' => System::callstack(20)]);
+			$this->logger->debug('URL is longer than 1000 characters.', ['url' => $url]);
 			$this->profiler->stopRecording();
 			return CurlResult::createErrorCurl($this->logger, substr($url, 0, 200));
 		}
@@ -160,7 +160,7 @@ class HttpClient implements ICanSendHttpRequests
 		};
 
 		if (empty($conf[HttpClientOptions::HEADERS]['Accept']) && in_array($method, ['get', 'head'])) {
-			$this->logger->info('Accept header was missing, using default.', ['url' => $url, 'callstack' => System::callstack()]);
+			$this->logger->info('Accept header was missing, using default.', ['url' => $url]);
 			$conf[HttpClientOptions::HEADERS]['Accept'] = HttpClientAccept::DEFAULT;
 		}
 
@@ -238,7 +238,7 @@ class HttpClient implements ICanSendHttpRequests
 		$this->profiler->startRecording('network');
 
 		if (Network::isLocalLink($url)) {
-			$this->logger->debug('Local link', ['url' => $url, 'callstack' => System::callstack(20)]);
+			$this->logger->debug('Local link', ['url' => $url]);
 		}
 
 		if (Network::isUrlBlocked($url)) {
@@ -271,7 +271,7 @@ class HttpClient implements ICanSendHttpRequests
 	{
 		$ret = $this->fetchFull($url, $accept_content, $timeout, $cookiejar);
 
-		return $ret->getBody();
+		return $ret->getBodyString();
 	}
 
 	/**

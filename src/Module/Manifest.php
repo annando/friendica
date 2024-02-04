@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -133,6 +133,6 @@ class Manifest extends BaseModule
 			$manifest['theme_color'] = $theme_color;
 		}
 
-		Core\System::jsonExit($manifest, 'application/manifest+json');
+		$this->jsonExit($manifest, 'application/manifest+json');
 	}
 }

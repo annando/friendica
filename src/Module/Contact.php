@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -29,7 +29,6 @@ use Friendica\Content\Widget;
 use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
 use Friendica\Core\Renderer;
-use Friendica\Core\System;
 use Friendica\Core\Theme;
 use Friendica\Core\Worker;
 use Friendica\Database\DBA;
@@ -140,7 +139,7 @@ class Contact extends BaseModule
 			try {
 				UpdateContact::add(Worker::PRIORITY_HIGH, $contact_id);
 			} catch (\InvalidArgumentException $e) {
-				Logger::notice($e->getMessage(), ['contact' => $contact, 'callstack' => System::callstack()]);
+				Logger::notice($e->getMessage(), ['contact' => $contact]);
 			}
 		}
 	}

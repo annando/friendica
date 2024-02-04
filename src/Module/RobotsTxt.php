@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -50,6 +50,10 @@ class RobotsTxt extends BaseModule
 
 		echo PHP_EOL;
 		echo 'User-agent: ChatGPT-User' . PHP_EOL;
+		echo 'Disallow: /' . PHP_EOL;
+
+		echo PHP_EOL;
+		echo 'User-agent: Google-Extended' . PHP_EOL;
 		echo 'Disallow: /' . PHP_EOL;
 
 		echo PHP_EOL;

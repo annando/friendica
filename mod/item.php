@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -220,6 +220,10 @@ function item_insert(int $uid, array $request, bool $preview, string $return_pat
 	$recipients = explode(',', $request['emailcc'] ?? '');
 
 	DI::contentItem()->postProcessPost($post, $recipients);
+
+	if (($post['private'] == Item::PRIVATE) && ($post['thr-parent-id'] != $post['uri-id'])) {
+		DI::contentItem()->copyPermissions($post['thr-parent-id'], $post['uri-id'], $post['parent-uri-id']);
+	}
 
 	Logger::debug('post_complete');
 

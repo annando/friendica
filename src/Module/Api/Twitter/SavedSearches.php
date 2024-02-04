@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -32,7 +32,7 @@ class SavedSearches extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$terms = DBA::select('search', ['id', 'term'], ['uid' => $uid]);
@@ -44,6 +44,6 @@ class SavedSearches extends BaseApi
 
 		DBA::close($terms);
 
-		$this->response->exit('terms', ['terms' => $result], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('terms', ['terms' => $result], $this->parameters['extension'] ?? null);
 	}
 }

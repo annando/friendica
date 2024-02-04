@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -30,10 +30,14 @@ use Friendica\BaseDataTransferObject;
  */
 class Configuration extends BaseDataTransferObject
 {
+	/** @var Accounts */
+	protected $accounts;
 	/** @var StatusesConfig */
 	protected $statuses;
 	/** @var MediaAttachmentsConfig */
 	protected $media_attachments;
+	/** @var Polls */
+	protected $polls;
 
 	/**
 	 * @param StatusesConfig $statuses
@@ -41,9 +45,13 @@ class Configuration extends BaseDataTransferObject
 	 */
 	public function __construct(
 		StatusesConfig $statuses,
-		MediaAttachmentsConfig $media_attachments
+		MediaAttachmentsConfig $media_attachments,
+		Polls $polls,
+		Accounts $accounts
 	) {
+		$this->accounts          = $accounts;
 		$this->statuses          = $statuses;
 		$this->media_attachments = $media_attachments;
+		$this->polls             = $polls;
 	}
 }

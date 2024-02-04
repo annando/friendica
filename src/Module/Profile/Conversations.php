@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -220,9 +220,9 @@ class Conversations extends BaseProfile
 		$last_updated_array[$last_updated_key] = time();
 		$this->session->set('last_updated', $last_updated_array);
 
-		if ($is_owner && !$this->config->get('theme', 'hide_eventlist')) {
-			$o .= ProfileModel::getBirthdays();
-			$o .= ProfileModel::getEventsReminderHTML();
+		if ($is_owner && ProfileModel::shouldDisplayEventList($this->session->getLocalUserId(), $this->mode)) {
+			$o .= ProfileModel::getBirthdays($this->session->getLocalUserId());
+			$o .= ProfileModel::getEventsReminderHTML($this->session->getLocalUserId(), $this->session->getPublicContactId());
 		}
 
 		if ($is_owner) {

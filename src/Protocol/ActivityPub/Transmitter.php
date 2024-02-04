@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -23,6 +23,7 @@ namespace Friendica\Protocol\ActivityPub;
 
 use Friendica\App;
 use Friendica\Content\Feature;
+use Friendica\Content\Smilies;
 use Friendica\Content\Text\BBCode;
 use Friendica\Core\Cache\Enum\Duration;
 use Friendica\Core\Logger;
@@ -347,7 +348,7 @@ class Transmitter
 	{
 		$owner = User::getOwnerDataById($uid);
 		if (!isset($owner['id'])) {
-			DI::logger()->error('Unable to find owner data for uid', ['uid' => $uid, 'callstack' => System::callstack(20)]);
+			DI::logger()->error('Unable to find owner data for uid', ['uid' => $uid]);
 			throw new HTTPException\NotFoundException('User not found.');
 		}
 
@@ -367,13 +368,14 @@ class Transmitter
 			$data['outbox']    = DI::baseUrl() . '/outbox/' . $owner['nick'];
 			$data['featured']  = DI::baseUrl() . '/featured/' . $owner['nick'];
 		} else {
-			$data['inbox'] = DI::baseUrl() . '/friendica/inbox';
+			$data['inbox']  = DI::baseUrl() . '/friendica/inbox';
+			$data['outbox'] = DI::baseUrl() . '/friendica/outbox';
 		}
 
 		$data['preferredUsername'] = $owner['nick'];
-		$data['name'] = $owner['name'];
+		$data['name'] = $full ? $owner['name'] : $owner['nick'];
 
-		if (!$full && !empty($owner['country-name'] . $owner['region'] . $owner['locality'])) {
+		if ($full && !empty($owner['country-name'] . $owner['region'] . $owner['locality'])) {
 			$data['vcard:hasAddress'] = ['@type' => 'vcard:Home', 'vcard:country-name' => $owner['country-name'],
 				'vcard:region' => $owner['region'], 'vcard:locality' => $owner['locality']];
 		}
@@ -395,7 +397,7 @@ class Transmitter
 
 		$data['url'] = $owner['url'];
 		$data['manuallyApprovesFollowers'] = in_array($owner['page-flags'], [User::PAGE_FLAGS_NORMAL, User::PAGE_FLAGS_PRVGROUP]);
-		$data['discoverable'] = (bool)$owner['net-publish'];
+		$data['discoverable'] = (bool)$owner['net-publish'] && $full;
 		$data['publicKey'] = ['id' => $owner['url'] . '#main-key',
 			'owner' => $owner['url'],
 			'publicKeyPem' => $owner['pubkey']];
@@ -560,14 +562,13 @@ class Transmitter
 	 *
 	 * @param array   $item             Item array
 	 * @param boolean $blindcopy        addressing via "bcc" or "cc"?
-	 * @param boolean $expand_followers Expand the list of followers
 	 * @param integer $last_id          Last item id for adding receivers
 	 *
 	 * @return array with permission data
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 * @throws \ImagickException
 	 */
-	private static function createPermissionBlockForItem(array $item, bool $blindcopy, bool $expand_followers, int $last_id = 0): array
+	private static function createPermissionBlockForItem(array $item, bool $blindcopy, int $last_id = 0): array
 	{
 		if ($last_id == 0) {
 			$last_id = $item['id'];
@@ -704,7 +705,7 @@ class Transmitter
 				$data['to'][] = $actor_profile['followers'];
 			}
 		} else {
-			$receiver_list = Item::enumeratePermissions($item, true, $expand_followers);
+			$receiver_list = Item::enumeratePermissions($item, true, false);
 
 			foreach ($terms as $term) {
 				$cid = Contact::getIdForURL($term['url'], $item['uid']);
@@ -851,6 +852,28 @@ class Transmitter
 			unset($receivers['bcc']);
 		}
 
+		if (!$blindcopy && count($receivers['audience']) == 1) {
+			$receivers['audience'] = $receivers['audience'][0];
+		} elseif (!$receivers['audience']) {
+			unset($receivers['audience']);
+		}
+
+		return $receivers;
+	}
+
+	/**
+	 * Store the receivers for the given item
+	 *
+	 * @param array $item
+	 * @return void
+	 */
+	public static function storeReceiversForItem(array $item)
+	{
+		$receivers = self::createPermissionBlockForItem($item, true);
+		if (empty($receivers)) {
+			return;
+		}
+
 		foreach (['to' => Tag::TO, 'cc' => Tag::CC, 'bcc' => Tag::BCC, 'audience' => Tag::AUDIENCE] as $element => $type) {
 			if (!empty($receivers[$element])) {
 				foreach ($receivers[$element] as $receiver) {
@@ -862,6 +885,57 @@ class Transmitter
 					Tag::store($item['uri-id'], $type, $name, $receiver);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Get a list of receivers for the provided uri-id
+	 *
+	 * @param array $item
+	 * @param boolean $blindcopy
+	 * @return void
+	 */
+	public static function getReceiversForUriId(int $uri_id, bool $blindcopy)
+	{
+		$tags = Tag::getByURIId($uri_id, [Tag::TO, Tag::CC, Tag::BCC, Tag::AUDIENCE]);
+		if (empty($tags)) {
+			Logger::debug('No receivers found', ['uri-id' => $uri_id]);
+			$post = Post::selectFirst(Item::DELIVER_FIELDLIST, ['uri-id' => $uri_id, 'origin' => true]);
+			if (!empty($post)) {
+				ActivityPub\Transmitter::storeReceiversForItem($post);
+				$tags = Tag::getByURIId($uri_id, [Tag::TO, Tag::CC, Tag::BCC, Tag::AUDIENCE]);
+				Logger::debug('Receivers are created', ['uri-id' => $uri_id, 'receivers' => count($tags)]);
+			} else {
+				Logger::debug('Origin item not found', ['uri-id' => $uri_id]);
+			}
+		}
+
+		$receivers = [
+			'to'       => [],
+			'cc'       => [],
+			'bcc'      => [],
+			'audience' => [],
+		];
+
+		foreach ($tags as $receiver) {
+			switch ($receiver['type']) {
+				case Tag::TO:
+					$receivers['to'][] = $receiver['url'];
+					break;
+				case Tag::CC:
+					$receivers['cc'][] = $receiver['url'];
+					break;
+				case Tag::BCC:
+					$receivers['bcc'][] = $receiver['url'];
+					break;
+				case Tag::AUDIENCE:
+					$receivers['audience'][] = $receiver['url'];
+					break;
+			}
+		}
+
+		if (!$blindcopy) {
+			unset($receivers['bcc']);
 		}
 
 		if (!$blindcopy && count($receivers['audience']) == 1) {
@@ -905,13 +979,12 @@ class Transmitter
 	 * Fetches a list of inboxes of followers of a given user
 	 *
 	 * @param integer $uid      User ID
-	 * @param boolean $personal fetch personal inboxes
 	 * @param boolean $all_ap   Retrieve all AP enabled inboxes
 	 * @return array of follower inboxes
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 * @throws \ImagickException
 	 */
-	public static function fetchTargetInboxesforUser(int $uid, bool $personal = false, bool $all_ap = false): array
+	public static function fetchTargetInboxesforUser(int $uid, bool $all_ap = false): array
 	{
 		$inboxes = [];
 
@@ -932,11 +1005,13 @@ class Transmitter
 		}
 
 		$condition = [
-			'uid' => $uid,
-			'archive' => false,
-			'pending' => false,
-			'blocked' => false,
-			'network' => Protocol::FEDERATED,
+			'uid'          => $uid,
+			'self'         => false,
+			'archive'      => false,
+			'pending'      => false,
+			'blocked'      => false,
+			'network'      => Protocol::FEDERATED,
+			'contact-type' => [Contact::TYPE_UNKNOWN, Contact::TYPE_PERSON, Contact::TYPE_NEWS, Contact::TYPE_ORGANISATION],
 		];
 
 		if (!empty($uid)) {
@@ -959,7 +1034,7 @@ class Transmitter
 
 			$profile = APContact::getByURL($contact['url'], false);
 			if (!empty($profile)) {
-				if (empty($profile['sharedinbox']) || $personal || Contact::isLocal($contact['url'])) {
+				if (empty($profile['sharedinbox']) || Contact::isLocal($contact['url'])) {
 					$target = $profile['inbox'];
 				} else {
 					$target = $profile['sharedinbox'];
@@ -979,15 +1054,13 @@ class Transmitter
 	 *
 	 * @param array   $item     Item array
 	 * @param integer $uid      User ID
-	 * @param boolean $personal fetch personal inboxes
-	 * @param integer $last_id  Last item id for adding receivers
 	 * @return array with inboxes
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 * @throws \ImagickException
 	 */
-	public static function fetchTargetInboxes(array $item, int $uid, bool $personal = false, int $last_id = 0): array
+	public static function fetchTargetInboxes(array $item, int $uid): array
 	{
-		$permissions = self::createPermissionBlockForItem($item, true, true, $last_id);
+		$permissions = self::getReceiversForUriId($item['uri-id'], true);
 		if (empty($permissions)) {
 			return [];
 		}
@@ -1019,13 +1092,13 @@ class Transmitter
 				}
 
 				if ($item_profile && ($receiver == $item_profile['followers']) && ($uid == $profile_uid)) {
-					$inboxes = array_merge_recursive($inboxes, self::fetchTargetInboxesforUser($uid, $personal, self::isAPPost($last_id)));
+					$inboxes = array_merge_recursive($inboxes, self::fetchTargetInboxesforUser($uid, true));
 				} else {
 					$profile = APContact::getByURL($receiver, false);
 					if (!empty($profile)) {
 						$contact = Contact::getByURLForUser($receiver, $uid, false, ['id']);
 
-						if (empty($profile['sharedinbox']) || $personal || $blindcopy || Contact::isLocal($receiver)) {
+						if (empty($profile['sharedinbox']) || $blindcopy || Contact::isLocal($receiver)) {
 							$target = $profile['inbox'];
 						} else {
 							$target = $profile['sharedinbox'];
@@ -1039,6 +1112,27 @@ class Transmitter
 		}
 
 		return $inboxes;
+	}
+
+	/**
+	 * Fetch the target inboxes for a given mail id
+	 *
+	 * @param integer $mail_id
+	 * @return array
+	 */
+	public static function fetchTargetInboxesFromMail(int $mail_id): array
+	{
+		$mail = DBA::selectFirst('mail', ['contact-id'], ['id' => $mail_id]);
+		if (!DBA::isResult($mail)) {
+			return [];
+		}
+
+		$account = DBA::selectFirst('account-user-view', ['ap-inbox'], ['id' => $mail['contact-id']]);
+		if (empty($account['ap-inbox'])) {
+			return [];
+		}
+
+		return [$account['ap-inbox'] => [$mail['contact-id']]];
 	}
 
 	/**
@@ -1119,7 +1213,7 @@ class Transmitter
 		$data['actor'] = $mail['author-link'];
 		$data['published'] = DateTimeFormat::utc($mail['created'] . '+00:00', DateTimeFormat::ATOM);
 		$data['instrument'] = self::getService();
-		$data = array_merge($data, self::createPermissionBlockForItem($mail, true, false));
+		$data = array_merge($data, self::createPermissionBlockForItem($mail, true));
 
 		if (empty($data['to']) && !empty($data['cc'])) {
 			$data['to'] = $data['cc'];
@@ -1351,7 +1445,7 @@ class Transmitter
 
 		$data['instrument'] = self::getService();
 
-		$data = array_merge($data, self::createPermissionBlockForItem($item, false, false));
+		$data = array_merge($data, self::createPermissionBlockForItem($item, false));
 
 		if (in_array($data['type'], ['Create', 'Update', 'Delete'])) {
 			$data['object'] = self::createNote($item, $api_mode);
@@ -1431,6 +1525,29 @@ class Transmitter
 		}
 
 		return $location;
+	}
+
+	/**
+	 * Appends emoji tags to a tag array according to the tags used.
+	 *
+	 * @param array $tags Tag array
+	 * @param string $text Text containing tags like :tag:
+	 * @return string normalized text
+	 */
+	private static function addEmojiTags(array &$tags, string $text): string
+	{
+		$emojis = Smilies::extractUsedSmilies($text, $normalized);
+		foreach ($emojis as $name => $url) {
+			$tags[] = [
+				'type' => 'Emoji',
+				'name' => $name,
+				'icon' => [
+					'type' => 'Image',
+					'url' => $url,
+				],
+			];
+		}
+		return $normalized;
 	}
 
 	/**
@@ -1705,17 +1822,18 @@ class Transmitter
 			$data['name'] = BBCode::toPlaintext($item['title'], false);
 		}
 
-		$permission_block = self::createPermissionBlockForItem($item, false, false);
+		$permission_block = self::getReceiversForUriId($item['uri-id'], false);
 
 		$real_quote = false;
 
 		$item = Post\Media::addHTMLAttachmentToItem($item);
 
 		$body = $item['body'];
-
+		$emojis = [];
 		if ($type == 'Note') {
 			$body = $item['raw-body'] ?? self::removePictures($body);
 		}
+		$body = self::addEmojiTags($emojis, $body);
 
 		/**
 		 * @todo Improve the automated summary
@@ -1752,7 +1870,7 @@ class Transmitter
 
 			$body = BBCode::setMentionsToNicknames($body);
 
-			if (!empty($item['quote-uri-id'])) {
+			if (!empty($item['quote-uri-id']) && ($item['quote-uri-id'] != $item['uri-id'])) {
 				if (Post::exists(['uri-id' => $item['quote-uri-id'], 'network' => [Protocol::ACTIVITYPUB, Protocol::DFRN]])) {
 					$real_quote = true;
 					$data['quoteUrl'] = $item['quote-uri'];
@@ -1772,7 +1890,7 @@ class Transmitter
 		if (!empty($language)) {
 			$richbody = BBCode::setMentionsToNicknames($item['body'] ?? '');
 			$richbody = Post\Media::removeFromEndOfBody($richbody);
-			if (!empty($item['quote-uri-id'])) {
+			if (!empty($item['quote-uri-id']) && ($item['quote-uri-id'] != $item['uri-id'])) {
 				if ($real_quote) {
 					$richbody = DI::contentItem()->addShareLink($richbody, $item['quote-uri-id']);
 				} else {
@@ -1784,7 +1902,7 @@ class Transmitter
 			$data['contentMap'][$language] = BBCode::convertForUriId($item['uri-id'], $richbody, BBCode::EXTERNAL);
 		}
 
-		if (!empty($item['quote-uri-id'])) {
+		if (!empty($item['quote-uri-id']) && ($item['quote-uri-id'] != $item['uri-id'])) {
 			$source = DI::contentItem()->addSharedPost($item, $item['body']);
 		} else {
 			$source = $item['body'];
@@ -1797,7 +1915,7 @@ class Transmitter
 		}
 
 		$data['attachment'] = self::createAttachmentList($item);
-		$data['tag'] = self::createTagList($item, $data['quoteUrl'] ?? '');
+		$data['tag'] = array_merge(self::createTagList($item, $data['quoteUrl'] ?? ''), $emojis);
 
 		if (empty($data['location']) && (!empty($item['coord']) || !empty($item['location']))) {
 			$data['location'] = self::createLocation($item);
@@ -1824,7 +1942,7 @@ class Transmitter
 		if (!empty($item['language'])) {
 			$languages = array_keys(json_decode($item['language'], true));
 			if (!empty($languages[0])) {
-				return $languages[0];
+				return DI::l10n()->toISO6391($languages[0]);
 			}
 		}
 
@@ -1832,12 +1950,12 @@ class Transmitter
 		if (!empty($item['uid'])) {
 			$user = DBA::selectFirst('user', ['language'], ['uid' => $item['uid']]);
 			if (!empty($user['language'])) {
-				return $user['language'];
+				return DI::l10n()->toISO6391($user['language']);
 			}
 		}
 
 		// And finally just use the system language
-		return DI::config()->get('system', 'language');
+		return DI::l10n()->toISO6391(DI::config()->get('system', 'language'));
 	}
 
 	/**

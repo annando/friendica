@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -38,7 +38,7 @@ class Whoami extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$owner = User::getOwnerDataById($uid);
@@ -100,6 +100,6 @@ class Whoami extends BaseApi
 		];
 
 		$data['generator'] = ActivityPub\Transmitter::getService();
-		System::jsonExit($data, 'application/activity+json');
+		$this->jsonExit($data, 'application/activity+json');
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -69,7 +69,7 @@ class Get extends \Friendica\BaseModule
 			$events = Event::getListByDate($owner['uid'], $request['start'] ?? '', $request['end'] ?? '');
 		}
 
-		System::jsonExit($events ? self::map($events) : []);
+		$this->jsonExit($events ? self::map($events) : []);
 	}
 
 	private static function map(array $events): array

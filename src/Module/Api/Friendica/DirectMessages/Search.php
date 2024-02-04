@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -44,9 +44,9 @@ class Search extends BaseApi
 	/** @var DirectMessage */
 	private $directMessage;
 
-	public function __construct(DirectMessage $directMessage, Database $dba, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, array $server, array $parameters = [])
+	public function __construct(DirectMessage $directMessage, Database $dba, \Friendica\Factory\Api\Mastodon\Error $errorFactory, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, array $server, array $parameters = [])
 	{
-		parent::__construct($app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
+		parent::__construct($errorFactory, $app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 
 		$this->dba           = $dba;
 		$this->directMessage = $directMessage;
@@ -54,7 +54,7 @@ class Search extends BaseApi
 
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -64,7 +64,7 @@ class Search extends BaseApi
 		// error if no searchstring specified
 		if ($request['searchstring'] == '') {
 			$answer = ['result' => 'error', 'message' => 'searchstring not specified'];
-			$this->response->exit('direct_message_search', ['$result' => $answer], $this->parameters['extension'] ?? null);
+			$this->response->addFormattedContent('direct_message_search', ['$result' => $answer], $this->parameters['extension'] ?? null);
 			return;
 		}
 
@@ -82,6 +82,6 @@ class Search extends BaseApi
 			$success = ['success' => true, 'search_results' => $ret];
 		}
 
-		$this->response->exit('direct_message_search', ['$result' => $success], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('direct_message_search', ['$result' => $success], $this->parameters['extension'] ?? null);
 	}
 }

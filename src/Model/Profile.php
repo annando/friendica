@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -22,6 +22,7 @@
 namespace Friendica\Model;
 
 use Friendica\App;
+use Friendica\App\Mode;
 use Friendica\Content\Text\BBCode;
 use Friendica\Content\Widget\ContactBlock;
 use Friendica\Core\Cache\Enum\Duration;
@@ -228,7 +229,7 @@ class Profile
 
 		// System user, aborting
 		if ($profile['uid'] === 0) {
-			DI::logger()->warning('System user found in Profile::load', ['nickname' => $nickname, 'callstack' => System::callstack(20)]);
+			DI::logger()->warning('System user found in Profile::load', ['nickname' => $nickname]);
 			throw new HTTPException\NotFoundException(DI::l10n()->t('User not found.'));
 		}
 
@@ -307,7 +308,12 @@ class Profile
 
 		$profile_url = $profile['url'];
 
-		$cid = $profile['id'];
+		$contact = Contact::selectFirst(['id'], ['uri-id' => $profile['uri-id'], 'uid' => 0]);
+		if (!$contact) {
+			return $o;
+		}
+
+		$cid = $contact['id'];
 
 		$follow_link = null;
 		$unfollow_link = null;
@@ -346,8 +352,6 @@ class Profile
 			if (Contact::canReceivePrivateMessages($profile_contact)) {
 				if ($visitor_is_followed || $visitor_is_following) {
 					$wallmessage_link = $visitor_base_path . '/message/new/' . $profile_contact['id'];
-				} elseif ($visitor_is_authenticated && !empty($profile['unkmail'])) {
-					$wallmessage_link = 'profile/' . $profile['nickname'] . '/unkmail';
 				}
 			}
 		}
@@ -450,7 +454,19 @@ class Profile
 		$p['url'] = Contact::magicLinkById($cid, $profile['url']);
 
 		if (!isset($profile['hidewall'])) {
-			Logger::warning('Missing hidewall key in profile array', ['profile' => $profile, 'callstack' => System::callstack(10)]);
+			Logger::warning('Missing hidewall key in profile array', ['profile' => $profile]);
+		}
+
+		if ($profile['account-type'] == Contact::TYPE_COMMUNITY) {
+			$mention_label = DI::l10n()->t('Post to group');
+			$mention_url   = 'compose/0?body=!' . $profile['addr'];
+			$network_label = DI::l10n()->t('View group');
+			$network_url   = 'network/group/' . $cid;
+		} else {
+			$mention_label = DI::l10n()->t('Mention');
+			$mention_url   = 'compose/0?body=@' . $profile['addr'];
+			$network_label = DI::l10n()->t('Network Posts');
+			$network_url   = 'contact/' . $cid . '/conversations';
 		}
 
 		$tpl = Renderer::getMarkupTemplate('profile/vcard.tpl');
@@ -476,6 +492,10 @@ class Profile
 			'$updated' => $updated,
 			'$diaspora' => $diaspora,
 			'$contact_block' => $contact_block,
+			'$mention_label' => $mention_label,
+			'$mention_url' => $mention_url,
+			'$network_label' => $network_label,
+			'$network_url' => $network_url,
 		]);
 
 		$arr = ['profile' => &$profile, 'entry' => &$o];
@@ -486,29 +506,39 @@ class Profile
 	}
 
 	/**
+	 * Check if the event list should be displayed
+	 *
+	 * @param integer $uid
+	 * @param Mode $mode
+	 * @return boolean
+	 */
+	public static function shouldDisplayEventList(int $uid, Mode $mode): bool
+	{
+		if (empty($uid) || $mode->isMobile()) {
+			return false;
+		}
+
+		if (!DI::pConfig()->get($uid, 'system', 'display_eventlist', true)) {
+			return false;
+		}
+
+		return !DI::config()->get('theme', 'hide_eventlist');
+	}
+
+	/**
 	 * Returns the upcoming birthdays of contacts of the current user as HTML content
+	 * @param int $uid  User Id
 	 *
 	 * @return string The upcoming birthdays (HTML)
 	 * @throws HTTPException\InternalServerErrorException
 	 * @throws HTTPException\ServiceUnavailableException
 	 * @throws \ImagickException
 	 */
-	public static function getBirthdays(): string
+	public static function getBirthdays(int $uid): string
 	{
-		if (!DI::userSession()->getLocalUserId() || DI::mode()->isMobile() || DI::mode()->isMobile()) {
-			return '';
-		}
-
-		/*
-		* $mobile_detect = new Mobile_Detect();
-		* $is_mobile = $mobile_detect->isMobile() || $mobile_detect->isTablet();
-		* 		if ($is_mobile)
-		* 			return $o;
-		*/
-
 		$bd_short = DI::l10n()->t('F d');
 
-		$cacheKey = 'get_birthdays:' . DI::userSession()->getLocalUserId();
+		$cacheKey = 'get_birthdays:' . $uid;
 		$events   = DI::cache()->get($cacheKey);
 		if (is_null($events)) {
 			$result = DBA::p(
@@ -525,7 +555,7 @@ class Profile
 				ORDER BY `start`",
 				Contact::SHARING,
 				Contact::FRIEND,
-				DI::userSession()->getLocalUserId(),
+				$uid,
 				DateTimeFormat::utc('now + 6 days'),
 				DateTimeFormat::utcNow()
 			);
@@ -589,30 +619,18 @@ class Profile
 
 	/**
 	 * Renders HTML for event reminder (e.g. contact birthdays
+	 * @param int $uid  User Id
+	 * @param int $pcid Public Contact Id
 	 *
 	 * @return string Rendered HTML
 	 */
-	public static function getEventsReminderHTML(): string
+	public static function getEventsReminderHTML(int $uid, int $pcid): string
 	{
-		$a = DI::app();
-		$o = '';
-
-		if (!DI::userSession()->getLocalUserId() || DI::mode()->isMobile() || DI::mode()->isMobile()) {
-			return $o;
-		}
-
-		/*
-		* 	$mobile_detect = new Mobile_Detect();
-		* 		$is_mobile = $mobile_detect->isMobile() || $mobile_detect->isTablet();
-		* 		if ($is_mobile)
-		* 			return $o;
-		*/
-
 		$bd_format = DI::l10n()->t('g A l F d'); // 8 AM Friday January 18
 		$classtoday = '';
 
 		$condition = ["`uid` = ? AND `type` != 'birthday' AND `start` < ? AND `start` >= ?",
-			DI::userSession()->getLocalUserId(), DateTimeFormat::utc('now + 7 days'), DateTimeFormat::utc('now - 1 days')];
+			$uid, DateTimeFormat::utc('now + 7 days'), DateTimeFormat::utc('now - 1 days')];
 		$s = DBA::select('event', [], $condition, ['order' => ['start']]);
 
 		$r = [];
@@ -622,7 +640,7 @@ class Profile
 			$total = 0;
 
 			while ($rr = DBA::fetch($s)) {
-				$condition = ['parent-uri' => $rr['uri'], 'uid' => $rr['uid'], 'author-id' => DI::userSession()->getPublicContactId(),
+				$condition = ['parent-uri' => $rr['uri'], 'uid' => $rr['uid'], 'author-id' => $pcid,
 					'vid' => [Verb::getID(Activity::ATTEND), Verb::getID(Activity::ATTENDMAYBE)],
 					'visible' => true, 'deleted' => false];
 				if (!Post::exists($condition)) {
@@ -813,12 +831,14 @@ class Profile
 
 	/**
 	 * Set the visitor cookies (see remote_user()) for signed HTTP requests
-	 (
+	 *
+	 * @param array $server The content of the $_SERVER superglobal
 	 * @return array Visitor contact array
+	 * @throws InternalServerErrorException
 	 */
-	public static function addVisitorCookieForHTTPSigner(): array
+	public static function addVisitorCookieForHTTPSigner(array $server): array
 	{
-		$requester = HTTPSignature::getSigner('', $_SERVER);
+		$requester = HTTPSignature::getSigner('', $server);
 		if (empty($requester)) {
 			return [];
 		}

@@ -41,6 +41,9 @@
 			{{if $wallmessage_link}}
 				<li><a id="wallmessage-link" href="{{$wallmessage_link}}">{{$wallmessage}}</a></li>
 			{{/if}}
+			{{if $showgroup_link}}
+				<li><a id="showgroup-link" href="{{$showgroup_link}}">{{$showgroup}}</a></li>
+			{{/if}}
 		</ul>
 	</div>
 

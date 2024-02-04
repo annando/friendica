@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -36,7 +36,7 @@ class Hashtag extends BaseModule
 		$result = [];
 
 		if (empty($request['t'])) {
-			System::jsonExit($result);
+			$this->jsonExit($result);
 		}
 
 		$taglist = DBA::select(
@@ -50,6 +50,6 @@ class Hashtag extends BaseModule
 		}
 		DBA::close($taglist);
 
-		System::jsonExit($result);
+		$this->jsonExit($result);
 	}
 }

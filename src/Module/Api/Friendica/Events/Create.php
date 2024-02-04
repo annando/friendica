@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -40,7 +40,7 @@ class Create extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_WRITE);
+		$this->checkAllowedScope(BaseApi::SCOPE_WRITE);
 		$uid = BaseApi::getCurrentUserID();
 
 		// params
@@ -110,6 +110,6 @@ class Create extends BaseApi
 
 		$result = ['success' => true, 'event_id' => $event_id, 'event' => $event];
 
-		$this->response->exit('event_create', ['$result' => $result], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('event_create', ['$result' => $result], $this->parameters['extension'] ?? null);
 	}
 }

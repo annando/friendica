@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -86,6 +86,61 @@
 		"query" => "FROM `group_member`
 			INNER JOIN `contact` ON `group_member`.`contact-id` = `contact`.`id`
 			INNER JOIN `group` ON `group_member`.`gid` = `group`.`id`"
+	],
+	"post-counts-view" => [
+		"fields" => [
+			"uri-id" => ["post-counts", "uri-id"],
+			"vid" => ["post-counts", "vid"],
+			"verb" => ["verb", "name"],
+			"reaction" => ["post-counts", "reaction"],
+			"parent-uri-id" => ["post-counts", "parent-uri-id"],
+			"count" => ["post-counts", "count"],
+		],
+		"query" => "FROM `post-counts`
+			INNER JOIN `verb` ON `verb`.`id` = `post-counts`.`vid`"
+	],
+	"post-timeline-view" => [
+		"fields" => [
+			"uid" => ["post-user", "uid"],
+			"uri-id" => ["post-user", "uri-id"],
+			"gravity" => ["post-user", "gravity"],
+			"created" => ["post-user", "created"],
+			"edited" => ["post-user", "edited"],
+			"commented" => ["post-thread-user", "commented"],
+			"received" => ["post-user", "received"],
+			"changed" => ["post-thread-user", "changed"],
+			"private" => ["post-user", "private"],
+			"visible" => ["post-user", "visible"],
+			"deleted" => ["post-user", "deleted"],
+			"origin" => ["post-user", "origin"],
+			"global" => ["post-user", "global"],
+			"network" => ["post-user", "network"],
+			"protocol" => ["post-user", "protocol"],
+			"vid" => ["post-user", "vid"],
+			"contact-id" => ["post-user", "contact-id"],
+			"contact-blocked" => ["contact", "blocked"],
+			"contact-readonly" => ["contact", "readonly"],
+			"contact-pending" => ["contact", "pending"],
+			"contact-rel" => ["contact", "rel"],
+			"contact-uid" => ["contact", "uid"],
+			"self" => ["contact", "self"],
+			"author-id" => ["post-user", "author-id"],
+			"author-blocked" => ["author", "blocked"],
+			"author-hidden" => ["author", "hidden"],
+			"author-gsid" => ["author", "gsid"],
+			"owner-id" => ["post-user", "owner-id"],
+			"owner-blocked" => ["owner", "blocked"],
+			"owner-gsid" => ["owner", "gsid"],
+			"causer-id" => ["post-user", "causer-id"],
+			"causer-blocked" => ["causer", "blocked"],
+			"causer-gsid" => ["causer", "gsid"],
+		],
+		"query" => "FROM `post-user`
+			LEFT JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
+			STRAIGHT_JOIN `contact` ON `contact`.`id` = `post-user`.`contact-id`
+			STRAIGHT_JOIN `contact` AS `author` ON `author`.`id` = `post-user`.`author-id`
+			STRAIGHT_JOIN `contact` AS `owner` ON `owner`.`id` = `post-user`.`owner-id`
+			LEFT JOIN `contact` AS `causer` ON `causer`.`id` = `post-user`.`causer-id`"
 	],
 	"post-user-view" => [
 		"fields" => [
@@ -184,6 +239,7 @@
 			"author-blocked" => ["author", "blocked"],
 			"author-hidden" => ["author", "hidden"],
 			"author-updated" => ["author", "updated"],
+			"author-contact-type" => ["author", "contact-type"],
 			"author-gsid" => ["author", "gsid"],
 			"author-baseurl" => ["author", "baseurl"],
 			"owner-id" => ["post-user", "owner-id"],
@@ -366,6 +422,7 @@
 			"author-blocked" => ["author", "blocked"],
 			"author-hidden" => ["author", "hidden"],
 			"author-updated" => ["author", "updated"],
+			"author-contact-type" => ["author", "contact-type"],
 			"author-gsid" => ["author", "gsid"],
 			"owner-id" => ["post-thread-user", "owner-id"],
 			"owner-uri-id" => ["owner", "uri-id"],
@@ -532,6 +589,7 @@
 			"author-blocked" => ["author", "blocked"],
 			"author-hidden" => ["author", "hidden"],
 			"author-updated" => ["author", "updated"],
+			"author-contact-type" => ["author", "contact-type"],
 			"author-gsid" => ["author", "gsid"],
 			"owner-id" => ["post", "owner-id"],
 			"owner-uri-id" => ["owner", "uri-id"],
@@ -675,6 +733,7 @@
 			"author-blocked" => ["author", "blocked"],
 			"author-hidden" => ["author", "hidden"],
 			"author-updated" => ["author", "updated"],
+			"author-contact-type" => ["author", "contact-type"],
 			"author-gsid" => ["author", "gsid"],
 			"owner-id" => ["post-thread", "owner-id"],
 			"owner-uri-id" => ["owner", "uri-id"],
@@ -943,8 +1002,6 @@
 			"blockwall" => ["user", "blockwall"],
 			"hidewall" => ["user", "hidewall"],
 			"blocktags" => ["user", "blocktags"],
-			"unkmail" => ["user", "unkmail"],
-			"cntunkmail" => ["user", "cntunkmail"],
 			"notify-flags" => ["user", "notify-flags"],
 			"page-flags" => ["user", "page-flags"],
 			"account-type" => ["user", "account-type"],

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -30,6 +30,8 @@ use Friendica\Protocol\ActivityPub\Receiver;
 
 class FetchMissingActivity
 {
+	const WORKER_DEFER_LIMIT = 5;
+
 	/**
 	 * Fetch missing activities
 	 * @param string $url Contact URL
@@ -42,8 +44,10 @@ class FetchMissingActivity
 		$result = ActivityPub\Processor::fetchMissingActivity($url, $child, $relay_actor, $completion);
 		if ($result) {
 			Logger::info('Successfully fetched missing activity', ['url' => $url]);
-		} elseif (!Worker::defer()) {
-			Logger::info('Activity could not be fetched', ['url' => $url]);
+		} elseif (is_null($result)) {
+			Logger::info('Permament error, activity could not be fetched', ['url' => $url]);
+		} elseif (!Worker::defer(self::WORKER_DEFER_LIMIT)) {
+			Logger::info('Defer limit reached, activity could not be fetched', ['url' => $url]);
 
 			// recursively delete all entries that belong to this worker task
 			$queue = DI::app()->getQueue();

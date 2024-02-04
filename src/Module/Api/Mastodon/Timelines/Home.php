@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -22,7 +22,6 @@
 namespace Friendica\Module\Api\Mastodon\Timelines;
 
 use Friendica\Core\Logger;
-use Friendica\Core\System;
 use Friendica\Database\DBA;
 use Friendica\DI;
 use Friendica\Model\Item;
@@ -41,7 +40,7 @@ class Home extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -67,8 +66,10 @@ class Home extends BaseApi
 		}
 
 		if ($request['only_media']) {
-			$condition = DBA::mergeConditions($condition, ["`uri-id` IN (SELECT `uri-id` FROM `post-media` WHERE `type` IN (?, ?, ?))",
-				Post\Media::AUDIO, Post\Media::IMAGE, Post\Media::VIDEO]);
+			$condition = DBA::mergeConditions($condition, [
+				"`uri-id` IN (SELECT `uri-id` FROM `post-media` WHERE `type` IN (?, ?, ?))",
+				Post\Media::AUDIO, Post\Media::IMAGE, Post\Media::VIDEO
+			]);
 		}
 
 		if ($request['remote']) {
@@ -79,7 +80,7 @@ class Home extends BaseApi
 			$condition = DBA::mergeConditions($condition, ['gravity' => Item::GRAVITY_PARENT]);
 		}
 
-		$items = Post::selectForUser($uid, ['uri-id'], $condition, $params);
+		$items = Post::selectTimelineForUser($uid, ['uri-id'], $condition, $params);
 
 		$display_quotes = self::appSupportsQuotes();
 
@@ -101,6 +102,6 @@ class Home extends BaseApi
 
 
 		self::setLinkHeader($request['friendica_order'] != TimelineOrderByTypes::ID);
-		System::jsonExit($statuses);
+		$this->jsonExit($statuses);
 	}
 }

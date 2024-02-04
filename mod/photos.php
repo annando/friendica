@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -215,14 +215,14 @@ function photos_post(App $a)
 			// get the list of photos we are about to delete
 			if ($visitor) {
 				$r = DBA::toArray(DBA::p(
-					"SELECT distinct(`resource-id`) as `rid` FROM `photo` WHERE `contact-id` = ? AND `uid` = ? AND `album` = ?",
+					"SELECT distinct(`resource-id`) AS `rid` FROM `photo` WHERE `contact-id` = ? AND `uid` = ? AND `album` = ?",
 					$visitor,
 					$page_owner_uid,
 					$album
 				));
 			} else {
 				$r = DBA::toArray(DBA::p(
-					"SELECT distinct(`resource-id`) as `rid` FROM `photo` WHERE `uid` = ? AND `album` = ?",
+					"SELECT distinct(`resource-id`) AS `rid` FROM `photo` WHERE `uid` = ? AND `album` = ?",
 					DI::userSession()->getLocalUserId(),
 					$album
 				));
@@ -312,16 +312,16 @@ function photos_post(App $a)
 
 					Photo::update(['height' => $height, 'width' => $width], ['resource-id' => $resource_id, 'uid' => $page_owner_uid, 'scale' => 0], $image);
 
-					if ($width > 640 || $height > 640) {
-						$image->scaleDown(640);
+					if ($width > \Friendica\Util\Proxy::PIXEL_MEDIUM || $height > \Friendica\Util\Proxy::PIXEL_MEDIUM) {
+						$image->scaleDown(\Friendica\Util\Proxy::PIXEL_MEDIUM);
 						$width  = $image->getWidth();
 						$height = $image->getHeight();
 
 						Photo::update(['height' => $height, 'width' => $width], ['resource-id' => $resource_id, 'uid' => $page_owner_uid, 'scale' => 1], $image);
 					}
 
-					if ($width > 320 || $height > 320) {
-						$image->scaleDown(320);
+					if ($width > \Friendica\Util\Proxy::PIXEL_SMALL || $height > \Friendica\Util\Proxy::PIXEL_SMALL) {
+						$image->scaleDown(\Friendica\Util\Proxy::PIXEL_SMALL);
 						$width  = $image->getWidth();
 						$height = $image->getHeight();
 
@@ -762,7 +762,7 @@ function photos_content(App $a)
 
 		$total = 0;
 		$r = DBA::toArray(DBA::p(
-			"SELECT `resource-id`, max(`scale`) AS `scale` FROM `photo` WHERE `uid` = ? AND `album` = ?
+			"SELECT `resource-id`, MAX(`scale`) AS `scale` FROM `photo` WHERE `uid` = ? AND `album` = ?
 			AND `scale` <= 4 $sql_extra GROUP BY `resource-id`",
 			$owner_uid,
 			$album
@@ -782,9 +782,9 @@ function photos_content(App $a)
 		}
 
 		$r = DBA::toArray(DBA::p(
-			"SELECT `resource-id`, ANY_VALUE(`id`) AS `id`, ANY_VALUE(`filename`) AS `filename`,
-			ANY_VALUE(`type`) AS `type`, max(`scale`) AS `scale`, ANY_VALUE(`desc`) as `desc`,
-			ANY_VALUE(`created`) as `created`
+			"SELECT `resource-id`, MIN(`id`) AS `id`, MIN(`filename`) AS `filename`,
+			MIN(`type`) AS `type`, MAX(`scale`) AS `scale`, MIN(`desc`) AS `desc`,
+			MIN(`created`) AS `created`
 			FROM `photo` WHERE `uid` = ? AND `album` = ?
 			AND `scale` <= 4 $sql_extra GROUP BY `resource-id` ORDER BY `created` $order LIMIT ? , ?",
 			intval($owner_uid),
@@ -1167,11 +1167,11 @@ function photos_content(App $a)
 				}
 
 				if (!empty($conv_responses['like'][$link_item['uri']])) {
-					$like = DI::conversation()->formatActivity($conv_responses['like'][$link_item['uri']]['links'], 'like', $link_item['id']);
+					$like = DI::conversation()->formatActivity($conv_responses['like'][$link_item['uri']]['links'], 'like', $link_item['id'], '', []);
 				}
 
 				if (!empty($conv_responses['dislike'][$link_item['uri']])) {
-					$dislike = DI::conversation()->formatActivity($conv_responses['dislike'][$link_item['uri']]['links'], 'dislike', $link_item['id']);
+					$dislike = DI::conversation()->formatActivity($conv_responses['dislike'][$link_item['uri']]['links'], 'dislike', $link_item['id'], '', []);
 				}
 
 				if (($can_post || Security::canWriteToUserWall($owner_uid))) {

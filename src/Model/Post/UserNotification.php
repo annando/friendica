@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -602,10 +602,10 @@ class UserNotification
 	 */
 	private static function checkQuoted(array $item, array $contacts): bool
 	{
-		if (empty($item['quote-uri-id'])) {
+		if (empty($item['quote-uri-id']) || ($item['quote-uri-id'] == $item['uri-id'])) {
 			return false;
 		}
-		$condition = ['uri-id' => $item['quote-uri-id'], 'uid' => $item['uid'], 'author-id' => $contacts, 'deleted' => false, 'gravity' => [item::GRAVITY_PARENT, Item::GRAVITY_COMMENT]];
+		$condition = ['uri-id' => $item['quote-uri-id'], 'uid' => $item['uid'], 'author-id' => $contacts, 'deleted' => false, 'gravity' => [Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT]];
 		return Post::exists($condition);
 	}
 

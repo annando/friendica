@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -22,7 +22,6 @@
 namespace Friendica\Protocol\Diaspora\Repository;
 
 use Friendica\BaseRepository;
-use Friendica\Core\System;
 use Friendica\Database\Database;
 use Friendica\Database\Definition\DbaDefinition;
 use Friendica\Model\APContact;
@@ -273,7 +272,7 @@ class DiasporaContact extends BaseRepository
 
 		$DiasporaContact = $this->save($DiasporaContact);
 
-		$this->logger->info('Updated diaspora-contact', ['url' => (string) $DiasporaContact->url, 'callstack' => System::callstack(20)]);
+		$this->logger->info('Updated diaspora-contact', ['url' => (string) $DiasporaContact->url]);
 
 		return $DiasporaContact;
 	}

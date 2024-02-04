@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -230,16 +230,82 @@ class BBCode
 	{
 		DI::profiler()->startRecording('rendering');
 		// Remove pictures in advance to avoid unneeded proxy calls
+		$text = preg_replace("/\[img\=([0-9]*)x([0-9]*)\](.*?)\[\/img\]/ism", ' ', $text);
 		$text = preg_replace("/\[img\=(.*?)\](.*?)\[\/img\]/ism", ' $2 ', $text);
 		$text = preg_replace("/\[img.*?\[\/img\]/ism", ' ', $text);
 
 		// Remove attachment
 		$text = self::replaceAttachment($text);
 
-		$naked_text = HTML::toPlaintext(self::convert($text, false, BBCode::EXTERNAL, true), 0, !$keep_urls);
+		$naked_text = HTML::toPlaintext(self::convert($text, false, self::EXTERNAL, true), 0, !$keep_urls);
 
 		DI::profiler()->stopRecording();
 		return $naked_text;
+	}
+
+	/**
+	 * Converts text into a format that can be used for the channel search and the language detection.
+	 *
+	 * @param string $text
+	 * @param integer $uri_id
+	 * @return string
+	 */
+	public static function toSearchText(string $text, int $uri_id): string
+	{
+		// Removes attachments
+		$text = self::removeAttachment($text);
+
+		// Add text from attached media
+		if (!empty($uri_id)) {
+			foreach (Post\Media::getByURIId($uri_id) as $media) {
+				if (!empty($media['description']) && (stripos($text, $media['description']) === false)) {
+					$text .= ' ' . $media['description'];
+				}
+				if (in_array($media['type'], [Post\Media::HTML, Post\Media::ACTIVITY])) {
+					foreach (['name', 'author-name', 'publisher-name'] as $key) {
+						if (!empty($media[$key] && stripos($text, $media[$key]) === false)) {
+							$text .= ' ' . $media[$key];
+						}
+					}
+				}
+			}
+		}
+
+		if (empty($text)) {
+			return '';
+		}
+
+		// Remove links without a link description
+		$text = preg_replace("~\[url\=.*\]https?:.*\[\/url\]~", ' ', $text);
+
+		// Remove pictures
+		$text = preg_replace("/\[img\=([0-9]*)x([0-9]*)\](.*?)\[\/img\]/ism", ' ', $text);
+
+		// Replace picture with the alt description
+		$text = preg_replace("/\[img\=.*?\](.*?)\[\/img\]/ism", ' $1 ', $text);
+
+		// Remove the other pictures
+		$text = preg_replace("/\[img.*?\[\/img\]/ism", ' ', $text);
+
+		// Removes mentions, remove links from hashtags
+		$text = preg_replace('/[@!]\[url\=.*?\].*?\[\/url\]/ism', ' ', $text);
+		$text = preg_replace('/[#]\[url\=.*?\](.*?)\[\/url\]/ism', ' #$1 ', $text);
+		$text = preg_replace('/[@!#]+?\[url.*?\[\/url\]/ism', ' ', $text);
+		$text = preg_replace("/\[url=[^\[\]]*\](.*)\[\/url\]/Usi", ' $1 ', $text);
+
+		// Convert it to plain text
+		$text = self::toPlaintext($text, false);
+
+		// Remove possibly remaining links
+		$text = preg_replace(Strings::autoLinkRegEx(), '', $text);
+
+		// Remove all unneeded white space
+		do {
+			$oldtext = $text;
+			$text = str_replace(['  ', "\n", "\r", '"'], ' ', $text);
+		} while ($oldtext != $text);
+
+		return trim($text);
 	}
 
 	private static function proxyUrl(string $image, int $simplehtml = self::INTERNAL, int $uriid = 0, string $size = ''): string
@@ -931,7 +997,7 @@ class BBCode
 				$network = $contact['network'] ?? Protocol::PHANTOM;
 
 				$tpl = Renderer::getMarkupTemplate('shared_content.tpl');
-				$text .= BBCode::SHARED_ANCHOR . Renderer::replaceMacros($tpl, [
+				$text .= self::SHARED_ANCHOR . Renderer::replaceMacros($tpl, [
 					'$profile'      => $attributes['profile'],
 					'$avatar'       => $attributes['avatar'],
 					'$author'       => $attributes['author'],
@@ -1112,6 +1178,7 @@ class BBCode
 	public static function removeLinks(string $bbcode): string
 	{
 		DI::profiler()->startRecording('rendering');
+		$bbcode = preg_replace("/\[img\=([0-9]*)x([0-9]*)\](.*?)\[\/img\]/ism", ' ', $bbcode);
 		$bbcode = preg_replace("/\[img\=(.*?)\](.*?)\[\/img\]/ism", ' $1 ', $bbcode);
 		$bbcode = preg_replace("/\[img.*?\[\/img\]/ism", ' ', $bbcode);
 
@@ -1178,7 +1245,7 @@ class BBCode
 	}
 
 	/**
-	 * Expand Youtube and Vimeo links to 
+	 * Expand Youtube and Vimeo links to
 	 *
 	 * @param string $text
 	 * @return string
@@ -1331,7 +1398,7 @@ class BBCode
 					"\n[hr]", "[hr]\n", " [hr]", "[hr] ",
 					"\n[attachment ", " [attachment ", "\n[/attachment]", "[/attachment]\n", " [/attachment]", "[/attachment] ",
 					"[table]\n", "[table] ", " [table]", "\n[/table]", " [/table]", "[/table] ",
-					" \n", "\t\n", "[/li]\n", "\n[li]", "\n[*]", 
+					" \n", "\t\n", "[/li]\n", "\n[li]", "\n[*]",
 				];
 				$replace = [
 					"[th]", "[th]", "[th]", "[/th]", "[/th]", "[/th]",
@@ -1424,14 +1491,14 @@ class BBCode
 				if ($simple_html == self::INTERNAL) {
 					//Ensure to always start with <h4> if possible
 					$heading_count = 0;
-					for ($level = 6; $level > 0; $level--) { 
+					for ($level = 6; $level > 0; $level--) {
 						if (preg_match("(\[h$level\].*?\[\/h$level\])ism", $text)) {
 							$heading_count++;
 						}
 					}
 					if ($heading_count > 0) {
 						$heading = min($heading_count + 3, 6);
-						for ($level = 6; $level > 0; $level--) { 
+						for ($level = 6; $level > 0; $level--) {
 							if (preg_match("(\[h$level\].*?\[\/h$level\])ism", $text)) {
 								$text = preg_replace("(\[h$level\](.*?)\[\/h$level\])ism", "</p><h$heading>$1</h$heading><p>", $text);
 								$heading--;
@@ -1492,7 +1559,11 @@ class BBCode
 				$text = preg_replace("(\[style=(.*?)\](.*?)\[\/style\])ism", '<span style="$1">$2</span>', $text);
 
 				// Mastodon Emoji (internal tag, do not document for users)
-				$text = preg_replace("(\[emoji=(.*?)](.*?)\[/emoji])ism", '<span class="mastodon emoji"><img src="$1" alt="$2" title="$2"/></span>', $text);
+				if ($simple_html == self::MASTODON_API) {
+					$text = preg_replace("(\[emoji=(.*?)](.*?)\[/emoji])ism", '$2', $text);
+				} else {
+					$text = preg_replace("(\[emoji=(.*?)](.*?)\[/emoji])ism", '<span class="mastodon emoji"><img src="$1" alt="$2" title="$2"/></span>', $text);
+				}
 
 				// Check for CSS classes
 				// @deprecated since 2021.12, left for backward-compatibility reasons
@@ -1735,12 +1806,8 @@ class BBCode
 					$text = preg_replace("/\[event\-id\](.*?)\[\/event\-id\]/ism", '', $text);
 				}
 
-				if (!$for_plaintext && DI::config()->get('system', 'big_emojis') && ($simple_html != self::DIASPORA)) {
-					$conv = html_entity_decode(str_replace([' ', "\n", "\r"], '', $text));
-					// Emojis are always 4 byte Unicode characters
-					if (!empty($conv) && (strlen($conv) / mb_strlen($conv) == 4)) {
-						$text = '<span style="font-size: xx-large; line-height: normal;">' . $text . '</span>';
-					}
+				if (!$for_plaintext && DI::config()->get('system', 'big_emojis') && ($simple_html != self::DIASPORA) && Smilies::isEmojiPost($text)) {
+					$text = '<span style="font-size: xx-large; line-height: normal;">' . $text . '</span>';
 				}
 
 				// Handle mentions and hashtag links
@@ -1996,7 +2063,7 @@ class BBCode
 	{
 		DI::profiler()->startRecording('rendering');
 
-		$text = BBCode::performWithEscapedTags($text, ['code', 'noparse', 'nobb', 'pre'], function ($text) {
+		$text = self::performWithEscapedTags($text, ['code', 'noparse', 'nobb', 'pre'], function ($text) {
 			$text = preg_replace("/[\s|\n]*\[abstract\].*?\[\/abstract\][\s|\n]*/ism", ' ', $text);
 			$text = preg_replace("/[\s|\n]*\[abstract=.*?\].*?\[\/abstract][\s|\n]*/ism", ' ', $text);
 			return $text;
@@ -2018,7 +2085,7 @@ class BBCode
 		DI::profiler()->startRecording('rendering');
 		$addon = strtolower($addon);
 
-		$abstract = BBCode::performWithEscapedTags($text, ['code', 'noparse', 'nobb', 'pre'], function ($text) use ($addon) {
+		$abstract = self::performWithEscapedTags($text, ['code', 'noparse', 'nobb', 'pre'], function ($text) use ($addon) {
 			if ($addon && preg_match('#\[abstract=' . preg_quote($addon, '#') . '](.*?)\[/abstract]#ism', $text, $matches)) {
 				return $matches[1];
 			}
@@ -2114,6 +2181,9 @@ class BBCode
 		// If a link is followed by a quote then there should be a newline before it
 		// Maybe we should make this newline at every time before a quote.
 		$text = str_replace(['</a><blockquote>'], ['</a><br><blockquote>'], $text);
+
+		// The converter doesn't convert these elements
+		$text = str_replace(['<div>', '</div>'], ['<p>', '</p>'], $text);
 
 		// Now convert HTML to Markdown
 		$text = HTML::toMarkdown($text);

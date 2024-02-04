@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -152,10 +152,10 @@ class Ping extends BaseModule
 				}
 			}
 
-			$compute_circle_counts = $this->config->get('system','compute_group_counts') ?? $this->config->get('system','compute_circle_counts');
+			$compute_circle_counts = $this->config->get('system','compute_circle_counts');
 			if ($network_count && $compute_circle_counts) {
 				// Find out how unseen network posts are spread across circles
-				foreach (Circle::countUnseen() as $circle_count) {
+				foreach (Circle::countUnseen($this->session->getLocalUserId()) as $circle_count) {
 					if ($circle_count['count'] > 0) {
 						$circles_unseen[] = $circle_count;
 					}
@@ -303,9 +303,9 @@ class Ping extends BaseModule
 
 		if (isset($_GET['callback'])) {
 			// JSONP support
-			System::httpExit($_GET['callback'] . '(' . json_encode(['result' => $data]) . ')', Response::TYPE_BLANK, 'application/javascript');
+			$this->httpExit($_GET['callback'] . '(' . json_encode(['result' => $data]) . ')', Response::TYPE_BLANK, 'application/javascript');
 		} else {
-			System::jsonExit(['result' => $data]);
+			$this->jsonExit(['result' => $data]);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -120,7 +120,7 @@ class OEmbed
 								['https://www.youtube.com/', 'https://player.vimeo.com/'], $href);
 							$result = DI::httpClient()->fetchFull($href . '&maxwidth=' . $a->getThemeInfoValue('videowidth'));
 							if ($result->getReturnCode() === 200) {
-								$json_string = $result->getBody();
+								$json_string = $result->getBodyString();
 								break;
 							}
 						}

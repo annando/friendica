@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -362,7 +362,7 @@ class Event
 		$item['allow_gid']     = $event['allow_gid'];
 		$item['deny_cid']      = $event['deny_cid'];
 		$item['deny_gid']      = $event['deny_gid'];
-		$item['private']       = $event['allow_cid'] && $event['allow_gid'] && $event['deny_cid'] && $event['deny_gid'] ? 0 : 1;
+		$item['private']       = $event['allow_cid'] || $event['allow_gid'] || $event['deny_cid'] || $event['deny_gid'];
 		$item['visible']       = 1;
 		$item['verb']          = Activity::POST;
 		$item['object-type']   = Activity\ObjectType::EVENT;
@@ -636,7 +636,7 @@ class Event
 	{
 		$fmt = DI::l10n()->t('l, F j');
 
-		$item = Post::selectFirst(['plink', 'author-name', 'author-network', 'author-id', 'author-avatar', 'author-link', 'private', 'uri-id'], ['id' => $event['itemid']]);
+		$item = Post::selectFirst(['plink', 'author-name', 'author-network', 'author-id', 'author-avatar', 'author-link', 'author-alias', 'private', 'uri-id'], ['id' => $event['itemid']]);
 		if (empty($item)) {
 			// Using default values when no item had been found
 			$item = ['plink' => '', 'author-name' => '', 'author-avatar' => '', 'author-link' => '', 'private' => Item::PUBLIC, 'uri-id' => ($event['uri-id'] ?? 0)];

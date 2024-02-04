@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -37,6 +37,6 @@ class Test extends BaseApi
 			$ok = 'ok';
 		}
 
-		$this->response->exit('ok', ['ok' => $ok], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('ok', ['ok' => $ok], $this->parameters['extension'] ?? null);
 	}
 }

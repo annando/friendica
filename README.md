@@ -1,46 +1,30 @@
-Friendica Social Communications Server
-======================================
+Friendica - your open and free social network
+=============================================
 
-Welcome to the free social web.
+Welcome to the free social web. Friendica is a platform for decentralised social communication linking to other independent social and corporate services.
 
-Friendica is a decentralised communications platform that integrates social communication. Our platform links to independent social projects and corporate services.
+Friendica connects you to a federated communications network of thousands of servers called the Fediverse.
+Through various protocols you can interact with anyone on [Friendica]( https://friendi.ca), [Mastodon](https://joinmastodon.org), [Lemmy](https://join-lemmy.org/), [Diaspora](https://diasporafoundation.org), [Misskey](https://join.misskey.page), [Peertube](https://joinpeertube.org/), [Pixelfed](https://pixelfed.org/), [Pleroma](https://pleroma.social) and many more.
+Receiving content from Tumblr, WordPress and RSS is also possible.
+Friendica allows to import and mirror your content via add-ons such as ITTT and Buffer.
+You can control the privacy scope of your content.
 
-Our mission is to free friends, family and colleagues from data-harvesting corporations; we aim for social communication to be free and open, while flowing between any provider as easily as email does.
+Being part of the Fediverse allows you to be free from data-harvesting corporations.
+Enjoy open social communication, independent of any specific provider.
 
-Friendica connects you effortlessly to a federated communications network of several thousand servers, with more than half a million user registrations. You can directly connect to anyone on [Friendica]( https://friendi.ca), [Mastodon](https://joinmastodon.org/), [Diaspora](https://diasporafoundation.org/), [GnuSocial](https://gnu.io/social/), [Pleroma](https://pleroma.social/), or [Hubzilla](https://hubzilla.org/), regardless where each user profile is hosted.
+[Join Friendica](https://dir.friendica.social/servers) today or set up [your own Friendica instance](doc/Install.md).
 
-With Friendica, you can also fully interact with anyone on Twitter and receive any content from Tumblr, Wordpress or RSS. Friendica allows you to integrate most things on the web via a range of addons such as ITTT, Buffer; you will be able to easily control your own data as you decide.
+### Friendica on desktop
 
-Join today and [get your Friendica profile!](https://dir.friendica.social/servers 'Join Friendica today!')
+![Frio theme in desktop browser](images/screenshots/friendica-2023-12-frio-desktop.png?raw=true "Frio theme in desktop browser")
 
-Have a look at the [installation documentation](doc/Install.md) for further information about installing and using Friendica.
+### Friendica on mobile
 
-### Friendica Screenshots
-
-| ![Frio theme in mobile browser](images/screenshots/friendica-frio-mobile-profile-1.png?raw=true "Frio theme in mobile browser") ![Frio theme in mobile browser](images/screenshots/friendica-frio-mobile-profile-2.png?raw=true "Frio theme in mobile browser") |
-|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|                                                                                                    *Frio theme, mobile browser. Timeline and composer view.*                                                                                                    |
-|                                                                ![Frio theme in desktop browser](images/screenshots/friendica-frio-green-profile-1.png?raw=true "Frio theme in desktop browser")                                                                 |
-|                                                                                    *Frio theme, desktop browser. Timeline view, contact info popped up, control menu open.*                                                                                     |
-|                                                                ![Frio theme in desktop browser](images/screenshots/friendica-frio-green-profile-2.png?raw=true "Frio theme in desktop browser")                                                                 |
-|                                                                                           *Frio theme, desktop browser. Menu open for controlling individual posts.*                                                                                            |
-|                                                                 ![Frio theme in desktop browser](images/screenshots/friendica-frio-red-profile-3.png?raw=true "Frio theme in desktop browser")                                                                  |
-|                                                                                              *Frio theme, desktop browser. Profile view, notification menu open.*                                                                                               |
-|                                                                 ![Frio theme in desktop browser](images/screenshots/friendica-frio-red-profile-2.png?raw=true "Frio theme in desktop browser")                                                                  |
-|                                                                                                         *Number of new posts, in total and by circle.*                                                                                                          |
-|                                                                 ![Frio theme in desktop browser](images/screenshots/friendica-frio-red-profile-1.png?raw=true "Frio theme in desktop browser")                                                                  |
-|                                                                                                                 *Calendar with popup of event.*                                                                                                                 |
-|                                     ![Frio theme default colour in standard browser on tablet](images/screenshots/friendica-frio-default-profile-1.png?raw=true "Frio theme default colour in standard browser on tablet")                                      |
-|                                                                                         *Notifications menu and private messages counter, standard browser on tablet.*                                                                                          |
-|                                                                ![Frio theme in desktop browser](images/screenshots/friendica-frio-brown-profile-2.png?raw=true "Frio theme in desktop browser")                                                                 |
-|                                                                                                         *Number of visible contacts, standard browser.*                                                                                                         |
-|                                                                ![Frio theme in desktop browser](images/screenshots/friendica-frio-brown-profile-1.png?raw=true "Frio theme in desktop browser")                                                                 |
-|                                                                                                   *Network posts chronologically ordered, standard browser.*                                                                                                    |
-|                                                                    ![Vier theme in desktop browser](images/screenshots/friendica-vier-profile.png?raw=true "Vier theme in desktop browser")                                                                     |
-|                                                                                                      *Vier theme, desktop browser. Public timeline view.*                                                                                                       |
-|                                                                   ![Vier theme in desktop browser](images/screenshots/friendica-vier-community.png?raw=true "Vier theme in desktop browser")                                                                    |
-|                                                                                                    *Vier theme, desktop browser. Community post displayed.*                                                                                                     |
+<p float="left">
+<img src="images/screenshots/friendica-2023-10-frio-mobile-timeline-dark-blue.png" width="370" alt="frio on mobile, dark color scheme">
+<img src="images/screenshots/friendica-2023-10-frio-mobile-options-light-blue.png" width="370" alt="frio on mobile, light color scheme">
+</p>
 
 ## Endorsements
 
-- [![Awesome Humane Tech](images/humane-tech-badge.svg)](https://github.com/humanetech-community/awesome-humane-tech) On August 12th 2020, Friendica was added to [the curated Awesome Humane Tech directory](https://github.com/humanetech-community/awesome-humane-tech) in [the "Fediverse" category](https://github.com/humanetech-community/awesome-humane-tech#fediverse).
+- Friendica is listed on [![Awesome Humane Tech](images/humane-tech-badge.svg)](https://codeberg.org/teaserbot-labs/delightful-humane-design) in the [Fediverse category](https://codeberg.org/teaserbot-labs/delightful-humane-design#fediverse).

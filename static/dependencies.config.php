@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -302,11 +302,6 @@ return [
 			['createClient', [], Dice::CHAIN_CALL],
 		],
 	],
-	Factory\Api\Mastodon\Error::class => [
-		'constructParams' => [
-			$_SERVER
-		],
-	],
 	ParsedLogIterator::class => [
 		'constructParams' => [
 			[Dice::INSTANCE => Util\ReversedFileReader::class],
@@ -328,6 +323,12 @@ return [
 	\Friendica\Module\Special\HTTPException::class => [
 		'constructParams' => [
 			$_SERVER
+		],
+	],
+	\Friendica\Module\Api\ApiResponse::class => [
+		'constructParams' => [
+			$_SERVER,
+			$_GET['callback'] ?? '',
 		],
 	],
 ];

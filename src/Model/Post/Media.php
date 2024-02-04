@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -25,7 +25,6 @@ use Friendica\Content\PageInfo;
 use Friendica\Content\Text\BBCode;
 use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
-use Friendica\Core\System;
 use Friendica\Database\Database;
 use Friendica\Database\DBA;
 use Friendica\DI;
@@ -36,6 +35,7 @@ use Friendica\Model\Photo;
 use Friendica\Model\Post;
 use Friendica\Network\HTTPClient\Client\HttpClientAccept;
 use Friendica\Network\HTTPClient\Client\HttpClientOptions;
+use Friendica\Protocol\ActivityPub;
 use Friendica\Util\Images;
 use Friendica\Util\Network;
 use Friendica\Util\ParseUrl;
@@ -79,7 +79,7 @@ class Media
 		}
 
 		if (DBA::exists('post-media', ['uri-id' => $media['uri-id'], 'preview' => $media['url']])) {
-			Logger::info('Media already exists as preview', ['uri-id' => $media['uri-id'], 'url' => $media['url'], 'callstack' => System::callstack()]);
+			Logger::info('Media already exists as preview', ['uri-id' => $media['uri-id'], 'url' => $media['url']]);
 			return false;
 		}
 
@@ -87,12 +87,12 @@ class Media
 		// and embedded as picture then we only store the picture or replace the document
 		$found = DBA::selectFirst('post-media', ['type'], ['uri-id' => $media['uri-id'], 'url' => $media['url']]);
 		if (!$force && !empty($found) && (($found['type'] != self::DOCUMENT) || ($media['type'] == self::DOCUMENT))) {
-			Logger::info('Media already exists', ['uri-id' => $media['uri-id'], 'url' => $media['url'], 'callstack' => System::callstack()]);
+			Logger::info('Media already exists', ['uri-id' => $media['uri-id'], 'url' => $media['url']]);
 			return false;
 		}
 
 		if (!ItemURI::exists($media['uri-id'])) {
-			Logger::info('Media referenced URI ID not found', ['uri-id' => $media['uri-id'], 'url' => $media['url'], 'callstack' => System::callstack()]);
+			Logger::info('Media referenced URI ID not found', ['uri-id' => $media['uri-id'], 'url' => $media['url']]);
 			return false;
 		}
 
@@ -102,7 +102,7 @@ class Media
 		// We are storing as fast as possible to avoid duplicated network requests
 		// when fetching additional information for pictures and other content.
 		$result = DBA::insert('post-media', $media, Database::INSERT_UPDATE);
-		Logger::info('Stored media', ['result' => $result, 'media' => $media, 'callstack' => System::callstack()]);
+		Logger::info('Stored media', ['result' => $result, 'media' => $media]);
 		$stored = $media;
 
 		$media = self::fetchAdditionalData($media);
@@ -208,13 +208,17 @@ class Media
 		$filetype = !empty($media['mimetype']) ? strtolower(current(explode('/', $media['mimetype']))) : '';
 
 		if (($media['type'] == self::IMAGE) || ($filetype == 'image')) {
-			$imagedata = Images::getInfoFromURLCached($media['url']);
+			$imagedata = Images::getInfoFromURLCached($media['url'], empty($media['description']));
 			if ($imagedata) {
 				$media['mimetype'] = $imagedata['mime'];
 				$media['size'] = $imagedata['size'];
 				$media['width'] = $imagedata[0];
 				$media['height'] = $imagedata[1];
 				$media['blurhash'] = $imagedata['blurhash'] ?? null;
+				if (!empty($imagedata['description']) && empty($media['description'])) {
+					$media['description'] = $imagedata['description'];
+					Logger::debug('Detected text for image', $media);
+				}
 			} else {
 				Logger::notice('No image data', ['media' => $media]);
 			}
@@ -254,7 +258,7 @@ class Media
 	 */
 	private static function addActivity(array $media): array
 	{
-		$id = Item::fetchByLink($media['url']);
+		$id = Item::fetchByLink($media['url'], 0, ActivityPub\Receiver::COMPLETION_ASYNC);
 		if (empty($id)) {
 			return $media;
 		}
@@ -262,6 +266,11 @@ class Media
 		$item = Post::selectFirst([], ['id' => $id, 'network' => Protocol::FEDERATED]);
 		if (empty($item['id'])) {
 			Logger::debug('Not a federated activity', ['id' => $id, 'uri-id' => $media['uri-id'], 'url' => $media['url']]);
+			return $media;
+		}
+
+		if ($item['uri-id'] == $media['uri-id']) {
+			Logger::info('Media-Uri-Id is identical to Uri-Id', ['uri-id' => $media['uri-id']]);
 			return $media;
 		}
 
@@ -870,113 +879,6 @@ class Media
 	}
 
 	/**
-	 * Split the attachment media in the three segments "visual", "link" and "additional"
-	 *
-	 * @param int    $uri_id URI id
-	 * @param array  $links list of links that shouldn't be added
-	 * @param bool   $has_media
-	 * @return array attachments
-	 */
-	public static function splitAttachments(int $uri_id, array $links = [], bool $has_media = true): array
-	{
-		$attachments = ['visual' => [], 'link' => [], 'additional' => []];
-
-		if (!$has_media) {
-			return $attachments;
-		}
-
-		$media = self::getByURIId($uri_id);
-		if (empty($media)) {
-			return $attachments;
-		}
-
-		$heights = [];
-		$selected = '';
-		$previews = [];
-
-		foreach ($media as $medium) {
-			foreach ($links as $link) {
-				if (Strings::compareLink($link, $medium['url'])) {
-					continue 2;
-				}
-			}
-
-			// Avoid adding separate media entries for previews
-			foreach ($previews as $preview) {
-				if (Strings::compareLink($preview, $medium['url'])) {
-					continue 2;
-				}
-			}
-
-			// Currently these two types are ignored here.
-			// Posts are added differently and contacts are not displayed as attachments.
-			if (in_array($medium['type'], [self::ACCOUNT, self::ACTIVITY])) {
-				continue;
-			}
-
-			if (!empty($medium['preview'])) {
-				$previews[] = $medium['preview'];
-			}
-
-			$type = explode('/', explode(';', $medium['mimetype'] ?? '')[0]);
-			if (count($type) < 2) {
-				Logger::info('Unknown MimeType', ['type' => $type, 'media' => $medium]);
-				$filetype = 'unkn';
-				$subtype = 'unkn';
-			} else {
-				$filetype = strtolower($type[0]);
-				$subtype = strtolower($type[1]);
-			}
-
-			$medium['filetype'] = $filetype;
-			$medium['subtype'] = $subtype;
-
-			if ($medium['type'] == self::HTML || (($filetype == 'text') && ($subtype == 'html'))) {
-				$attachments['link'][] = $medium;
-				continue;
-			}
-
-			if (
-				in_array($medium['type'], [self::AUDIO, self::IMAGE]) ||
-				in_array($filetype, ['audio', 'image'])
-			) {
-				$attachments['visual'][] = $medium;
-			} elseif (($medium['type'] == self::VIDEO) || ($filetype == 'video')) {
-				if (!empty($medium['height'])) {
-					// Peertube videos are delivered in many different resolutions. We pick a moderate one.
-					// Since only Peertube provides a "height" parameter, this wouldn't be executed
-					// when someone for example on Mastodon was sharing multiple videos in a single post.
-					$heights[$medium['height']] = $medium['url'];
-					$video[$medium['url']] = $medium;
-				} else {
-					$attachments['visual'][] = $medium;
-				}
-			} else {
-				$attachments['additional'][] = $medium;
-			}
-		}
-
-		if (!empty($heights)) {
-			ksort($heights);
-			foreach ($heights as $height => $url) {
-				if (empty($selected) || $height <= 480) {
-					$selected = $url;
-				}
-			}
-
-			if (!empty($selected)) {
-				$attachments['visual'][] = $video[$selected];
-				unset($video[$selected]);
-				foreach ($video as $element) {
-					$attachments['additional'][] = $element;
-				}
-			}
-		}
-
-		return $attachments;
-	}
-
-	/**
 	 * Add media attachments to the body
 	 *
 	 * @param int    $uriid
@@ -1114,25 +1016,9 @@ class Media
 	 */
 	public static function getPreviewUrlForId(int $id, string $size = ''): string
 	{
-		$url = DI::baseUrl() . '/photo/preview/';
-		switch ($size) {
-			case Proxy::SIZE_MICRO:
-				$url .= Proxy::PIXEL_MICRO . '/';
-				break;
-			case Proxy::SIZE_THUMB:
-				$url .= Proxy::PIXEL_THUMB . '/';
-				break;
-			case Proxy::SIZE_SMALL:
-				$url .= Proxy::PIXEL_SMALL . '/';
-				break;
-			case Proxy::SIZE_MEDIUM:
-				$url .= Proxy::PIXEL_MEDIUM . '/';
-				break;
-			case Proxy::SIZE_LARGE:
-				$url .= Proxy::PIXEL_LARGE . '/';
-				break;
-		}
-		return $url . $id;
+		return DI::baseUrl() . '/photo/preview/' .
+			(Proxy::getPixelsFromSize($size) ? Proxy::getPixelsFromSize($size) . '/' : '') .
+			$id;
 	}
 
 	/**
@@ -1144,24 +1030,8 @@ class Media
 	 */
 	public static function getUrlForId(int $id, string $size = ''): string
 	{
-		$url = DI::baseUrl() . '/photo/media/';
-		switch ($size) {
-			case Proxy::SIZE_MICRO:
-				$url .= Proxy::PIXEL_MICRO . '/';
-				break;
-			case Proxy::SIZE_THUMB:
-				$url .= Proxy::PIXEL_THUMB . '/';
-				break;
-			case Proxy::SIZE_SMALL:
-				$url .= Proxy::PIXEL_SMALL . '/';
-				break;
-			case Proxy::SIZE_MEDIUM:
-				$url .= Proxy::PIXEL_MEDIUM . '/';
-				break;
-			case Proxy::SIZE_LARGE:
-				$url .= Proxy::PIXEL_LARGE . '/';
-				break;
-		}
-		return $url . $id;
+		return DI::baseUrl() . '/photo/media/' .
+			(Proxy::getPixelsFromSize($size) ? Proxy::getPixelsFromSize($size) . '/' : '') .
+			$id;
 	}
 }

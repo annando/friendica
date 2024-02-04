@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -52,21 +52,37 @@ return [
 		// Enter 0 for no time limit.
 		'account_abandon_days' => 0,
 
-		// add_missing_posts (boolean)
-		// Checks for missing entries in "post", "post-thread" or "post-thread-user" and creates them
-		'add_missing_posts' => false,
+		// adjust_poll_frequency (Boolean)
+		// Automatically detect and set the best feed poll frequency.
+		'adjust_poll_frequency' => false,
+
+		// allow_relay_channels (Boolean)
+		// Allow Users to set remote_self
+		'allow_relay_channels' => true,
 
 		// allowed_themes (Comma-separated list)
 		// Themes users can change to in their settings.
 		'allowed_themes' => 'frio,vier',
 
+		// archival_days (Integer)
+		// Number of days that we try to deliver content before we archive a contact.
+		'archival_days' => 32,
+
 		// banner (HTML string)
 		// HTML snippet of the top navigation banner. Not supported by frio.
 		'banner' => '<a href="https://friendi.ca"><img id="logo-img" width="32" height="32" src="images/friendica.svg" alt="logo" /></a><span id="logo-text"><a href="https://friendi.ca">Friendica</a></span>',
 
+		// blocked_tags (String)
+		// Comma separated list of hashtags that shouldn't be displayed in the trending tags
+		'blocked_tags' => '',
+
 		// cache_contact_avatar (Boolean)
 		// Cache versions of the contact avatars. Uses a lot of storage space
 		'cache_contact_avatar' => true,
+
+		// cron_interval (Integer)
+		// Minimal period in minutes between two calls of the "Cron" worker job.
+		'cron_interval' => 5,
 
 		// curl_timeout (Integer)
 		// Value is in seconds. Set to 0 for unlimited (not recommended).
@@ -96,6 +112,10 @@ return [
 		// Enable/Disable Debugging (logging)
 		'debugging' => false,
 
+		// decoupled_receiver (Boolean)
+		// Decouple incoming AP posts by doing the processing in the background.
+		'decoupled_receiver' => false,
+
 		// default_timezone (String)
 		// Choose a default timezone. See https://secure.php.net/manual/en/timezones.php
 		// It only applies to timestamps for anonymous viewers.
@@ -118,6 +138,15 @@ return [
 		// Compute contact circle level when counting unseen network posts.
 		'compute_circle_counts' => true,
 
+		// itemspage_network (Integer)
+		// default number of items per page in stream pages (network, community, profile/contact statuses, search)
+		'itemspage_network' => 40,
+
+		// itemspage_network_mobile (Integer)
+		// default number of items per page in stream pages (network, community, profile/contact statuses, search)
+		// on detected mobile devices
+		'itemspage_network_mobile' => 20,
+
 		// jpeg_quality (Integer)
 		// Sets the ImageMagick quality level for JPEG images. Values ranges from 50 (awful) to 100 (near perfect).
 		'jpeg_quality' => 100,
@@ -126,6 +155,10 @@ return [
 		// System default language, including admin-created user default language.
 		// Two-letters ISO 639-1 code.
 		'language' => 'en',
+
+		// local_search (Boolean)
+		// Blocks search for users who are not logged in to prevent crawlers from blocking your system.
+		'local_search' => false,
 
 		// logfile (String)
 		// The logfile for storing logs.
@@ -137,6 +170,10 @@ return [
 		// Has to be one of these values: emergency, alert, critical, error, warning, notice, info, debug
 		'loglevel' => 'notice',
 
+		// max_author_posts_community_page (Integer)
+		// The maximum number of posts on the local community page from a single author.
+		'max_author_posts_community_page' => 0,
+
 		// max_image_length (Integer)
 		// An alternate way of limiting picture upload sizes.
 		// Specify the maximum pixel  length that pictures are allowed to be (for non-square pictures, it will apply to the longest side).
@@ -144,9 +181,9 @@ return [
 		// If you don't want to set a maximum length, set to -1.
 		'max_image_length' => -1,
 
-		// max_receivers (Integer)
-		// The maximum number of displayed receivers of posts
-		'max_receivers' => 10,
+		// max_server_posts_community_page (Integer)
+		// The maximum number of posts on the global community page from a single server.
+		'max_server_posts_community_page' => 0,
 
 		// maximagesize (Integer)
 		// Maximum size in bytes of an uploaded photo.
@@ -160,8 +197,12 @@ return [
 		// Minimal free memory in MB for the worker. Needs access to /proc/meminfo - default 0 (deactivated).
 		'min_memory' => 0,
 
+		// min_poll_interval (Integer)
+		// minimal distance in minutes between two polls for a contact. Reasonable values are between 1 and 59.
+		'min_poll_interval' => 15,
+
 		// no_regfullname (Boolean)
-		// Allow pseudonyms (true) or enforce a space between first name and last name in Full name, as an anti spam measure (false).
+		// Allow users to register with a display name comporting fewer than two parts separated by spaces.
 		'no_regfullname' => true,
 
 		// no_oembed_rich_content (Boolean)
@@ -172,6 +213,10 @@ return [
 		// Periodically (once an hour) run an "optimize table" command for cache tables
 		'optimize_tables' => false,
 
+		// process_view (Boolean)
+		// Process the "View" activity that is used by Peertube.
+		'process_view' => false,
+
 		// register_notification (Boolean)
 		// Send a notification mail to the admin for each new registration.
 		'register_notification' => true,
@@ -179,6 +224,22 @@ return [
 		// relay_deny_tags (String)
 		// Comma separated list of tags that are rejected.
 		'relay_deny_tags' => '',
+
+		// relay_deny_undetected_language (Boolean)
+		// Deny undetected languages
+		'relay_deny_undetected_language' => false,
+
+		// relay_languages (Integer)
+		// Number of languages that are used per post to check for acceptable posts.
+		'relay_languages' => 10,
+
+		// relay_language_quality (Float)
+		// Minimum value for the language detection quality for relay posts. The value must be between 0 and 1.
+		'relay_language_quality' => 0,
+
+		// relay_max_tags (Integer)
+		// Maximum amount of tags in a post before it is rejected as spam.
+		'relay_max_tags' => 20,
 
 		// proxify_content (Boolean)
 		// Use the proxy functionality for fetching external content
@@ -208,10 +269,56 @@ return [
 		// System theme name.
 		'theme' => 'frio',
 
+		// update_active_contacts (Boolean)
+		// When activated, only public contacts will be activated regularly that are used for example in items or tags.
+		'update_active_contacts' => false,
+
 		// url (String)
 		// The fully-qualified URL of this Friendica node.
 		// Used by the worker in a non-HTTP execution environment.
 		'url' => '',
+
+		// poco_discovery (Boolean)
+		// If enabled, the system will check for the existance of other contacts and servers
+		'poco_discovery' => false,
+
+		// poco_requery_days (Integer)
+		// Number of days after which a server is requeried for their contacts and servers it knows of.
+		'poco_requery_days' => 30,
+
+		// worker_defer_limit (Integer)
+		// Per default the systems tries delivering for 15 times before dropping it.
+		'worker_defer_limit' => 15,
+
+		// worker_fetch_limit (Integer)
+		// Number of worker tasks that are fetched in a single query.
+		'worker_fetch_limit' => 1,
+
+		// worker_load_cooldown (Integer)
+		// Maximum load that causes a cooldown before each worker function call.
+		'worker_load_cooldown' => 0,
+	],
+
+	'channel' => [
+		// engagement_hours (Integer)
+		// Maximum age of incoming posts for the engagement table, when the engagement post limit is 0 or hasn't been reached yet.
+		'engagement_hours' => 24,
+
+		// engagement_post_limit (Integer)
+		// NUmber of posts that are held in the engagement table
+		'engagement_post_limit' => 20000,
+
+		// interaction_score_days (Integer)
+		// Number of days that are used to calculate the interaction score.
+		'interaction_score_days' => 30,
+
+		// max_posts_per_author (Integer)
+		// Maixmum number of posts per page by author
+		'max_posts_per_author' => 2,
+
+		// sharer_interaction_days (Integer)
+		// Number of days of the last interaction that are used to define which sharers are used for the "sharers of sharers" channel.
+		'sharer_interaction_days' => 90,
 	],
 
 	// Used in the admin settings to lock certain features

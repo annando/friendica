@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -26,10 +26,8 @@ use Friendica\Content\Text\BBCode;
 use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
 use Friendica\Core\Renderer;
-use Friendica\Core\System;
 use Friendica\DI;
 use Friendica\Model\Contact;
-use Friendica\Util\Network;
 use Friendica\Util\Strings;
 
 /**
@@ -43,19 +41,17 @@ class VCard
 	 * Get HTML for vcard block
 	 *
 	 * @template widget/vcard.tpl
+	 * @param array $contact
+	 * @param bool  $hide_mention
 	 * @return string
 	 */
-	public static function getHTML(array $contact): string
+	public static function getHTML(array $contact, bool $hide_mention = false): string
 	{
 		if (!isset($contact['network']) || !isset($contact['id'])) {
-			Logger::warning('Incomplete contact', ['contact' => $contact ?? [], 'callstack' => System::callstack(20)]);
+			Logger::warning('Incomplete contact', ['contact' => $contact ?? []]);
 		}
 
-		if (!Network::isValidHttpUrl($contact['url']) && Network::isValidHttpUrl($contact['alias'])) {
-			$contact_url = $contact['alias'];
-		} else {
-			$contact_url = $contact['url'];
-		}
+		$contact_url = Contact::getProfileLink($contact);
 
 		if ($contact['network'] != '') {
 			$network_link   = Strings::formatNetworkName($contact['network'], $contact_url);
@@ -68,6 +64,9 @@ class VCard
 		$follow_link      = '';
 		$unfollow_link    = '';
 		$wallmessage_link = '';
+		$mention_label    = '';
+		$mention_link     = '';
+		$showgroup_link   = '';
 
 		$photo   = Contact::getPhoto($contact);
 
@@ -99,6 +98,17 @@ class VCard
 			if (in_array($rel, [Contact::FOLLOWER, Contact::FRIEND]) && Contact::canReceivePrivateMessages($contact)) {
 				$wallmessage_link = 'message/new/' . $id;
 			}
+
+			if ($contact['contact-type'] == Contact::TYPE_COMMUNITY) {
+				if (!$hide_mention) {
+					$mention_label  = DI::l10n()->t('Post to group');
+					$mention_link   = 'compose/0?body=!' . $contact['addr'];
+				}
+				$showgroup_link = 'network/group/' . $id;
+			} elseif (!$hide_mention) {
+				$mention_label = DI::l10n()->t('Mention');
+				$mention_link  = 'compose/0?body=@' . $contact['addr'];
+			}
 		}
 
 		return Renderer::replaceMacros(Renderer::getMarkupTemplate('widget/vcard.tpl'), [
@@ -119,6 +129,10 @@ class VCard
 			'$unfollow_link'    => $unfollow_link,
 			'$wallmessage'      => DI::l10n()->t('Message'),
 			'$wallmessage_link' => $wallmessage_link,
+			'$mention'          => $mention_label,
+			'$mention_link'     => $mention_link,
+			'$showgroup'        => DI::l10n()->t('View group'),
+			'$showgroup_link'   => $showgroup_link,
 		]);
 	}
 }

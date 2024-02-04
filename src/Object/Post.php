@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -156,15 +156,16 @@ class Post
 	/**
 	 * Get data in a form usable by a conversation template
 	 *
-	 * @param array   $conv_responses conversation responses
-	 * @param string $formSecurityToken A security Token to avoid CSF attacks
-	 * @param integer $thread_level   default = 1
+	 * @param array   $conv_responses    conversation responses
+	 * @param string  $formSecurityToken A security Token to avoid CSF attacks
+	 * @param integer $thread_level      default = 1
+	 * @param array   $thread_parent     Array of parent guid and parent author names
 	 *
 	 * @return mixed The data requested on success, false on failure
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 * @throws \ImagickException
 	 */
-	public function getTemplateData(array $conv_responses, string $formSecurityToken, int $thread_level = 1)
+	public function getTemplateData(array $conv_responses, string $formSecurityToken, int $thread_level = 1, array $thread_parent = [])
 	{
 		$item = $this->getData();
 		$edited = false;
@@ -200,7 +201,7 @@ class Post
 		$indent = '';
 		$shiny = '';
 		$osparkle = '';
-		$total_children = $this->countDescendants();
+		$total_children = $item['counts'] ?? $this->countDescendants();
 
 		$conv = $this->getThread();
 
@@ -319,7 +320,7 @@ class Post
 		$location_html = $locate['html'] ?: Strings::escapeHtml($locate['location'] ?: $locate['coord'] ?: '');
 
 		// process action responses - e.g. like/dislike/attend/agree/whatever
-		$response_verbs = ['like', 'dislike', 'announce'];
+		$response_verbs = ['like', 'dislike', 'announce', 'comment'];
 
 		$isevent = false;
 		$attend = [];
@@ -334,13 +335,30 @@ class Post
 			}
 		}
 
+		$emojis = $this->getEmojis($item);
+
+		$verbs = [
+			'like'        => Activity::LIKE,
+			'dislike'     => Activity::DISLIKE,
+			'announce'    => Activity::ANNOUNCE,
+			'comment'     => Activity::POST,
+			'attendyes'   => Activity::ATTEND,
+			'attendno'    => Activity::ATTENDNO,
+			'attendmaybe' => Activity::ATTENDMAYBE,
+		];
+		$reactions = $emojis;
 		$responses = [];
 		foreach ($response_verbs as $value => $verb) {
 			$responses[$verb] = [
 				'self'   => $conv_responses[$verb][$item['uri-id']]['self'] ?? 0,
-				'output' => !empty($conv_responses[$verb][$item['uri-id']]) ? DI::conversation()->formatActivity($conv_responses[$verb][$item['uri-id']]['links'], $verb, $item['uri-id']) : '',
+				'output' => !empty($conv_responses[$verb][$item['uri-id']]) ? DI::conversation()->formatActivity($conv_responses[$verb][$item['uri-id']]['links'], $verb, $item['uri-id'], $verbs[$verb], $emojis) : '',
+				'total'  => $emojis[$verbs[$verb]]['total'] ?? '',
+				'title'  => $emojis[$verbs[$verb]]['title'] ?? '',
 			];
+			unset($reactions[$verbs[$verb]]);
 		}
+
+		unset($emojis[Activity::POST]);
 
 		/*
 		 * We should avoid doing this all the time, but it depends on the conversation mode
@@ -440,7 +458,8 @@ class Post
 			$title = '';
 		}
 
-		if (DI::pConfig()->get(DI::userSession()->getLocalUserId(), 'system', 'hide_dislike')) {
+		$hide_dislike = DI::pConfig()->get(DI::userSession()->getLocalUserId(), 'system', 'hide_dislike');
+		if ($hide_dislike) {
 			$buttons['dislike'] = false;
 		}
 
@@ -496,7 +515,15 @@ class Post
 			$browsershare = null;
 		}
 
+		$parent_guid     = $thread_parent[$item['thr-parent-id']]['guid'] ?? '';
+		$parent_username = $thread_parent[$item['thr-parent-id']]['name'] ?? '';
+		$parent_unknown  = $parent_username ? '' : DI::l10n()->t('Unknown parent');
+
 		$tmp_item = [
+			'parentguid'      => $parent_guid,
+			'inreplyto'       => DI::l10n()->t('in reply to %s', $parent_username),
+			'isunknown'       => $parent_unknown,
+			'isunknown_label' => DI::l10n()->t('Parent is probably private or not federated.'),
 			'template'        => $this->getTemplate(),
 			'type'            => implode('', array_slice(explode('/', $item['verb']), -1)),
 			'comment_firstcollapsed' => false,
@@ -563,12 +590,16 @@ class Post
 			'ignore_author'   => $ignore,
 			'collapse'        => $collapse,
 			'report'          => $report,
-			'ignore_server'     => $ignoreServer,
+			'ignore_server'   => $ignoreServer,
 			'vote'            => $buttons,
 			'like_html'       => $responses['like']['output'],
 			'dislike_html'    => $responses['dislike']['output'],
-			'emojis'          => $this->getEmojis($item),
+			'hide_dislike'    => $hide_dislike,
+			'emojis'          => $emojis,
+			'quoteshares'     => $this->getQuoteShares($item['quoteshares']),
+			'reactions'       => $reactions,
 			'responses'       => $responses,
+			'legacy_activities' => DI::config()->get('system', 'legacy_activities'),
 			'switchcomment'   => DI::l10n()->t('Comment'),
 			'reply_label'     => DI::l10n()->t('Reply to %s', $profile_name),
 			'comment_html'    => $comment_html,
@@ -609,8 +640,10 @@ class Post
 		$children = $this->getChildren();
 		$nb_children = count($children);
 		if ($nb_children > 0) {
+			$thread_parent[$item['uri-id']] = ['guid' => $item['guid'], 'name' => $item['author-name']];
 			foreach ($children as $child) {
-				$result['children'][] = $child->getTemplateData($conv_responses, $formSecurityToken, $thread_level + 1);
+				$thread_parent[$child->getDataValue('uri-id')] = ['guid' => $child->getDataValue('guid'), 'name' => $child->getDataValue('author-name')];
+				$result['children'][] = $child->getTemplateData($conv_responses, $formSecurityToken, $thread_level + 1, $thread_parent);
 			}
 
 			// Collapse
@@ -651,6 +684,7 @@ class Post
 
 		$emojis = [];
 		foreach ($item['emojis'] as $index => $element) {
+			$key    = $element['verb'];
 			$actors = implode(', ', $element['title']);
 			switch ($element['verb']) {
 				case Activity::ANNOUNCE:
@@ -661,6 +695,11 @@ class Post
 				case Activity::VIEW:
 					$title = DI::l10n()->t('Viewed by: %s', $actors);
 					$icon  = ['fa' => 'fa-eye', 'icon' => 'icon-eye-open'];
+					break;
+
+				case Activity::READ:
+					$title = DI::l10n()->t('Read by: %s', $actors);
+					$icon  = ['fa' => 'fa-book', 'icon' => 'icon-book'];
 					break;
 
 				case Activity::LIKE:
@@ -688,16 +727,36 @@ class Post
 					$icon  = ['fa' => 'fa-times', 'icon' => 'icon-remove'];
 					break;
 
+				case Activity::POST:
+					$title = DI::l10n()->t('Commented by: %s', $actors);
+					$icon  = ['fa' => 'fa-commenting', 'icon' => 'icon-commenting'];
+					break;
+	
 				default:
 					$title = DI::l10n()->t('Reacted with %s by: %s', $element['emoji'], $actors);
 					$icon  = [];
+					$key   = $element['emoji'];
 					break;
 			}
-			$emojis[$index] = ['emoji' => $element['emoji'], 'total' => $element['total'], 'title' => $title, 'icon' => $icon];
+			$emojis[$key] = ['emoji' => $element['emoji'], 'total' => $element['total'], 'title' => $title, 'icon' => $icon];
 		}
-		ksort($emojis);
 
 		return $emojis;
+	}
+
+	/**
+	 * Fetch quote shares
+	 *
+	 * @param array $quoteshares
+	 * @return array
+	 */
+	private function getQuoteShares($quoteshares)
+	{
+		if (empty($quoteshares)) {
+			return [];
+		}
+
+		return ['total' => $quoteshares['total'], 'title' => DI::l10n()->t('Quote shared by: %s', implode(', ', $quoteshares['title']))];
 	}
 
 	/**

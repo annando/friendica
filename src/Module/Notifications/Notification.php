@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -116,7 +116,7 @@ class Notification extends BaseModule
 				$success = false;
 			}
 
-			System::jsonExit(['result' => (($success) ? 'success' : 'fail')]);
+			$this->jsonExit(['result' => (($success) ? 'success' : 'fail')]);
 		}
 	}
 

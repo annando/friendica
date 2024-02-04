@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -33,27 +33,27 @@ class Lists extends BaseApi
 {
 	protected function delete(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		if (empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		if (!Circle::exists($this->parameters['id'], $uid)) {
-			DI::mstdnError()->RecordNotFound();
+			$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 		}
 
 		if (!Circle::remove($this->parameters['id'])) {
-			DI::mstdnError()->InternalError();
+			$this->logAndJsonError(500, $this->errorFactory->InternalError());
 		}
 
-		System::jsonExit([]);
+		$this->jsonExit([]);
 	}
 
 	protected function post(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		$request = $this->getRequest([
@@ -61,17 +61,17 @@ class Lists extends BaseApi
 		], $request);
 
 		if (empty($request['title'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		Circle::create($uid, $request['title']);
 
 		$id = Circle::getIdByName($uid, $request['title']);
 		if (!$id) {
-			DI::mstdnError()->InternalError();
+			$this->logAndJsonError(500, $this->errorFactory->InternalError());
 		}
 
-		System::jsonExit(DI::mstdnList()->createFromCircleId($id));
+		$this->jsonExit(DI::mstdnList()->createFromCircleId($id));
 	}
 
 	public function put(array $request = [])
@@ -82,7 +82,7 @@ class Lists extends BaseApi
 		], $request);
 
 		if (empty($request['title']) || empty($this->parameters['id'])) {
-			DI::mstdnError()->UnprocessableEntity();
+			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
 		}
 
 		Circle::update($this->parameters['id'], $request['title']);
@@ -93,7 +93,7 @@ class Lists extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = self::getCurrentUserID();
 
 		if (empty($this->parameters['id'])) {
@@ -106,11 +106,11 @@ class Lists extends BaseApi
 			$id = $this->parameters['id'];
 
 			if (!Circle::exists($id, $uid)) {
-				DI::mstdnError()->RecordNotFound();
+				$this->logAndJsonError(404, $this->errorFactory->RecordNotFound());
 			}
 			$lists = DI::mstdnList()->createFromCircleId($id);
 		}
 
-		System::jsonExit($lists);
+		$this->jsonExit($lists);
 	}
 }

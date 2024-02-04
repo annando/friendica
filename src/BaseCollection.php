@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -128,6 +128,24 @@ class BaseCollection extends \ArrayIterator
 	{
 		return new static(array_reverse($this->getArrayCopy()), $this->getTotalCount());
 	}
+
+	/**
+	 * Split the collection in smaller collections no bigger than the provided length
+	 *
+	 * @param int $length
+	 * @return static[]
+	 */
+	public function chunk(int $length): array
+	{
+		if ($length < 1) {
+			throw new \RangeException('BaseCollection->chunk(): Size parameter expected to be greater than 0');
+		}
+
+		return array_map(function ($array) {
+			return new static($array);
+		}, array_chunk($this->getArrayCopy(), $length));
+	}
+
 
 	/**
 	 * @inheritDoc

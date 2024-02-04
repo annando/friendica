@@ -199,6 +199,8 @@ $a->strings['Delete this item?'] = 'Diesen Beitrag löschen?';
 $a->strings['Block this author? They won\'t be able to follow you nor see your public posts, and you won\'t be able to see their posts and their notifications.'] = 'Soll dieser Autor geblockt werden? Sie werden nicht in der Lage sein, dir zu folgen oder deine öffentlichen Beiträge zu sehen. Außerdem wirst du nicht in der Lage sein ihre Beiträge und Benachrichtigungen zu lesen.';
 $a->strings['Ignore this author? You won\'t be able to see their posts and their notifications.'] = 'Diesen Autor ignorieren? Du wirst seine Beiträge und Benachrichtigungen nicht mehr sehen können.';
 $a->strings['Collapse this author\'s posts?'] = 'Beiträge dieses Autors zusammenklappen?';
+$a->strings['Ignore this author\'s server?'] = 'Den Server dieses Autors ignorieren?';
+$a->strings['You won\'t see any content from this server including reshares in your Network page, the community pages and individual conversations.'] = 'Du wirst keine Inhalte von dieser Instanz sehen, auch nicht das erneute Teilen auf Ihrer Netzwerkseite, den Gemeinschaftsseiten und einzelnen Unterhaltungen.';
 $a->strings['Like not successful'] = 'Das "Mag ich" war nicht erfolgreich';
 $a->strings['Dislike not successful'] = 'Das "Mag ich nicht" war nicht erfolgreich';
 $a->strings['Sharing not successful'] = 'Das Teilen war nicht erfolgreich';
@@ -206,16 +208,16 @@ $a->strings['Attendance unsuccessful'] = 'Die Teilnahme war nicht erfolgreich';
 $a->strings['Backend error'] = 'Fehler im Backend';
 $a->strings['Network error'] = 'Netzwerkfehler';
 $a->strings['Drop files here to upload'] = 'Ziehe Dateien hierher, um sie hochzuladen';
-$a->strings['Your browser does not support drag and drop file uploads.'] = 'Ihr Browser unterstützt das Hochladen von Dateien per Drag & Drop nicht.';
-$a->strings['Please use the fallback form below to upload your files like in the olden days.'] = 'Bitte verwenden Sie das untenstehende Formular, um Ihre Dateien wie früher hochzuladen.';
+$a->strings['Your browser does not support drag and drop file uploads.'] = 'Dein Browser unterstützt das Hochladen von Dateien per Drag & Drop nicht.';
+$a->strings['Please use the fallback form below to upload your files like in the olden days.'] = 'Bitte verwende das unten stehende Formular, um Ihre Dateien wie früher hochzuladen.';
 $a->strings['File is too big ({{filesize}}MiB). Max filesize: {{maxFilesize}}MiB.'] = 'Datei ist zu groß ({{filesize}}MiB). Maximale Dateigröße: {{maxFilesize}}MiB.';
-$a->strings['You can\'t upload files of this type.'] = 'Sie können keine Dateien dieses Typs hochladen.';
+$a->strings['You can\'t upload files of this type.'] = 'Du kannst keine Dateien dieses Typs hochladen.';
 $a->strings['Server responded with {{statusCode}} code.'] = 'Der Server antwortete mit Status-Code {{statusCode}} ';
 $a->strings['Cancel upload'] = 'Hochladen abbrechen';
 $a->strings['Upload canceled.'] = 'Hochladen abgebrochen';
-$a->strings['Are you sure you want to cancel this upload?'] = 'Sind Sie sicher, dass Sie diesen Upload abbrechen möchten?';
+$a->strings['Are you sure you want to cancel this upload?'] = 'Bist du sicher, dass du diesen Upload abbrechen möchten?';
 $a->strings['Remove file'] = 'Datei entfernen';
-$a->strings['You can\'t upload any more files.'] = 'Sie können keine weiteren Dateien hochladen.';
+$a->strings['You can\'t upload any more files.'] = 'Du kannst keine weiteren Dateien hochladen.';
 $a->strings['toggle mobile'] = 'mobile Ansicht umschalten';
 $a->strings['Method not allowed for this module. Allowed method(s): %s'] = 'Diese Methode ist in diesem Modul nicht erlaubt. Erlaubte Methoden sind: %s';
 $a->strings['Page not found.'] = 'Seite nicht gefunden.';
@@ -224,7 +226,7 @@ $a->strings['The form security token was not correct. This probably happened bec
 $a->strings['All contacts'] = 'Alle Kontakte';
 $a->strings['Followers'] = 'Folgende';
 $a->strings['Following'] = 'Gefolgte';
-$a->strings['Mutual friends'] = 'Beidseitige Freundschaft';
+$a->strings['Mutual friends'] = 'Gegenseitige Freundschaft';
 $a->strings['Common'] = 'Gemeinsam';
 $a->strings['Addon not found'] = 'Addon nicht gefunden';
 $a->strings['Addon already enabled'] = 'Addon bereits aktiviert';
@@ -367,6 +369,7 @@ $a->strings['Italic'] = 'Kursiv';
 $a->strings['Underline'] = 'Unterstrichen';
 $a->strings['Quote'] = 'Zitat';
 $a->strings['Add emojis'] = 'Emojis hinzufügen';
+$a->strings['Content Warning'] = 'Inhaltswarnung';
 $a->strings['Code'] = 'Code';
 $a->strings['Image'] = 'Bild';
 $a->strings['Link'] = 'Link';
@@ -384,16 +387,11 @@ $a->strings['Public post'] = 'Öffentlicher Beitrag';
 $a->strings['Message'] = 'Nachricht';
 $a->strings['Browser'] = 'Browser';
 $a->strings['Open Compose page'] = 'Composer Seite öffnen';
-$a->strings['Pinned item'] = 'Angehefteter Beitrag';
-$a->strings['View %s\'s profile @ %s'] = 'Das Profil von %s auf %s betrachten.';
-$a->strings['Categories:'] = 'Kategorien:';
-$a->strings['Filed under:'] = 'Abgelegt unter:';
-$a->strings['%s from %s'] = '%s von %s';
-$a->strings['View in context'] = 'Im Zusammenhang betrachten';
 $a->strings['remove'] = 'löschen';
 $a->strings['Delete Selected Items'] = 'Lösche die markierten Beiträge';
 $a->strings['You had been addressed (%s).'] = 'Du wurdest angeschrieben (%s).';
 $a->strings['You are following %s.'] = 'Du folgst %s.';
+$a->strings['You subscribed to %s.'] = 'Du hast %s abonniert.';
 $a->strings['You subscribed to one or more tags in this post.'] = 'Du folgst einem oder mehreren Hashtags dieses Beitrags.';
 $a->strings['%s reshared this.'] = '%s hat dies geteilt';
 $a->strings['Reshared'] = 'Geteilt';
@@ -410,6 +408,40 @@ $a->strings['Local delivery'] = 'Lokale Zustellung';
 $a->strings['Stored because of your activity (like, comment, star, ...)'] = 'Gespeichert aufgrund Ihrer Aktivität (Like, Kommentar, Stern, ...)';
 $a->strings['Distributed'] = 'Verteilt';
 $a->strings['Pushed to us'] = 'Zu uns gepusht';
+$a->strings['Pinned item'] = 'Angehefteter Beitrag';
+$a->strings['View %s\'s profile @ %s'] = 'Das Profil von %s auf %s betrachten.';
+$a->strings['Categories:'] = 'Kategorien:';
+$a->strings['Filed under:'] = 'Abgelegt unter:';
+$a->strings['%s from %s'] = '%s von %s';
+$a->strings['View in context'] = 'Im Zusammenhang betrachten';
+$a->strings['For you'] = 'Für Dich';
+$a->strings['Posts from contacts you interact with and who interact with you'] = 'Beiträge von Kontakten, mit denen du interagierst und die mit dir interagieren';
+$a->strings['What\'s Hot'] = 'Angesagt';
+$a->strings['Posts with a lot of interactions'] = 'Beiträge mit vielen Interaktionen';
+$a->strings['Posts in %s'] = 'Beiträge in %s';
+$a->strings['Posts from your followers that you don\'t follow'] = 'Beiträge von deinen Followern, denen du nicht folgst';
+$a->strings['Sharers of sharers'] = 'Geteilt von teilenden ';
+$a->strings['Posts from accounts that are followed by accounts that you follow'] = 'Beiträge von Accounts, welche von von Accounts gefolgt werden, denen du folgst ';
+$a->strings['Images'] = 'Bilder';
+$a->strings['Posts with images'] = 'Beiträge mit Bildern';
+$a->strings['Audio'] = 'Audio';
+$a->strings['Posts with audio'] = 'Beiträge mit Audio';
+$a->strings['Videos'] = 'Videos';
+$a->strings['Posts with videos'] = 'Beiträge mit Videos';
+$a->strings['Local Community'] = 'Lokale Gemeinschaft';
+$a->strings['Posts from local users on this server'] = 'Beiträge von Nutzern dieses Servers';
+$a->strings['Global Community'] = 'Globale Gemeinschaft';
+$a->strings['Posts from users of the whole federated network'] = 'Beiträge von Nutzern des gesamten  föderalen Netzwerks';
+$a->strings['Latest Activity'] = 'Neu - Aktivität';
+$a->strings['Sort by latest activity'] = 'Sortiere nach neueste Aktivität';
+$a->strings['Latest Posts'] = 'Neu - Empfangen';
+$a->strings['Sort by post received date'] = 'Nach Empfangsdatum der Beiträge sortiert';
+$a->strings['Latest Creation'] = 'Neu - Erstellung';
+$a->strings['Sort by post creation date'] = 'Sortiert nach dem Erstellungsdatum';
+$a->strings['Personal'] = 'Persönlich';
+$a->strings['Posts that mention or involve you'] = 'Beiträge, in denen es um dich geht';
+$a->strings['Starred'] = 'Markierte';
+$a->strings['Favourite Posts'] = 'Favorisierte Beiträge';
 $a->strings['General Features'] = 'Allgemeine Features';
 $a->strings['Photo Location'] = 'Aufnahmeort';
 $a->strings['Photo metadata is normally stripped. This extracts the location (if present) prior to stripping metadata and links it to a map.'] = 'Die Foto-Metadaten werden ausgelesen. Dadurch kann der Aufnahmeort (wenn vorhanden) in einer Karte angezeigt werden.';
@@ -439,6 +471,7 @@ $a->strings['Groups'] = 'Gruppen';
 $a->strings['External link to group'] = 'Externer Link zur Gruppe';
 $a->strings['show less'] = 'weniger anzeigen';
 $a->strings['show more'] = 'mehr anzeigen';
+$a->strings['Create new group'] = 'Neue Gruppe erstellen';
 $a->strings['event'] = 'Veranstaltung';
 $a->strings['status'] = 'Status';
 $a->strings['photo'] = 'Foto';
@@ -453,6 +486,7 @@ $a->strings['Send PM'] = 'Private Nachricht senden';
 $a->strings['Block'] = 'Sperren';
 $a->strings['Ignore'] = 'Ignorieren';
 $a->strings['Collapse'] = 'Zuklappen';
+$a->strings['Ignore %s server'] = 'Ignoriere %s Server';
 $a->strings['Languages'] = 'Sprachen';
 $a->strings['Connect/Follow'] = 'Verbinden/Folgen';
 $a->strings['Unable to fetch user.'] = 'Benutzer kann nicht abgerufen werden.';
@@ -570,11 +604,13 @@ $a->strings['%d contact in common'] = [
 	1 => '%d gemeinsame Kontakte',
 ];
 $a->strings['Archives'] = 'Archiv';
+$a->strings['On this date'] = 'An diesem Datum';
 $a->strings['Persons'] = 'Personen';
 $a->strings['Organisations'] = 'Organisationen';
 $a->strings['News'] = 'Nachrichten';
 $a->strings['Account Types'] = 'Kontenarten';
 $a->strings['All'] = 'Alle';
+$a->strings['Channels'] = 'Kanäle';
 $a->strings['Export'] = 'Exportieren';
 $a->strings['Export calendar as ical'] = 'Kalender als ical exportieren';
 $a->strings['Export calendar as csv'] = 'Kalender als csv exportieren';
@@ -591,11 +627,14 @@ $a->strings['Trending Tags (last %d hour)'] = [
 	1 => 'Trending Tags (%d Stunden)',
 ];
 $a->strings['More Trending Tags'] = 'mehr Trending Tags';
+$a->strings['Post to group'] = 'Beitrag an Gruppe';
+$a->strings['Mention'] = 'Mention';
 $a->strings['XMPP:'] = 'XMPP:';
 $a->strings['Matrix:'] = 'Matrix:';
 $a->strings['Location:'] = 'Ort:';
 $a->strings['Network:'] = 'Netzwerk:';
 $a->strings['Unfollow'] = 'Entfolgen';
+$a->strings['View group'] = 'Gruppe betrachten';
 $a->strings['Yourself'] = 'Du selbst';
 $a->strings['Mutuals'] = 'Beidseitige Freundschaft';
 $a->strings['Post to Email'] = 'An E-Mail senden';
@@ -603,7 +642,7 @@ $a->strings['Public'] = 'Öffentlich';
 $a->strings['This content will be shown to all your followers and can be seen in the community pages and by anyone with its link.'] = 'Dieser Inhalt wird all deine Abonenten sowie auf der Gemeinschaftsseite angezeigt. Außerdem kann ihn jeder sehen, der den Link kennt.';
 $a->strings['Limited/Private'] = 'Begrenzt/Privat';
 $a->strings['This content will be shown only to the people in the first box, to the exception of the people mentioned in the second box. It won\'t appear anywhere public.'] = 'Dieser Inhalt wird außschließlich den Kontakten gezeigt, die du in der ersten Box ausgewählt hast, mit den Ausnahmen derer die du in der zweiten Box auflistest. Er wird nicht öffentlich zugänglich sein.';
-$a->strings['Start typing the name of a contact or a circle to show a filtered list. You can also mention the special circles "Followers" and "Mutuals".'] = 'Geben Sie den Namen eines Kontakts oder eines Circles ein, um eine gefilterte Liste anzuzeigen. Sie können auch die speziellen Kreise "folgende" und "beidseitige Freundschaft" erwähnen.';
+$a->strings['Start typing the name of a contact or a circle to show a filtered list. You can also mention the special circles "Followers" and "Mutuals".'] = 'Gebe den Namen eines Kontakts oder eines Circles ein, um eine gefilterte Liste anzuzeigen. Du kannst auch die speziellen Kreise "Folgende" und "beidseitige Freundschaft" erwähnen.';
 $a->strings['Show to:'] = 'Sichtbar für:';
 $a->strings['Except to:'] = 'Ausgenommen:';
 $a->strings['CC: email addresses'] = 'Cc: E-Mail-Addressen';
@@ -631,6 +670,8 @@ $a->strings['Apache mod_rewrite module'] = 'Apache mod_rewrite module';
 $a->strings['Error: PDO or MySQLi PHP module required but not installed.'] = 'Fehler: PDO oder MySQLi PHP Modul erforderlich, aber nicht installiert.';
 $a->strings['Error: The MySQL driver for PDO is not installed.'] = 'Fehler: der MySQL Treiber für PDO ist nicht installiert';
 $a->strings['PDO or MySQLi PHP module'] = 'PDO oder MySQLi PHP Modul';
+$a->strings['Error: The IntlChar module is not installed.'] = 'Fehler: Das IntlChar-Modul von PHP ist nicht installiert.';
+$a->strings['IntlChar PHP module'] = 'PHP: IntlChar-Modul';
 $a->strings['Error, XML PHP module required but not installed.'] = 'Fehler: XML PHP Modul erforderlich aber nicht installiert.';
 $a->strings['XML PHP module'] = 'XML PHP Modul';
 $a->strings['libCurl PHP module'] = 'PHP: libCurl-Modul';
@@ -677,6 +718,7 @@ $a->strings['ImageMagick PHP extension is installed'] = 'ImageMagick PHP Erweite
 $a->strings['ImageMagick supports GIF'] = 'ImageMagick unterstützt GIF';
 $a->strings['Database already in use.'] = 'Die Datenbank wird bereits verwendet.';
 $a->strings['Could not connect to database.'] = 'Verbindung zur Datenbank gescheitert.';
+$a->strings['%s (%s)'] = '%s (%s)';
 $a->strings['Monday'] = 'Montag';
 $a->strings['Tuesday'] = 'Dienstag';
 $a->strings['Wednesday'] = 'Mittwoch';
@@ -714,6 +756,8 @@ $a->strings['Sep'] = 'Sep';
 $a->strings['Oct'] = 'Okt';
 $a->strings['Nov'] = 'Nov';
 $a->strings['Dec'] = 'Dez';
+$a->strings['The logfile \'%s\' is not usable. No logging possible (error: \'%s\')'] = 'Die Logdatei \'%s\' ist nicht beschreibbar. Derzeit ist keine Aufzeichnung möglich (Fehler: \'%s\')';
+$a->strings['The debug logfile \'%s\' is not usable. No logging possible (error: \'%s\')'] = 'Die Logdatei \'%s\' ist nicht beschreibbar. Derzeit ist keine Aufzeichnung möglich (Fehler: \'%s\')';
 $a->strings['Friendica can\'t display this page at the moment, please contact the administrator.'] = 'Friendica kann die Seite im Moment nicht darstellen. Bitte kontaktiere das Administratoren Team.';
 $a->strings['template engine cannot be registered without a name.'] = 'Die Template Engine kann nicht ohne einen Namen registriert werden.';
 $a->strings['template engine is not registered!'] = 'Template Engine wurde nicht registriert!';
@@ -760,14 +804,13 @@ $a->strings['Unauthorized'] = 'Nicht autorisiert';
 $a->strings['Token is not authorized with a valid user or is missing a required scope'] = 'Token ist nicht durch einen gültigen Benutzer autorisiert oder es fehlt ein erforderlicher Geltungsbereich';
 $a->strings['Internal Server Error'] = 'Interner Serverfehler';
 $a->strings['Legacy module file not found: %s'] = 'Legacy-Moduldatei nicht gefunden: %s';
-$a->strings['A deleted circle with this name was revived. Existing item permissions <strong>may</strong> apply to this circle and any future members. If this is not what you intended, please create another circle with a different name.'] = 'Ein gelöschter Circle mit diesem Namen wurde wiederhergestellt. Bestehende Objektberechtigungen <strong>können</strong> für diesen Circle und alle zukünftigen Mitglieder gelten. Wenn dies nicht das ist, was Sie beabsichtigen, erstellen Sie bitte einen neuen Circle mit einem anderen Namen.';
-$a->strings['Default privacy circle for new contacts'] = 'Voreingestellter Circle für neue Kontakte';
+$a->strings['A deleted circle with this name was revived. Existing item permissions <strong>may</strong> apply to this circle and any future members. If this is not what you intended, please create another circle with a different name.'] = 'Ein gelöschter Circle mit diesem Namen wurde wiederhergestellt. Bestehende Objektberechtigungen <strong>können</strong> für diesen Circle und alle zukünftigen Mitglieder gelten. Wenn dies nicht das ist, was du beabsichtigst, erstelle bitte einen neuen Circle mit einem anderen Namen.';
 $a->strings['Everybody'] = 'Alle Kontakte';
 $a->strings['edit'] = 'bearbeiten';
 $a->strings['add'] = 'hinzufügen';
 $a->strings['Edit circle'] = 'Circle ändern';
-$a->strings['Contacts not in any circle'] = 'Kontakte die keinem Circle zugeordnet sind';
-$a->strings['Create a new circle'] = 'Erstelle neuen Cricle';
+$a->strings['Contacts not in any circle'] = 'Kontakte, die keinem Circle zugeordnet sind';
+$a->strings['Create a new circle'] = 'Erstelle neuen Circle';
 $a->strings['Circle Name: '] = 'Circle Name: ';
 $a->strings['Edit circles'] = 'Circles bearbeiten';
 $a->strings['Approve'] = 'Genehmigen';
@@ -810,6 +853,8 @@ $a->strings['Show map'] = 'Karte anzeigen';
 $a->strings['Hide map'] = 'Karte verbergen';
 $a->strings['%s\'s birthday'] = '%ss Geburtstag';
 $a->strings['Happy Birthday %s'] = 'Herzlichen Glückwunsch, %s';
+$a->strings['%s (%s - %s): %s'] = '%s (%s - %s): %s';
+$a->strings['%s (%s): %s'] = '%s (%s): %s';
 $a->strings['Detected languages in this post:\n%s'] = 'Erkannte Sprachen in diesem Beitrag:\n%s';
 $a->strings['activity'] = 'Aktivität';
 $a->strings['comment'] = 'Kommentar';
@@ -909,7 +954,7 @@ $a->strings['An error occurred during registration. Please try again.'] = 'Währ
 $a->strings['An error occurred creating your default profile. Please try again.'] = 'Bei der Erstellung des Standardprofils ist ein Fehler aufgetreten. Bitte versuche es noch einmal.';
 $a->strings['An error occurred creating your self contact. Please try again.'] = 'Bei der Erstellung deines self-Kontakts ist ein Fehler aufgetreten. Bitte versuche es erneut.';
 $a->strings['Friends'] = 'Kontakte';
-$a->strings['An error occurred creating your default contact circle. Please try again.'] = 'Beim Erstellen Ihres Circles ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.';
+$a->strings['An error occurred creating your default contact circle. Please try again.'] = 'Beim Erstellen Ihres Circles ist ein Fehler aufgetreten. Bitte versuche es erneut.';
 $a->strings['Profile Photos'] = 'Profilbilder';
 $a->strings['
 		Dear %1$s,
@@ -931,10 +976,9 @@ $a->strings['
 		You may also wish to add some basic information to your default profile
 		(on the "Profiles" page) so that other people can easily find you.
 
-		We recommend setting your full name, adding a profile photo,
-		adding some profile "keywords" (very useful in making new friends) - and
-		perhaps what country you live in; if you do not wish to be more specific
-		than that.
+		We recommend adding a profile photo, adding some profile "keywords" 
+		(very useful in making new friends) - and perhaps what country you live in; 
+		if you do not wish to be more specific than that.
 
 		We fully respect your right to privacy, and none of these items are necessary.
 		If you are new and do not know anybody here, they may help
@@ -949,7 +993,15 @@ Adresse der Seite: %1$s
 Benutzername: %2$s
 Passwort: %3$s
 
-Du kannst dein Passwort unter "Einstellungen" ändern, sobald du dich angemeldet hast.Bitte nimm dir ein paar Minuten, um die anderen Einstellungen auf dieser Seite zu kontrollieren.Eventuell magst du ja auch einige Informationen über dich in deinem Profil veröffentlichen, damit andere Leute dich einfacher finden können.Bearbeite hierfür einfach dein Standard-Profil (über die Profil-Seite).Wir empfehlen dir, deinen kompletten Namen anzugeben und ein zu dir passendes Profilbild zu wählen, damit dich alte Bekannte wiederfinden.Außerdem ist es nützlich, wenn du auf deinem Profil Schlüsselwörter angibst. Das erleichtert es, Leute zu finden, die deine Interessen teilen.Wir respektieren deine Privatsphäre - keine dieser Angaben ist nötig.Wenn du neu im Netzwerk bist und noch niemanden kennst, dann können sie allerdings dabei helfen, neue und interessante Kontakte zu knüpfen.
+Du kannst dein Passwort unter "Einstellungen" ändern, sobald du dich angemeldet hast. 
+
+Bitte nimm dir ein paar Minuten, um die anderen Einstellungen auf dieser Seite zu kontrollieren. 
+
+Eventuell magst du ja auch einige Informationen über dich in deinem Profil veröffentlichen, damit andere Leute dich einfacher finden können. Bearbeite hierfür einfach dein Standard-Profil (über die Profil-Seite). 
+
+Wir empfehlen dir, ein zu dir passendes Profilbild zu wählen, damit dich alte Bekannte wiederfinden. Außerdem ist es nützlich, wenn du auf deinem Profil Schlüsselwörter angibst. Das erleichtert es, Leute zu finden, die deine Interessen teilen.
+
+Wir respektieren deine Privatsphäre - keine dieser Angaben ist nötig. Wenn du neu im Netzwerk bist und noch niemanden kennst, dann können sie allerdings dabei helfen, neue und interessante Kontakte zu knüpfen.
 
 Du kannst dein Nutzerkonto  jederzeit unter %1$s/settings/removeme wieder löschen.
 
@@ -997,10 +1049,9 @@ $a->strings['
 			You may also wish to add some basic information to your default profile
 			(on the "Profiles" page) so that other people can easily find you.
 
-			We recommend setting your full name, adding a profile photo,
-			adding some profile "keywords" (very useful in making new friends) - and
-			perhaps what country you live in; if you do not wish to be more specific
-			than that.
+			We recommend adding a profile photo, adding some profile "keywords" (very useful
+			in making new friends) - and perhaps what country you live in; if you do not wish
+			to be more specific than that.
 
 			We fully respect your right to privacy, and none of these items are necessary.
 			If you are new and do not know anybody here, they may help
@@ -1024,8 +1075,7 @@ Eventuell magst du ja auch einige Informationen über dich in deinem
 Profil veröffentlichen, damit andere Leute dich einfacher finden können.
 Bearbeite hierfür einfach dein Standard-Profil (über die Profil-Seite).
 
-Wir empfehlen dir, deinen kompletten Namen anzugeben und ein zu dir
-passendes Profilbild zu wählen, damit dich alte Bekannte wiederfinden.
+Wir empfehlen dir,  ein zu dir passendes Profilbild zu wählen, damit dich alte Bekannte wiederfinden.
 Außerdem ist es nützlich, wenn du auf deinem Profil Schlüsselwörter
 angibst. Das erleichtert es, Leute zu finden, die deine Interessen teilen.
 
@@ -1036,6 +1086,7 @@ allerdings dabei helfen, neue und interessante Kontakte zu knüpfen.
 Solltest du dein Nutzerkonto löschen wollen, kannst du dies unter %3$s/settings/removeme jederzeit tun.
 
 Danke für deine Aufmerksamkeit und willkommen auf %2$s.';
+$a->strings['User with delegates can\'t be removed, please remove delegate users first'] = 'Benutzer mit Delegaten können nicht entfernt werden, bitte entferne zuerst die delegierten Benutzer';
 $a->strings['Addon not found.'] = 'Addon nicht gefunden.';
 $a->strings['Addon %s disabled.'] = 'Addon %s ausgeschaltet.';
 $a->strings['Addon %s enabled.'] = 'Addon %s aktiviert.';
@@ -1125,7 +1176,7 @@ $a->strings['Context'] = 'Zusammenhang';
 $a->strings['ALL'] = 'ALLE';
 $a->strings['View details'] = 'Details anzeigen';
 $a->strings['Click to view details'] = 'Anklicken zum Anzeigen der Details';
-$a->strings['Event details'] = 'Veranstaltungsdetails';
+$a->strings['Event details'] = 'Ereignisdetails';
 $a->strings['Data'] = 'Daten';
 $a->strings['Source'] = 'Quelle';
 $a->strings['File'] = 'Datei';
@@ -1250,22 +1301,32 @@ $a->strings['Explicit Content'] = 'Sensibler Inhalt';
 $a->strings['Set this to announce that your node is used mostly for explicit content that might not be suited for minors. This information will be published in the node information and might be used, e.g. by the global directory, to filter your node from listings of nodes to join. Additionally a note about this will be shown at the user registration page.'] = 'Wähle dies, um anzuzeigen, dass dein Knoten hauptsächlich für explizite Inhalte verwendet wird, die möglicherweise nicht für Minderjährige geeignet sind. Diese Info wird in der Knoteninformation veröffentlicht und kann durch das Globale Verzeichnis genutzt werden, um deinen Knoten von den Auflistungen auszuschließen. Zusätzlich wird auf der Registrierungsseite ein Hinweis darüber angezeigt.';
 $a->strings['Proxify external content'] = 'Proxy für externe Inhalte';
 $a->strings['Route external content via the proxy functionality. This is used for example for some OEmbed accesses and in some other rare cases.'] = 'Externe Inhalte werden durch einen Proxy geleitet. Die wird z.B. für das aufrufen von OEmbed Inhalten verwendet und einigen anderen seltenen Fällen.';
+$a->strings['Only local search'] = 'Nur lokale Suche';
+$a->strings['Blocks search for users who are not logged in to prevent crawlers from blocking your system.'] = 'Sperrt die Suche für nicht eingeloggte Benutzer, um zu verhindern, dass Crawler Ihr System blockieren.';
+$a->strings['Blocked tags for trending tags'] = 'Blockierte Tags für Trend-Tags';
+$a->strings['Comma separated list of hashtags that shouldn\'t be displayed in the trending tags.'] = 'Durch Kommata getrennte Liste von Hashtags, die nicht in den Trending Tags angezeigt werden sollen.';
 $a->strings['Cache contact avatars'] = 'Kontaktprofilbilder zwischenspeichern';
 $a->strings['Locally store the avatar pictures of the contacts. This uses a lot of storage space but it increases the performance.'] = 'Die Profilbilder der Kontakte zwischenspeichern. Der Zwischenspeicher verbraucht viel Platz im Speicherplatz, verbessert aber die Performance.';
 $a->strings['Allow Users to set remote_self'] = 'Nutzern erlauben, das remote_self Flag zu setzen';
 $a->strings['With checking this, every user is allowed to mark every contact as a remote_self in the repair contact dialog. Setting this flag on a contact causes mirroring every posting of that contact in the users stream.'] = 'Ist dies ausgewählt, kann jeder Nutzer jeden seiner Kontakte als remote_self (entferntes Konto) im "Erweitert"-Reiter der Kontaktansicht markieren. Nach dem Setzen dieses Flags werden alle Top-Level-Beiträge dieser Kontakte automatisch in den Stream dieses Nutzers gepostet (gespiegelt).';
+$a->strings['Adjust the feed poll frequency'] = 'Einstellen der Abrufhäufigkeit';
+$a->strings['Automatically detect and set the best feed poll frequency.'] = 'Automatisches Erkennen und Einstellen der besten Abrufhäufigkeit.';
+$a->strings['Minimum poll interval'] = 'Minimales Abfrageintervall';
+$a->strings['Minimal distance in minutes between two polls for mail and feed contacts. Reasonable values are between 1 and 59.'] = 'Minimaler Abstand in Minuten zwischen zwei Abfragen für Mail- und Feed-Kontakte. Sinnvolle Werte liegen zwischen 1 und 59.';
 $a->strings['Enable multiple registrations'] = 'Erlaube Mehrfachregistrierung';
 $a->strings['Enable users to register additional accounts for use as pages.'] = 'Erlaube es Benutzern weitere Konten für Organisationen o.ä. mit der gleichen E-Mail Adresse anzulegen.';
 $a->strings['Enable OpenID'] = 'OpenID aktivieren';
 $a->strings['Enable OpenID support for registration and logins.'] = 'OpenID Unterstützung bei der Registrierung und dem Login aktivieren.';
-$a->strings['Enable Fullname check'] = 'Namen auf Vollständigkeit überprüfen';
-$a->strings['Enable check to only allow users to register with a space between the first name and the last name in their full name.'] = 'Erlaubt Nutzern Konten nur dann zu registrieren, bei denen im Namensfeld ein Leerzeichen zur Trennung von Vor- und Nachnamen verwendet wird.';
+$a->strings['Enable full name check'] = 'Namen auf Vollständigkeit überprüfen';
+$a->strings['Prevents users from registering with a display name with fewer than two parts separated by spaces.'] = 'Verhindert, dass sich Benutzer mit einem Anzeigenamen registrieren, der aus weniger als zwei durch Leerzeichen getrennten Teilen besteht.';
 $a->strings['Email administrators on new registration'] = 'Email den Administratoren bei neuen Registrierungen';
 $a->strings['If enabled and the system is set to an open registration, an email for each new registration is sent to the administrators.'] = 'Wenn diese Option aktiviert ist und die Registrierung auf offen eingestellt ist, wird den Administratoren bei jeder neuen Registierung eine Email geschickt.';
 $a->strings['Community pages for visitors'] = 'Für Besucher verfügbare Gemeinschaftsseite';
 $a->strings['Which community pages should be available for visitors. Local users always see both pages.'] = 'Welche Gemeinschaftsseiten sollen für Besucher dieses Knotens verfügbar sein? Lokale Nutzer können grundsätzlich beide Seiten verwenden.';
 $a->strings['Posts per user on community page'] = 'Anzahl der Beiträge pro Benutzer auf der Gemeinschaftsseite';
-$a->strings['The maximum number of posts per user on the community page. (Not valid for "Global Community")'] = 'Maximale Anzahl der Beiträge, die von jedem Nutzer auf der Gemeinschaftsseite angezeigt werden. (Gilt nicht für die \'Globale Gemeinschaftsseite\')';
+$a->strings['The maximum number of posts per user on the local community page. This is useful, when a single user floods the local community page.'] = 'Die maximale Anzahl von Beiträgen pro Benutzer auf der lokalen Gemeinschaftsseite. Dies ist nützlich, wenn ein einzelner Benutzer die lokale Gemeinschaftsseite überflutet.';
+$a->strings['Posts per server on community page'] = 'Beiträge pro Server auf der Gemeinschaftsseite';
+$a->strings['The maximum number of posts per server on the global community page. This is useful, when posts from a single server flood the global community page.'] = 'Die maximale Anzahl von Beiträgen pro Server auf der globalen Gemeinschaftsseite. Dies ist nützlich, wenn Beiträge von einem einzelnen Server die globale Gemeinschaftsseite überfluten.';
 $a->strings['Enable Mail support'] = 'E-Mail Unterstützung aktivieren';
 $a->strings['Enable built-in mail support to poll IMAP folders and to reply via mail.'] = 'Aktiviert die Unterstützung IMAP Ordner abzurufen und ermöglicht es auch auf E-Mails zu antworten.';
 $a->strings['Mail support can\'t be enabled because the PHP IMAP module is not installed.'] = 'E-Mail Unterstützung kann nicht aktiviert werden, da das PHP IMAP Modul nicht installiert ist.';
@@ -1293,12 +1354,14 @@ $a->strings['If enabled, contacts are checked for their followers and following 
 $a->strings['None - deactivated'] = 'Keine - deaktiviert';
 $a->strings['Local contacts - contacts of our local contacts are discovered for their followers/followings.'] = 'Lokale Kontakte - Die Beziehungen der lokalen Kontakte werden analysiert.';
 $a->strings['Interactors - contacts of our local contacts and contacts who interacted on locally visible postings are discovered for their followers/followings.'] = 'Interaktionen - Kontakte der lokalen Kontakte sowie die Profile die mit öffentlichen lokalen Beiträgen interagiert haben, werden bzgl. ihrer Beziehungen analysiert.';
+$a->strings['Only update contacts/servers with local data'] = 'Nur Kontakte/Server mit lokalen Daten aktualisieren';
+$a->strings['If enabled, the system will only look for changes in contacts and servers that engaged on this system by either being in a contact list of a user or when posts or comments exists from the contact on this system.'] = 'Wenn diese Option aktiviert ist, sucht das System nur nach Änderungen bei Kontakten und Servern, die mit dieser Instanz interagiert haben, indem sie entweder in einer Kontaktliste eines Benutzers enthalten sind oder wenn Beiträge oder Kommentare von diesem Kontakt in dieser Instanz vorhanden sind.';
 $a->strings['Synchronize the contacts with the directory server'] = 'Gleiche die Kontakte mit dem Directory-Server ab';
 $a->strings['if enabled, the system will check periodically for new contacts on the defined directory server.'] = 'Ist dies aktiv, wird das System regelmäßig auf dem Verzeichnis-Server nach neuen potentiellen Kontakten nachsehen.';
-$a->strings['Days between requery'] = 'Tage zwischen erneuten Abfragen';
-$a->strings['Number of days after which a server is requeried for his contacts.'] = 'Legt das Abfrageintervall fest, nach dem ein Server erneut nach Kontakten abgefragt werden soll.';
 $a->strings['Discover contacts from other servers'] = 'Neue Kontakte auf anderen Servern entdecken';
-$a->strings['Periodically query other servers for contacts. The system queries Friendica, Mastodon and Hubzilla servers.'] = 'Frage regelmäßig bei anderen Servern nach neuen potentiellen Kontakten an. Diese Anfragen werden an Friendica, Mastodon und Hubzilla Server gesandt.';
+$a->strings['Periodically query other servers for contacts and servers that they know of. The system queries Friendica, Mastodon and Hubzilla servers. Keep it deactivated on small machines to decrease the database size and load.'] = 'Regelmäßige Abfrage anderer Server nach Kontakten und Servern, welche dort bekannt sind. Das System fragt Friendica, Mastodon und Hubzilla Server ab. Lass diese Options auf kleinen Instanzen deaktiviert, um die Datenbankgröße und -last zu verringern.';
+$a->strings['Days between requery'] = 'Tage zwischen erneuten Abfragen';
+$a->strings['Number of days after which a server is requeried for their contacts and servers it knows of. This is only used when the discovery is activated.'] = 'Anzahl der Tage, nach denen ein Server nach seinen Kontakten und den ihm bekannten Servern abgefragt wird. Dies wird nur verwendet, wenn die Erkennung aktiviert ist.';
 $a->strings['Search the local directory'] = 'Lokales Verzeichnis durchsuchen';
 $a->strings['Search the local directory instead of the global directory. When searching locally, every search will be executed on the global directory in the background. This improves the search results when the search is repeated.'] = 'Suche im lokalen Verzeichnis anstelle des globalen Verzeichnisses durchführen. Jede Suche wird im Hintergrund auch im globalen Verzeichnis durchgeführt, um die Suchresultate zu verbessern, wenn die Suche wiederholt wird.';
 $a->strings['Publish server information'] = 'Server-Informationen veröffentlichen';
@@ -1319,16 +1382,34 @@ $a->strings['Maximum numbers of comments per post'] = 'Maximale Anzahl von Komme
 $a->strings['How much comments should be shown for each post? Default value is 100.'] = 'Wie viele Kommentare sollen pro Beitrag angezeigt werden? Standardwert sind 100.';
 $a->strings['Maximum numbers of comments per post on the display page'] = 'Maximale Anzahl von Kommentaren in der Einzelansicht';
 $a->strings['How many comments should be shown on the single view for each post? Default value is 1000.'] = 'Wie viele Kommentare sollen auf der Einzelansicht eines Beitrags angezeigt werden? Grundeinstellung sind 1000.';
+$a->strings['Items per page'] = 'Beiträge pro Seite';
+$a->strings['Number of items per page in stream pages (network, community, profile/contact statuses, search).'] = 'Anzahl der Elemente pro Seite in den Stream-Seiten (Netzwerk, Community, Profil/Kontaktstatus, Suche).';
+$a->strings['Items per page for mobile devices'] = 'Beiträge pro Seite für mobile Endgeräte';
+$a->strings['Number of items per page in stream pages (network, community, profile/contact statuses, search) for mobile devices.'] = 'Anzahl der Beiträge pro Seite in Stream-Seiten (Netzwerk, Community, Profil-/Kontaktstatus, Suche) für mobile Endgeräte.';
 $a->strings['Temp path'] = 'Temp-Pfad';
 $a->strings['If you have a restricted system where the webserver can\'t access the system temp path, enter another path here.'] = 'Solltest du ein eingeschränktes System haben, auf dem der Webserver nicht auf das temp-Verzeichnis des Systems zugreifen kann, setze hier einen anderen Pfad.';
 $a->strings['Only search in tags'] = 'Nur in Tags suchen';
 $a->strings['On large systems the text search can slow down the system extremely.'] = 'Auf großen Knoten kann die Volltext-Suche das System ausbremsen.';
 $a->strings['Generate counts per contact circle when calculating network count'] = 'Erstelle Zählungen je Circle bei der Berechnung der Netzwerkanzahl';
 $a->strings['On systems with users that heavily use contact circles the query can be very expensive.'] = 'Auf Systemen mit Benutzern, die häufig Circles verwenden, kann die Abfrage sehr aufwändig sein.';
+$a->strings['Process "view" activities'] = '"view"-Aktivitäten verarbeiten';
+$a->strings['"view" activities are mostly geberated by Peertube systems. Per default they are not processed for performance reasons. Only activate this option on performant system.'] = '"view"-Aktivitäten werden zumeist von Peertube-Systemen genutzt. Standardmäßig werden sie aus Leistungsgründen nicht verarbeitet. Aktivieren Sie diese Option nur auf performanten Systemen.';
+$a->strings['Days, after which a contact is archived'] = 'Anzahl der Tage, nach denen ein Kontakt archiviert wird';
+$a->strings['Number of days that we try to deliver content or to update the contact data before we archive a contact.'] = 'Die Anzahl der Tage, die wir versuchen, Inhalte zu liefern oder die Kontaktdaten zu aktualisieren, bevor wir einen Kontakt archivieren.';
 $a->strings['Maximum number of parallel workers'] = 'Maximale Anzahl parallel laufender Worker';
 $a->strings['On shared hosters set this to %d. On larger systems, values of %d are great. Default value is %d.'] = 'Wenn dein Knoten bei einem Shared Hoster ist, setze diesen Wert auf %d. Auf größeren Systemen funktioniert ein Wert von %d recht gut. Standardeinstellung sind %d.';
+$a->strings['Maximum load for workers'] = 'Maximale Last für Worker';
+$a->strings['Maximum load that causes a cooldown before each worker function call.'] = 'Maximale Auslastung des Systems, welche eine Verzögerung vor jedem Aufruf des Workers verursacht.';
 $a->strings['Enable fastlane'] = 'Aktiviere Fastlane';
 $a->strings['When enabed, the fastlane mechanism starts an additional worker if processes with higher priority are blocked by processes of lower priority.'] = 'Wenn aktiviert, wird der Fastlane-Mechanismus einen weiteren Worker-Prozeß starten, wenn Prozesse mit höherer Priorität von Prozessen mit niedrigerer Priorität blockiert werden.';
+$a->strings['Decoupled receiver'] = 'Entkoppelter Empfänger';
+$a->strings['Decouple incoming ActivityPub posts by processing them in the background via a worker process. Only enable this on fast systems.'] = 'Entkoppelt eingehende ActivityPub-Beiträge, indem sie im Hintergrund über einen Worker-Prozess verarbeitet werden. Aktiviere dies nur auf schnellen Systemen.';
+$a->strings['Cron interval'] = 'Cron Intervall';
+$a->strings['Minimal period in minutes between two calls of the "Cron" worker job.'] = 'Minimaler Intervall in Minuten zwischen zwei Aufrufen des "Cron" Arbeitsprozesses.';
+$a->strings['Worker defer limit'] = 'Worker-Verzögerungsgrenze';
+$a->strings['Per default the systems tries delivering for 15 times before dropping it.'] = 'Standardmäßig versucht das System 15 Mal zuzustellen, bevor es den Vorgang abbricht.';
+$a->strings['Worker fetch limit'] = 'Worker Abrufbegrenzung';
+$a->strings['Number of worker tasks that are fetched in a single query. Higher values should increase the performance, too high values will mostly likely decrease it. Only change it, when you know how to measure the performance of your system.'] = 'Anzahl der Worker-Aufgaben, die in einer einzigen Abfrage abgerufen werden. Höhere Werte sollten die Leistung verbessern, zu hohe Werte werden sie wahrscheinlich verringern. Änder dies nur, wenn Du weißt, wie Du die Leistung des Systems messen kannst.';
 $a->strings['Direct relay transfer'] = 'Direkte Relais-Übertragung';
 $a->strings['Enables the direct transfer to other servers without using the relay servers'] = 'Aktiviert das direkte Verteilen an andere Server, ohne dass ein Relais-Server verwendet wird.';
 $a->strings['Relay scope'] = 'Geltungsbereich des Relais';
@@ -1342,6 +1423,22 @@ $a->strings['Deny Server tags'] = 'Server Tags ablehnen';
 $a->strings['Comma separated list of tags that are rejected.'] = 'Durch Kommas getrennte Liste der Tags, die abgelehnt werden';
 $a->strings['Allow user tags'] = 'Verwende Schlagworte der Nutzer';
 $a->strings['If enabled, the tags from the saved searches will used for the "tags" subscription in addition to the "relay_server_tags".'] = 'Ist dies aktiviert, werden die Schlagwörter der gespeicherten Suchen zusätzlich zu den oben definierten Server-Schlagworten abonniert.';
+$a->strings['Deny undetected languages'] = 'Nicht erkannte Sprachen ablehnen';
+$a->strings['If enabled, posts with undetected languages will be rejected.'] = 'Wenn diese Option aktiviert ist, werden Beiträge mit nicht erkannten Sprachen abgelehnt.';
+$a->strings['Language Quality'] = 'Sprachqualität';
+$a->strings['The minimum language quality that is required to accept the post.'] = 'Die minimale erkannte Sprachqualität, die erforderlich ist, um den Beitrag anzunehmen.';
+$a->strings['Number of languages for the language detection'] = 'Anzahl der Sprachen für die Spracherkennung';
+$a->strings['The system detects a list of languages per post. Only if the desired languages are in the list, the message will be accepted. The higher the number, the more posts will be falsely detected.'] = 'Das System erkennt eine Liste von Sprachen pro Beitrag. Nur wenn die gewünschten Sprachen in der Liste enthalten sind, wird die Nachricht akzeptiert. Je höher die Zahl, desto mehr Beiträge werden fälschlicherweise erkannt.';
+$a->strings['Maximum age of channel'] = 'Maximales Alter des Kanals';
+$a->strings['This defines the maximum age in hours of items that should be displayed in channels. This affects the channel performance.'] = 'Hier wird das maximale Alter in Stunden von Beiträgen festgelegt, die in Kanälen angezeigt werden sollen. Dies wirkt sich auf die Leistung der Kanäle aus.';
+$a->strings['Maximum number of channel posts'] = 'Maximale Anzahl von Kanalbeiträgen';
+$a->strings['For performance reasons, the channels use a dedicated table to store content. The higher the value the slower the channels.'] = 'Aus Leistungsgründen verwenden die Kanäle eine dedizierte Tabelle zur Speicherung von Inhalten. Je höher der Wert, desto langsamer sind die Kanäle.';
+$a->strings['Interaction score days'] = 'Interaktionsscore Tage';
+$a->strings['Number of days that are used to calculate the interaction score.'] = 'Anzahl der Tage, die zur Berechnung des Interaktionsscores herangezogen werden.';
+$a->strings['Maximum number of posts per author'] = 'Maximale Anzahl von Beiträgen pro Autor';
+$a->strings['Maximum number of posts per page by author if the contact frequency is set to "Display only few posts". If there are more posts, then the post with the most interactions will be displayed.'] = 'Maximale Anzahl von Beiträgen pro Seite und Autor, wenn die Kontakthäufigkeit auf "Nur wenige Beiträge anzeigen" eingestellt ist. Wenn es mehr Beiträge gibt, wird der Beitrag mit den meisten Interaktionen angezeigt.';
+$a->strings['Sharer interaction days'] = 'Interaktionstage für teilende';
+$a->strings['Number of days of the last interaction that are used to define which sharers are used for the "sharers of sharers" channel.'] = 'Anzahl der Tage der letzten Interaktion, die verwendet werden, um festzulegen, welche teilenden für den Kanal "Geteilt von teilenden" verwendet werden.';
 $a->strings['Start Relocation'] = 'Umsiedlung starten';
 $a->strings['Storage backend, %s is invalid.'] = 'Speicher-Backend, %s ist ungültig.';
 $a->strings['Storage backend %s error: %s'] = 'Speicher-Backend %s Fehler %s';
@@ -1362,14 +1459,12 @@ $a->strings['Your table_definition_cache is too low (%d). This can lead to the d
 $a->strings['There is a new version of Friendica available for download. Your current version is %1$s, upstream version is %2$s'] = 'Es gibt eine neue Version von Friendica. Du verwendest derzeit die Version %1$s, die aktuelle Version ist %2$s.';
 $a->strings['The database update failed. Please run "php bin/console.php dbstructure update" from the command line and have a look at the errors that might appear.'] = 'Das Update der Datenbank ist fehlgeschlagen. Bitte führe \'php bin/console.php dbstructure update\' in der Kommandozeile aus und achte auf eventuell auftretende Fehlermeldungen.';
 $a->strings['The last update failed. Please run "php bin/console.php dbstructure update" from the command line and have a look at the errors that might appear. (Some of the errors are possibly inside the logfile.)'] = 'Das letzte Update ist fehlgeschlagen. Bitte führe "php bin/console.php dbstructure update" auf der Kommandozeile aus und werfe einen Blick auf eventuell auftretende Fehler. (Zusätzliche Informationen zu Fehlern könnten in den Logdateien stehen.)';
-$a->strings['The system.url entry is missing. This is a low level setting and can lead to unexpected behavior. Please add a valid entry as soon as possible in the config file or per console command!'] = 'Der Eintrag system.url fehlt. Dies ist eine Einstellung auf niedriger Ebene und kann zu unerwartetem Verhalten führen. Bitte fügen Sie so bald wie möglich einen gültigen Eintrag in der Konfigurationsdatei oder per Konsolenbefehl hinzu!';
+$a->strings['The system.url entry is missing. This is a low level setting and can lead to unexpected behavior. Please add a valid entry as soon as possible in the config file or per console command!'] = 'Der Eintrag system.url fehlt. Dies ist eine Einstellung auf niedriger Ebene und kann zu unerwartetem Verhalten führen. Bitt füge so bald wie möglich einen gültigen Eintrag in der Konfigurationsdatei oder per Konsolenbefehl hinzu!';
 $a->strings['The worker was never executed. Please check your database structure!'] = 'Der Hintergrundprozess (worker) wurde noch nie gestartet. Bitte überprüfe deine Datenbankstruktur.';
 $a->strings['The last worker execution was on %s UTC. This is older than one hour. Please check your crontab settings.'] = 'Der Hintergrundprozess (worker) wurde zuletzt um %s UTC ausgeführt. Das war vor mehr als einer Stunde. Bitte überprüfe deine crontab-Einstellungen.';
 $a->strings['Friendica\'s configuration now is stored in config/local.config.php, please copy config/local-sample.config.php and move your config from <code>.htconfig.php</code>. See <a href="%s">the Config help page</a> for help with the transition.'] = 'Die Konfiguration von Friendica befindet sich ab jetzt in der \'config/local.config.php\' Datei. Kopiere bitte die Datei  \'config/local-sample.config.php\' nach \'config/local.config.php\' und setze die Konfigurationvariablen so wie in der alten <code>.htconfig.php</code>. Wie die Übertragung der Werte aussehen muss, kannst du der <a href="%s">Konfiguration Hilfeseite</a> entnehmen.';
 $a->strings['Friendica\'s configuration now is stored in config/local.config.php, please copy config/local-sample.config.php and move your config from <code>config/local.ini.php</code>. See <a href="%s">the Config help page</a> for help with the transition.'] = 'Die Konfiguration von Friendica befindet sich ab jetzt in der \'config/local.config.php\' Datei. Kopiere bitte die Datei  \'config/local-sample.config.php\' nach \'config/local.config.php\' und setze die Konfigurationvariablen so wie in der alten <code>config/local.ini.php</code>. Wie die Übertragung der Werte aussehen muss, kannst du der <a href="%s">Konfiguration Hilfeseite</a> entnehmen.';
 $a->strings['<a href="%s">%s</a> is not reachable on your system. This is a severe configuration issue that prevents server to server communication. See <a href="%s">the installation page</a> for help.'] = '<a href="%s">%s</a> konnte von deinem System nicht aufgerufen werden. Dies deutet auf ein schwerwiegendes Problem deiner Konfiguration hin. Bitte konsultiere <a href="%s">die Installations-Dokumentation</a> zum Beheben des Problems.';
-$a->strings['The logfile \'%s\' is not usable. No logging possible (error: \'%s\')'] = 'Die Logdatei \'%s\' ist nicht beschreibbar. Derzeit ist keine Aufzeichnung möglich (Fehler: \'%s\')';
-$a->strings['The debug logfile \'%s\' is not usable. No logging possible (error: \'%s\')'] = 'Die Logdatei \'%s\' ist nicht beschreibbar. Derzeit ist keine Aufzeichnung möglich (Fehler: \'%s\')';
 $a->strings['Friendica\'s system.basepath was updated from \'%s\' to \'%s\'. Please remove the system.basepath from your db to avoid differences.'] = 'Friendica\'s system.basepath wurde aktualisiert \'%s\' von \'%s\'. Bitte entferne system.basepath aus der Datenbank um Unterschiede zu vermeiden.';
 $a->strings['Friendica\'s current system.basepath \'%s\' is wrong and the config file \'%s\' isn\'t used.'] = 'Friendica\'s aktueller system.basepath \'%s\' ist verkehrt und die config file \'%s\' wird nicht benutzt.';
 $a->strings['Friendica\'s current system.basepath \'%s\' is not equal to the config file \'%s\'. Please fix your configuration.'] = 'Friendica\'s aktueller system.basepath \'%s\' ist nicht gleich wie die config file \'%s\'. Bitte korrigiere deine Konfiguration.';
@@ -1440,6 +1535,9 @@ $a->strings['Monthly posting limit of %d post reached. The post was rejected.'] 
 	0 => 'Das monatliche Limit von %d Beitrag wurde erreicht. Der Beitrag wurde verworfen.',
 	1 => 'Das monatliche Limit von %d Beiträgen wurde erreicht. Der Beitrag wurde verworfen.',
 ];
+$a->strings['You don\'t have access to moderation pages.'] = 'Du hast keinen Zugriff zu den Moderationsseiten.';
+$a->strings['Submanaged account can\'t access the moderation pages. Please log back in as the main account.'] = 'Das verwaltete Konto kann nicht auf die Moderationsseiten zugreifen. Bitte melde dich wieder mit dem Hauptkonto an.';
+$a->strings['Reports'] = 'Reports';
 $a->strings['Users'] = 'Nutzer';
 $a->strings['Tools'] = 'Werkzeuge';
 $a->strings['Contact Blocklist'] = 'Kontakt Blockliste';
@@ -1457,7 +1555,7 @@ $a->strings['Group Search - %s'] = 'Gruppensuche - %s';
 $a->strings['No matches'] = 'Keine Übereinstimmungen';
 $a->strings['%d result was filtered out because your node blocks the domain it is registered on. You can review the list of domains your node is currently blocking in the <a href="/friendica">About page</a>.'] = [
 	0 => '%d Ergebnis wurde herausgefiltert, weil Ihr Knoten die Domäne blockiert, auf der das Ergebnis registriert ist. Sie können die Liste aller Domänen, die Ihr Knoten derzeit blockiert, auf der <a href="/friendica">Info-Seite</a> einsehen.',
-	1 => '%d Ergebnisse wurden herausgefiltert, weil Ihr Knoten die Domäne blockiert, auf der die Ergebnisse registriert sind. Sie können die Liste aller Domänen, die Ihr Knoten derzeit blockiert, auf der<a href="/friendica">Info-Seite</a> einsehen.',
+	1 => '%d Ergebnisse wurden herausgefiltert, weil Ihr Knoten die Domäne blockiert, auf der die Ergebnisse registriert sind. Du kannst die Liste aller Domänen, die Ihr Knoten derzeit blockiert, auf der<a href="/friendica">Info-Seite</a> einsehen.',
 ];
 $a->strings['Account'] = 'Nutzerkonto';
 $a->strings['Two-factor authentication'] = 'Zwei-Faktor Authentifizierung';
@@ -1465,6 +1563,7 @@ $a->strings['Display'] = 'Anzeige';
 $a->strings['Social Networks'] = 'Soziale Netzwerke';
 $a->strings['Manage Accounts'] = 'Accounts Verwalten';
 $a->strings['Connected apps'] = 'Verbundene Programme';
+$a->strings['Remote servers'] = 'Remote Instanzen';
 $a->strings['Export personal data'] = 'Persönliche Daten exportieren';
 $a->strings['Remove account'] = 'Konto löschen';
 $a->strings['This page is missing a url parameter.'] = 'Der Seite fehlt ein URL Parameter.';
@@ -1610,6 +1709,7 @@ $a->strings['You are mutual friends with %s'] = 'Du hast mit %s eine beidseitige
 $a->strings['You are sharing with %s'] = 'Du teilst mit %s';
 $a->strings['%s is sharing with you'] = '%s teilt mit dir';
 $a->strings['Private communications are not available for this contact.'] = 'Private Kommunikation ist für diesen Kontakt nicht verfügbar.';
+$a->strings['This contact is on a server you ignored.'] = 'Dieser Kontakt befindet sich auf einem Server, den du ignoriert hast.';
 $a->strings['Never'] = 'Niemals';
 $a->strings['(Update was not successful)'] = '(Aktualisierung war nicht erfolgreich)';
 $a->strings['(Update was successful)'] = '(Aktualisierung war erfolgreich)';
@@ -1640,6 +1740,7 @@ $a->strings['Currently blocked'] = 'Derzeit geblockt';
 $a->strings['Currently ignored'] = 'Derzeit ignoriert';
 $a->strings['Currently collapsed'] = 'Derzeit zugeklappt';
 $a->strings['Currently archived'] = 'Momentan archiviert';
+$a->strings['Manage remote servers'] = 'Verwaltung entfernter Instanzen';
 $a->strings['Hide this contact from others'] = 'Verbirg diesen Kontakt vor Anderen';
 $a->strings['Replies/likes to your public posts <strong>may</strong> still be visible'] = 'Antworten/Likes auf deine öffentlichen Beiträge <strong>könnten</strong> weiterhin sichtbar sein';
 $a->strings['Notification for new posts'] = 'Benachrichtigung bei neuen Beiträgen';
@@ -1650,6 +1751,17 @@ $a->strings['Actions'] = 'Aktionen';
 $a->strings['Status'] = 'Status';
 $a->strings['Mirror postings from this contact'] = 'Spiegle Beiträge dieses Kontakts';
 $a->strings['Mark this contact as remote_self, this will cause friendica to repost new entries from this contact.'] = 'Markiere diesen Kontakt als remote_self (entferntes Konto), dies veranlasst Friendica, alle Top-Level Beiträge dieses Kontakts an all Deine Kontakte zu senden (spiegeln).';
+$a->strings['Channel Settings'] = 'Kanal Einstellungen';
+$a->strings['Frequency of this contact in relevant channels'] = 'Häufigkeit dieses Kontakts in relevanten Kanälen';
+$a->strings['Depending on the type of the channel not all posts from this contact are displayed. By default, posts need to have a minimum amount of interactions (comments, likes) to show in your channels. On the other hand there can be contacts who flood the channel, so you might want to see only some of their posts. Or you don\'t want to see their content at all, but you don\'t want to block or hide the contact completely.'] = 'Je nach Art des Kanals werden nicht alle Beiträge dieses Kontakts angezeigt. Standardmäßig müssen Beiträge eine Mindestanzahl an Interaktionen (Kommentare, Gefällt mir Angaben) aufweisen, um in Ihren Kanälen angezeigt zu werden. Andererseits kann es Kontakte geben, die den Kanal überfluten, so dass du vielleicht nur einige ihrer Beiträge sehen möchtest. Oder du willst deren Inhalte überhaupt nicht sehen, aber du willst den Kontakt nicht komplett blockieren oder ausblenden.';
+$a->strings['Default frequency'] = 'Standardhäufigkeit';
+$a->strings['Posts by this contact are displayed in the "for you" channel if you interact often with this contact or if a post reached some level of interaction.'] = 'Beiträge dieses Kontakts werden im "Für Dich"-Kanal angezeigt, wenn du häufig mit diesem Kontakt interagieren oder wenn ein Beitrag ein gewisses Maß an Interaktion erreicht hat.';
+$a->strings['Display all posts of this contact'] = 'Alle Beiträge dieses Kontakts anzeigen';
+$a->strings['All posts from this contact will appear on the "for you" channel'] = 'Alle Beiträge dieses Kontakts werden auf dem Kanal "Für Dich" erscheinen';
+$a->strings['Display only few posts'] = 'Zeige nur einige Beiträge an';
+$a->strings['When a contact creates a lot of posts in a short period, this setting reduces the number of displayed posts in every channel.'] = 'Wenn ein Kontakt viele Beiträge in einem kurzen Zeitraum erstellt, reduziert diese Einstellung die Anzahl der angezeigten Beiträge in jedem Kanal.';
+$a->strings['Never display posts'] = 'Zeige keine Beiträge an';
+$a->strings['Posts from this contact will never be displayed in any channel'] = 'Beiträge von diesem Kontakt werden in keinem Kanal angezeigt';
 $a->strings['Refetch contact data'] = 'Kontaktdaten neu laden';
 $a->strings['Toggle Blocked status'] = 'Geblockt-Status ein-/ausschalten';
 $a->strings['Toggle Ignored status'] = 'Ignoriert-Status ein-/ausschalten';
@@ -1668,29 +1780,18 @@ $a->strings['Unfollowing is currently not supported by your network.'] = 'Bei di
 $a->strings['Disconnect/Unfollow'] = 'Verbindung lösen/Nicht mehr folgen';
 $a->strings['Contact was successfully unfollowed'] = 'Kontakt wurde erfolgreich entfolgt.';
 $a->strings['Unable to unfollow this contact, please contact your administrator'] = 'Konnte dem Kontakt nicht entfolgen. Bitte kontaktiere deinen Administrator.';
-$a->strings['This community stream shows all public posts received by this node. They may not reflect the opinions of this node’s users.'] = 'Diese Gemeinschaftsseite zeigt alle öffentlichen Beiträge, die auf diesem Knoten eingegangen sind. Der Inhalt entspricht nicht zwingend der Meinung der Nutzer dieses Servers.';
-$a->strings['Local Community'] = 'Lokale Gemeinschaft';
-$a->strings['Posts from local users on this server'] = 'Beiträge von Nutzern dieses Servers';
-$a->strings['Global Community'] = 'Globale Gemeinschaft';
-$a->strings['Posts from users of the whole federated network'] = 'Beiträge von Nutzern des gesamten  föderalen Netzwerks';
-$a->strings['Own Contacts'] = 'Eigene Kontakte';
-$a->strings['Include'] = 'Einschließen';
-$a->strings['Hide'] = 'Verbergen';
 $a->strings['No results.'] = 'Keine Ergebnisse.';
+$a->strings['Channel not available.'] = 'Channel nicht verüfgbar';
+$a->strings['This community stream shows all public posts received by this node. They may not reflect the opinions of this node’s users.'] = 'Diese Gemeinschaftsseite zeigt alle öffentlichen Beiträge, die auf diesem Knoten eingegangen sind. Der Inhalt entspricht nicht zwingend der Meinung der Nutzer dieses Servers.';
 $a->strings['Community option not available.'] = 'Optionen für die Gemeinschaftsseite nicht verfügbar.';
 $a->strings['Not available.'] = 'Nicht verfügbar.';
 $a->strings['No such circle'] = 'Circle ist nicht vorhanden';
 $a->strings['Circle: %s'] = 'Circle: %s';
-$a->strings['Latest Activity'] = 'Neu - Aktivität';
-$a->strings['Sort by latest activity'] = 'Sortiere nach neueste Aktivität';
-$a->strings['Latest Posts'] = 'Neu - Empfangen';
-$a->strings['Sort by post received date'] = 'Nach Empfangsdatum der Beiträge sortiert';
-$a->strings['Latest Creation'] = 'Neu - Erstellung';
-$a->strings['Sort by post creation date'] = 'Sortiert nach dem Erstellungsdatum';
-$a->strings['Personal'] = 'Persönlich';
-$a->strings['Posts that mention or involve you'] = 'Beiträge, in denen es um dich geht';
-$a->strings['Starred'] = 'Markierte';
-$a->strings['Favourite Posts'] = 'Favorisierte Beiträge';
+$a->strings['Error %d (%s) while fetching the timeline.'] = 'Fehler %d (%s) beim Abruf der Timeline.';
+$a->strings['Network feed not available.'] = 'Netzwerkfeed nicht verfügbar.';
+$a->strings['Own Contacts'] = 'Eigene Kontakte';
+$a->strings['Include'] = 'Einschließen';
+$a->strings['Hide'] = 'Verbergen';
 $a->strings['Credits'] = 'Credits';
 $a->strings['Friendica is a community project, that would not be possible without the help of many people. Here is a list of those who have contributed to the code or the translation of Friendica. Thank you all!'] = 'Friendica ist ein Gemeinschaftsprojekt, das nicht ohne die Hilfe vieler Personen möglich wäre. Hier ist eine Aufzählung der Personen, die zum Code oder der Übersetzung beigetragen haben. Dank an alle !';
 $a->strings['Formatted'] = 'Formatiert';
@@ -1760,11 +1861,6 @@ $a->strings['Output'] = 'Ergebnis';
 $a->strings['Lookup address'] = 'Adresse nachschlagen';
 $a->strings['Webfinger Diagnostic'] = 'Webfinger Diagnostik';
 $a->strings['Lookup address:'] = 'Adresse nachschlagen:';
-$a->strings['You are now logged in as %s'] = 'Du bist jetzt als %s angemeldet';
-$a->strings['Switch between your accounts'] = 'Wechsle deine Konten';
-$a->strings['Manage your accounts'] = 'Verwalte deine Konten';
-$a->strings['Toggle between different identities or community/group pages which share your account details or which you have been granted "manage" permissions'] = 'Zwischen verschiedenen Identitäten oder Gemeinschafts-/Gruppenseiten wechseln, die deine Kontoinformationen teilen oder zu denen du „Verwalten“-Befugnisse bekommen hast.';
-$a->strings['Select an identity to manage: '] = 'Wähle eine Identität zum Verwalten aus: ';
 $a->strings['No entries (some entries may be hidden).'] = 'Keine Einträge (einige Einträge könnten versteckt sein).';
 $a->strings['Find on this site'] = 'Auf diesem Server suchen';
 $a->strings['Results for:'] = 'Ergebnisse für:';
@@ -1802,7 +1898,7 @@ $a->strings['Base settings'] = 'Grundeinstellungen';
 $a->strings['Base path to installation'] = 'Basis-Pfad zur Installation';
 $a->strings['If the system cannot detect the correct path to your installation, enter the correct path here. This setting should only be set if you are using a restricted system and symbolic links to your webroot.'] = 'Falls das System nicht den korrekten Pfad zu deiner Installation gefunden hat, gib den richtigen Pfad bitte hier ein. Du solltest hier den Pfad nur auf einem eingeschränkten System angeben müssen, bei dem du mit symbolischen Links auf dein Webverzeichnis verweist.';
 $a->strings['The Friendica system URL'] = 'Die Friendica System URL';
-$a->strings['Overwrite this field in case the system URL determination isn\'t right, otherwise leave it as is.'] = 'Überschreiben Sie dieses Feld, falls die System-URL-Erkennung nicht korrekt ist, ansonsten lassen Sie es unverändert.';
+$a->strings['Overwrite this field in case the system URL determination isn\'t right, otherwise leave it as is.'] = 'Überschreibe dieses Feld, falls die System-URL-Erkennung nicht korrekt ist, ansonsten lasse es unverändert.';
 $a->strings['Database connection'] = 'Datenbankverbindung';
 $a->strings['In order to install Friendica we need to know how to connect to your database.'] = 'Um Friendica installieren zu können, müssen wir wissen, wie wir mit Deiner Datenbank Kontakt aufnehmen können.';
 $a->strings['Please contact your hosting provider or site administrator if you have questions about these settings.'] = 'Bitte kontaktiere den Hosting-Provider oder den Administrator der Seite, falls du Fragen zu diesen Einstellungen haben solltest.';
@@ -1835,9 +1931,9 @@ $a->strings['%d message sent.'] = [
 $a->strings['You have no more invitations available'] = 'Du hast keine weiteren Einladungen';
 $a->strings['Visit %s for a list of public sites that you can join. Friendica members on other sites can all connect with each other, as well as with members of many other social networks.'] = 'Besuche %s für eine Liste der öffentlichen Server, denen du beitreten kannst. Friendica-Mitglieder unterschiedlicher Server können sich sowohl alle miteinander verbinden, als auch mit Mitgliedern anderer sozialer Netzwerke.';
 $a->strings['To accept this invitation, please visit and register at %s or any other public Friendica website.'] = 'Um diese Kontaktanfrage zu akzeptieren, besuche und registriere dich bitte bei %s oder einer anderen öffentlichen Friendica-Website.';
-$a->strings['Friendica sites all inter-connect to create a huge privacy-enhanced social web that is owned and controlled by its members. They can also connect with many traditional social networks. See %s for a list of alternate Friendica sites you can join.'] = 'Friendica Server verbinden sich alle untereinander, um ein großes, datenschutzorientiertes Soziales Netzwerk zu bilden, das von seinen Mitgliedern betrieben und kontrolliert wird. Sie können sich auch mit vielen üblichen Sozialen Netzwerken verbinden. Besuche %s für eine Liste alternativer Friendica-Server, denen du beitreten kannst.';
+$a->strings['Friendica sites all inter-connect to create a huge privacy-enhanced social web that is owned and controlled by its members. They can also connect with many traditional social networks. See %s for a list of alternate Friendica sites you can join.'] = 'Friendica Server verbinden sich alle untereinander, um ein großes, datenschutzorientiertes Soziales Netzwerk zu bilden, das von seinen Mitgliedern betrieben und kontrolliert wird. Du kannst dich auch mit vielen üblichen Sozialen Netzwerken verbinden. Besuche %s für eine Liste alternativer Friendica-Server, denen du beitreten kannst.';
 $a->strings['Our apologies. This system is not currently configured to connect with other public sites or invite members.'] = 'Es tut uns leid. Dieses System ist zurzeit nicht dafür konfiguriert, sich mit anderen öffentlichen Seiten zu verbinden oder Mitglieder einzuladen.';
-$a->strings['Friendica sites all inter-connect to create a huge privacy-enhanced social web that is owned and controlled by its members. They can also connect with many traditional social networks.'] = 'Friendica Server verbinden sich alle untereinander, um ein großes, datenschutzorientiertes Soziales Netzwerk zu bilden, das von seinen Mitgliedern betrieben und kontrolliert wird. Sie können sich auch mit vielen üblichen Sozialen Netzwerken verbinden.';
+$a->strings['Friendica sites all inter-connect to create a huge privacy-enhanced social web that is owned and controlled by its members. They can also connect with many traditional social networks.'] = 'Friendica Server verbinden sich alle untereinander, um ein großes, datenschutzorientiertes Soziales Netzwerk zu bilden, das von seinen Mitgliedern betrieben und kontrolliert wird. Du kannst dich auch mit vielen üblichen Sozialen Netzwerken verbinden.';
 $a->strings['To accept this invitation, please visit and register at %s.'] = 'Um diese Kontaktanfrage zu akzeptieren, besuche und registriere dich bitte bei %s.';
 $a->strings['Send invitations'] = 'Einladungen senden';
 $a->strings['Enter email addresses, one per line:'] = 'E-Mail-Adressen eingeben, eine pro Zeile:';
@@ -1854,7 +1950,6 @@ $a->strings['Clear the location'] = 'Ort löschen';
 $a->strings['Location services are unavailable on your device'] = 'Ortungsdienste sind auf Ihrem Gerät nicht verfügbar';
 $a->strings['Location services are disabled. Please check the website\'s permissions on your device'] = 'Ortungsdienste sind deaktiviert. Bitte überprüfe die Berechtigungen der Website auf deinem Gerät';
 $a->strings['You can make this page always open when you use the New Post button in the <a href="/settings/display">Theme Customization settings</a>.'] = 'Wenn du magst, kannst du unter den <a href="/settings/display">Benutzerdefinierte Theme-Einstellungen</a> einstellen, dass diese Seite immer geöffnet wird, wenn du den "Neuer Beitrag" Button verwendest.';
-$a->strings['The requested item doesn\'t exist or has been deleted.'] = 'Der angeforderte Beitrag existiert nicht oder wurde gelöscht.';
 $a->strings['The feed for this item is unavailable.'] = 'Der Feed für diesen Beitrag ist nicht verfügbar.';
 $a->strings['Unable to follow this item.'] = 'Konnte dem Beitrag nicht folgen.';
 $a->strings['System down for maintenance'] = 'System zur Wartung abgeschaltet';
@@ -1992,12 +2087,61 @@ $a->strings['Tag'] = 'Tag';
 $a->strings['Type'] = 'Typ';
 $a->strings['Term'] = 'Term';
 $a->strings['URL'] = 'URL';
-$a->strings['Mention'] = 'Mention';
 $a->strings['Implicit Mention'] = 'Implicit Mention';
 $a->strings['Item not found'] = 'Beitrag nicht gefunden';
 $a->strings['No source recorded'] = 'Keine Quelle aufgezeichnet';
 $a->strings['Please make sure the <code>debug.store_source</code> config key is set in <code>config/local.config.php</code> for future items to have sources.'] = 'Bitte stelle sicher, dass der Config-Schlüssel <code>debug.store_source</code>  in der <code>config/local.config.php</code> gesetzt ist um in Zukunft Quellen zu haben.';
 $a->strings['Item Guid'] = 'Beitrags-Guid';
+$a->strings['Contact not found or their server is already blocked on this node.'] = 'Kontakt nicht gefunden oder seine Instanz ist bereits auf dieser Instanz blockiert.';
+$a->strings['Please login to access this page.'] = 'Bitte melde dich an, um auf diese Seite zuzugreifen.';
+$a->strings['Create Moderation Report'] = 'Moderationsbericht erstellen';
+$a->strings['Pick Contact'] = 'Kontakt wählen';
+$a->strings['Please enter below the contact address or profile URL you would like to create a moderation report about.'] = 'Bitte gib unten die Kontaktadresse oder Profil-URL ein, über die du einen Moderationsbericht erstellen möchten.';
+$a->strings['Contact address/URL'] = 'Kontaktadresse/URL';
+$a->strings['Pick Category'] = 'Kategorie auswählen';
+$a->strings['Please pick below the category of your report.'] = 'Bitte wähle unten die Kategorie für deinen Bericht.';
+$a->strings['Spam'] = 'Spam';
+$a->strings['This contact is publishing many repeated/overly long posts/replies or advertising their product/websites in otherwise irrelevant conversations.'] = 'Dieser Kontakt veröffentlicht viele wiederholte/überlange Beiträge/Antworten oder wirbt für sein Produkt/seine Website in ansonsten belanglosen Gesprächen.';
+$a->strings['Illegal Content'] = 'Illegaler Inhalt';
+$a->strings['This contact is publishing content that is considered illegal in this node\'s hosting juridiction.'] = 'Dieser Kontakt veröffentlicht Inhalte, die in dem Land, in dem diese Instanz gehostet wird, als illegal gelten.';
+$a->strings['Community Safety'] = 'Sicherheit in der Gemeinschaft';
+$a->strings['This contact aggravated you or other people, by being provocative or insensitive, intentionally or not. This includes disclosing people\'s private information (doxxing), posting threats or offensive pictures in posts or replies.'] = 'Dieser Kontakt hat dich oder andere Personen verärgert, indem er absichtlich oder unabsichtlich provokativ oder unsensibel war. Dazu gehören die Offenlegung privater Informationen (Doxxing), das Posten von Drohungen oder anstößigen Bildern in Beiträgen oder Antworten.';
+$a->strings['Unwanted Content/Behavior'] = 'Unerwünschte Inhalte/Verhaltensweisen';
+$a->strings['This contact has repeatedly published content irrelevant to the node\'s theme or is openly criticizing the node\'s administration/moderation without directly engaging with the relevant people for example or repeatedly nitpicking on a sensitive topic.'] = 'Dieser Kontakt hat wiederholt Inhalte veröffentlicht, die für das Thema der Instanz irrelevant sind, oder er kritisiert offen die Verwaltung/Moderation der Instanz, ohne sich direkt mit den betreffenden Personen auseinanderzusetzen, oder er ist wiederholt erbsenzählerisch bei einem heiklen Thema.';
+$a->strings['Rules Violation'] = 'Verstoß gegen die Regeln';
+$a->strings['This contact violated one or more rules of this node. You will be able to pick which one(s) in the next step.'] = 'Dieser Kontakt hat gegen eine oder mehrere Regeln dieser Instanz verstoßen. Du kannst im nächsten Schritt auswählen, welche.';
+$a->strings['Please elaborate below why you submitted this report. The more details you provide, the better your report can be handled.'] = 'Bitte gib im Folgenden an, warum du diese Meldung eingereicht hast. Je mehr Details du angibst, desto besser kann Ihre Meldung bearbeitet werden.';
+$a->strings['Additional Information'] = 'Zusätzliche Informationen';
+$a->strings['Please provide any additional information relevant to this particular report. You will be able to attach posts by this contact in the next step, but any context is welcome.'] = 'Bitte gib alle zusätzlichen Informationen an, die für diesen Bericht relevant sind. Du kannst im nächsten Schritt Beiträge dieser Kontaktperson anhängen, aber jeder Kontext ist willkommen.';
+$a->strings['Pick Rules'] = 'Regeln auswählen';
+$a->strings['Please pick below the node rules you believe this contact violated.'] = 'Bitte wähle unten die Instanzregeln aus, gegen die dieser Kontakt deiner Meinung nach verstoßen hat.';
+$a->strings['Pick Posts'] = 'Beiträge auswählen';
+$a->strings['Please optionally pick posts to attach to your report.'] = 'Bitte wähle optional Beiträge aus, die du an diesen Bericht anhängen möchtest.';
+$a->strings['Submit Report'] = 'Bericht senden';
+$a->strings['Further Action'] = 'Weiteres Vorgehen';
+$a->strings['You can also perform one of the following action on the contact you reported:'] = 'Du kannst auch eine der folgenden Aktionen für den gemeldeten Kontakt durchführen:';
+$a->strings['Nothing'] = 'Nichts';
+$a->strings['Collapse contact'] = 'Kontakt verbergen';
+$a->strings['Their posts and replies will keep appearing in your Network page but their content will be collapsed by default.'] = 'Ihre Beiträge und Antworten werden weiterhin auf Ihrer Netzwerkseite angezeigt, aber ihr Inhalt wird standardmäßig ausgeblendet.';
+$a->strings['Their posts won\'t appear in your Network page anymore, but their replies can appear in forum threads. They still can follow you.'] = 'Ihre Beiträge werden nicht mehr auf deiner Netzwerkseite angezeigt, aber ihre Antworten können in Forenbeiträgen erscheinen. Sie können dir immer noch folgen.';
+$a->strings['Block contact'] = 'Kontakt blockieren';
+$a->strings['Their posts won\'t appear in your Network page anymore, but their replies can appear in forum threads, with their content collapsed by default. They cannot follow you but still can have access to your public posts by other means.'] = 'Ihre Beiträge erscheinen nicht mehr auf deiner Netzwerkseite, aber ihre Antworten können in Forumsthemen erscheinen, wobei ihr Inhalt standardmäßig eingeklappt ist. Sie können dir nicht folgen, haben aber auf anderem Wege weiterhin Zugang zu deinen öffentlichen Beiträgen.';
+$a->strings['Forward report'] = 'Bericht weiterleiten';
+$a->strings['Would you ike to forward this report to the remote server?'] = 'Möchtest du diesen Bericht an den Entfernten-Server weiterleiten?';
+$a->strings['1. Pick a contact'] = '1. Wähle einen Kontakt';
+$a->strings['2. Pick a category'] = '2. Wähle eine Kategorie';
+$a->strings['2a. Pick rules'] = '2a. Regeln wählen';
+$a->strings['2b. Add comment'] = '2b. Kommentar hinzufügen';
+$a->strings['3. Pick posts'] = '3. Beiträge auswählen';
+$a->strings['List of reports'] = 'Liste der Reports';
+$a->strings['This page display reports created by our or remote users.'] = 'Auf dieser Seite werden Reports angezeigt, die von unseren oder entfernten Benutzern erstellt wurden.';
+$a->strings['No report exists at this node.'] = 'Auf dieser Instanz ist kein Report vorhanden.';
+$a->strings['Category'] = 'Kategorie';
+$a->strings['%s total report'] = [
+	0 => '%s Report',
+	1 => '%s Reports insgesamt',
+];
+$a->strings['URL of the reported contact.'] = 'URL des gemeldeten Kontakts.';
 $a->strings['Normal Account'] = 'Normales Konto';
 $a->strings['Automatic Follower Account'] = 'Automatisch folgendes Konto (Marktschreier)';
 $a->strings['Public Group Account'] = 'Öffentliches Gruppen-Konto';
@@ -2184,7 +2328,7 @@ $a->strings['Note for the admin'] = 'Hinweis für den Admin';
 $a->strings['Leave a message for the admin, why you want to join this node'] = 'Hinterlasse eine Nachricht an den Admin, warum du einen Account auf dieser Instanz haben möchtest.';
 $a->strings['Membership on this site is by invitation only.'] = 'Mitgliedschaft auf dieser Seite ist nur nach vorheriger Einladung möglich.';
 $a->strings['Your invitation code: '] = 'Dein Ein­la­dungs­code';
-$a->strings['Your Full Name (e.g. Joe Smith, real or real-looking): '] = 'Dein vollständiger Name (z.B. Hans Mustermann, echt oder echt erscheinend):';
+$a->strings['Your Display Name (as you would like it to be displayed on this system'] = 'Ihr Anzeigename (wie er auf dieser Instanz angezeigt werden soll)';
 $a->strings['Your Email Address: (Initial information will be send there, so this has to be an existing address.)'] = 'Deine E-Mail Adresse (Informationen zur Registrierung werden an diese Adresse gesendet, darum muss sie existieren.)';
 $a->strings['Please repeat your e-mail address:'] = 'Bitte wiederhole deine E-Mail Adresse';
 $a->strings['New Password:'] = 'Neues Passwort:';
@@ -2240,7 +2384,7 @@ $a->strings['Passwords do not match.'] = 'Die Passwörter stimmen nicht überein
 $a->strings['Password does not need changing.'] = 'Passwort muss nicht geändert werden.';
 $a->strings['Password unchanged.'] = 'Passwort unverändert.';
 $a->strings['Password Too Long'] = 'Passwort ist zu lang';
-$a->strings['Since version 2022.09, we\'ve realized that any password longer than 72 characters is truncated during hashing. To prevent any confusion about this behavior, please update your password to be fewer or equal to 72 characters.'] = 'Mit der Version 2022.09 haben wir festgestellt, dass jedes Passwort, das länger als 72 Zeichen ist, beim Hashing abgeschnitten wird. Um Verwirrung über dieses Verhalten zu vermeiden, aktualisieren Sie Ihr Passwort bitte so, dass es höchstens 72 Zeichen hat.';
+$a->strings['Since version 2022.09, we\'ve realized that any password longer than 72 characters is truncated during hashing. To prevent any confusion about this behavior, please update your password to be fewer or equal to 72 characters.'] = 'Mit der Version 2022.09 haben wir festgestellt, dass jedes Passwort, das länger als 72 Zeichen ist, beim Hashing abgeschnitten wird. Um Verwirrung über dieses Verhalten zu vermeiden, aktualisiere dein Passwort bitte so, dass es höchstens 72 Zeichen hat.';
 $a->strings['Update Password'] = 'Passwort aktualisieren';
 $a->strings['Current Password:'] = 'Aktuelles Passwort:';
 $a->strings['Your current password to confirm the changes'] = 'Dein aktuelles Passwort um die Änderungen zu bestätigen';
@@ -2302,6 +2446,7 @@ $a->strings['Password:'] = 'Passwort:';
 $a->strings['Your current password to confirm the changes of the email address'] = 'Dein aktuelles Passwort um die Änderungen deiner E-Mail Adresse zu bestätigen';
 $a->strings['Delete OpenID URL'] = 'OpenID URL löschen';
 $a->strings['Basic Settings'] = 'Grundeinstellungen';
+$a->strings['Display name:'] = 'Anzeigename:';
 $a->strings['Email Address:'] = 'E-Mail-Adresse:';
 $a->strings['Your Timezone:'] = 'Deine Zeitzone:';
 $a->strings['Your Language:'] = 'Deine Sprache:';
@@ -2312,7 +2457,7 @@ $a->strings['Security and Privacy Settings'] = 'Sicherheits- und Privatsphäre-E
 $a->strings['Maximum Friend Requests/Day:'] = 'Maximale Anzahl von Kontaktanfragen/Tag:';
 $a->strings['(to prevent spam abuse)'] = '(um SPAM zu vermeiden)';
 $a->strings['Allow your profile to be searchable globally?'] = 'Darf dein Profil bei Suchanfragen gefunden werden?';
-$a->strings['Activate this setting if you want others to easily find and follow you. Your profile will be searchable on remote systems. This setting also determines whether Friendica will inform search engines that your profile should be indexed or not.'] = 'Aktiviere diese Einstellung, wenn du von anderen einfach gefunden und gefolgt werden möchtest. Dei Profil wird dann auf anderen Systemen leicht durchsuchbar. Außerdem regelt diese Einstellung ob Friendica Suchmaschinen mitteilen soll, ob dein Profil indiziert werden soll oder nicht.';
+$a->strings['Activate this setting if you want others to easily find and follow you. Your profile will be searchable on remote systems. This setting also determines whether Friendica will inform search engines that your profile should be indexed or not.'] = 'Aktiviere diese Einstellung, wenn du von anderen einfach gefunden und gefolgt werden möchtest. Dein Profil wird dann auf anderen Systemen leicht durchsuchbar. Außerdem regelt diese Einstellung ob Friendica Suchmaschinen mitteilen soll, ob dein Profil indiziert werden soll oder nicht.';
 $a->strings['Hide your contact/friend list from viewers of your profile?'] = 'Liste der Kontakte vor Betrachtern des Profil verbergen?';
 $a->strings['A list of your contacts is displayed on your profile page. Activate this option to disable the display of your contact list.'] = 'Auf deiner Profilseite wird eine Liste deiner Kontakte angezeigt. Aktiviere diese Option wenn du das nicht möchtest.';
 $a->strings['Hide your public content from anonymous viewers'] = 'Verbirg die öffentliche Inhalte vor anonymen Besuchern';
@@ -2328,6 +2473,8 @@ $a->strings['Your contacts can add additional tags to your posts.'] = 'Deine Kon
 $a->strings['Permit unknown people to send you private mail?'] = 'Dürfen dir Unbekannte private Nachrichten schicken?';
 $a->strings['Friendica network users may send you private messages even if they are not in your contact list.'] = 'Nutzer des Friendica Netzwerks können dir private Nachrichten senden, selbst wenn sie nicht in deine Kontaktliste sind.';
 $a->strings['Maximum private messages per day from unknown people:'] = 'Maximale Anzahl privater Nachrichten von Unbekannten pro Tag:';
+$a->strings['Default privacy circle for new contacts'] = 'Voreingestellter Circle für neue Kontakte';
+$a->strings['Default privacy circle for new group contacts'] = 'Voreingestellter Circle für neue Gruppenkontakte';
 $a->strings['Default Post Permissions'] = 'Standard-Zugriffsrechte für Beiträge';
 $a->strings['Expiration settings'] = 'Verfalls-Einstellungen';
 $a->strings['Automatically expire posts after this many days:'] = 'Beiträge verfallen automatisch nach dieser Anzahl von Tagen:';
@@ -2376,6 +2523,31 @@ $a->strings['If you have moved this profile from another server, and some of you
 $a->strings['Resend relocate message to contacts'] = 'Umzugsbenachrichtigung erneut an Kontakte senden';
 $a->strings['Addon Settings'] = 'Addon Einstellungen';
 $a->strings['No Addon settings configured'] = 'Keine Addon-Einstellungen konfiguriert';
+$a->strings['Label'] = 'Bezeichnung';
+$a->strings['Description'] = 'Beschreibung';
+$a->strings['Access Key'] = 'Zugriffsschlüssel';
+$a->strings['Circle/Channel'] = 'Circle/Kanal';
+$a->strings['Include Tags'] = 'Tags einschließen';
+$a->strings['Exclude Tags'] = 'Tags ausschließen';
+$a->strings['Full Text Search'] = 'Volltextsuche';
+$a->strings['Delete channel'] = 'Lösche Kanal';
+$a->strings['Check to delete this entry from the channel list'] = 'Haken setzen, um diesen Eintrag aus der Kanalliste zu löschen';
+$a->strings['Short name for the channel. It is displayed on the channels widget.'] = 'Kurzname für den Kanal. Er wird im Widget für die Kanäle angezeigt.';
+$a->strings['This should describe the content of the channel in a few word.'] = 'Dies sollte den Inhalt des Kanals in wenigen Worten beschreiben.';
+$a->strings['When you want to access this channel via an access key, you can define it here. Pay attention to not use an already used one.'] = 'Wenn du auf diesen Kanal über einen Zugangsschlüssel zugreifen willst, kannst du ihn hier festlegen. Achte darauf, dass du nicht einen bereits verwendeten Schlüssel benutzt.';
+$a->strings['Select a circle or channel, that your channel should be based on.'] = 'Wähle einen Circle oder Kanal, auf dem Ihr Kanal basieren soll.';
+$a->strings['Comma separated list of tags. A post will be used when it contains any of the listed tags.'] = 'Durch Kommata getrennte Liste von Tags. Ein Beitrag wird verwendet, wenn er eines der aufgeführten Tags enthält.';
+$a->strings['Comma separated list of tags. If a post contain any of these tags, then it will not be part of nthis channel.'] = 'Durch Kommata getrennte Liste von Tags. Wenn ein Beitrag eines dieser Tags enthält, wird er nicht Teil dieses Kanals sein.';
+$a->strings['Search terms for the body, supports the "boolean mode" operators from MariaDB. See the help for a complete list of operators and additional keywords: %s'] = 'Suchbegriffe für den Body, unterstützt die "boolean mode"-Operatoren von MariaDB. In der Hilfe findest du eine vollständige Liste der Operatoren und zusätzliche Schlüsselwörter: %s';
+$a->strings['Check to display images in the channel.'] = 'Aktiviere diese Option, um Bilder im Kanal anzuzeigen.';
+$a->strings['Check to display videos in the channel.'] = 'Aktiviere diese Option, um Videos im Kanal anzuzeigen.';
+$a->strings['Check to display audio in the channel.'] = 'Aktiviere diese Option, um Audio im Kanal anzuzeigen.';
+$a->strings['This page can be used to define your own channels.'] = 'Auf dieser Seite kannst du deine eigenen Kanäle definieren.';
+$a->strings['Add new entry to the channel list'] = 'Neuen Eintrag zur Kanalliste hinzufügen';
+$a->strings['Add'] = 'Hinzufügen';
+$a->strings['Current Entries in the channel list'] = 'Aktuelle Einträge in der Kanalliste';
+$a->strings['Delete entry from the channel list'] = 'Eintrag aus der Kanalliste löschen';
+$a->strings['Delete entry from the channel list?'] = 'Eintrag aus der Kanalliste löschen?';
 $a->strings['Failed to connect with email account using the settings provided.'] = 'Verbindung zum E-Mail-Konto mit den angegebenen Einstellungen nicht möglich.';
 $a->strings['Diaspora (Socialhome, Hubzilla)'] = 'Diaspora (Socialhome, Hubzilla)';
 $a->strings['Built-in support for %s connectivity is enabled'] = 'Eingebaute Unterstützung für die Verbindung zu %s ist aktiviert.';
@@ -2432,7 +2604,6 @@ $a->strings['Delegates'] = 'Bevollmächtigte';
 $a->strings['Delegates are able to manage all aspects of this account/page except for basic account settings. Please do not delegate your personal account to anybody that you do not trust completely.'] = 'Bevollmächtigte sind in der Lage, alle Aspekte dieses Kontos/dieser Seite zu verwalten, abgesehen von den Grundeinstellungen des Kontos. Bitte gib niemandem eine Bevollmächtigung für Deinen privaten Account, dem du nicht absolut vertraust!';
 $a->strings['Existing Page Delegates'] = 'Vorhandene Bevollmächtigte für die Seite';
 $a->strings['Potential Delegates'] = 'Potentielle Bevollmächtigte';
-$a->strings['Add'] = 'Hinzufügen';
 $a->strings['No entries.'] = 'Keine Einträge.';
 $a->strings['The theme you chose isn\'t available.'] = 'Das gewählte Theme ist nicht verfügbar';
 $a->strings['%s - (Unsupported)'] = '%s - (Nicht unterstützt)';
@@ -2445,6 +2616,7 @@ $a->strings['General Theme Settings'] = 'Allgemeine Theme-Einstellungen';
 $a->strings['Custom Theme Settings'] = 'Benutzerdefinierte Theme-Einstellungen';
 $a->strings['Content Settings'] = 'Einstellungen zum Inhalt';
 $a->strings['Theme settings'] = 'Theme-Einstellungen';
+$a->strings['Timelines'] = 'Timelines';
 $a->strings['Display Theme:'] = 'Theme:';
 $a->strings['Mobile Theme:'] = 'Mobiles Theme';
 $a->strings['Number of items to display per page:'] = 'Zahl der Beiträge, die pro Netzwerkseite angezeigt werden sollen: ';
@@ -2464,14 +2636,22 @@ $a->strings['Display the resharer'] = 'Teilenden anzeigen';
 $a->strings['Display the first resharer as icon and text on a reshared item.'] = 'Zeige das Profilbild des ersten Kontakts von dem ein Beitrag geteilt wurde.';
 $a->strings['Stay local'] = 'Bleib lokal';
 $a->strings['Don\'t go to a remote system when following a contact link.'] = 'Gehe nicht zu einem Remote-System, wenn einem Kontaktlink gefolgt wird';
+$a->strings['Show the post deletion checkbox'] = 'Die Checkbox zum Löschen von Beiträgen anzeigen';
+$a->strings['Display the checkbox for the post deletion on the network page.'] = 'Zeigt die Checkbox für das Löschen von Beiträgen auf der Netzwerkseite an.';
+$a->strings['DIsplay the event list'] = 'Anzeige der der anstehenden Ereignisse';
+$a->strings['Display the birthday reminder and event list on the network page.'] = 'Zeigt die Geburtstagserinnerungen und die anstehenden Veranstaltungen auf der Netzwerkseite an.';
 $a->strings['Link preview mode'] = 'Vorschau Modus für Links';
 $a->strings['Appearance of the link preview that is added to each post with a link.'] = 'Aussehen der Linkvorschau, die zu jedem Beitrag mit einem Link hinzugefügt wird.';
+$a->strings['Bookmark'] = 'Lesezeichen';
+$a->strings['Enable timelines that you want to see in the channels widget. Bookmark timelines that you want to see in the top menu.'] = 'Aktiviere die Timelines, die Sie im Kanäle-Widget sehen möchten. Setze ein Lesezeichen für Timelines, die du im oberen Menü sehen willst.';
+$a->strings['Channel languages:'] = 'Channel Spachen:';
+$a->strings['Select all languages that you want to see in your channels.'] = 'Wähle alle Sprachen aus, die du in deinen Kanälen sehen willst.';
 $a->strings['Beginning of week:'] = 'Wochenbeginn:';
 $a->strings['Default calendar view:'] = 'Standard-Kalenderansicht:';
 $a->strings['Additional Features'] = 'Zusätzliche Features';
 $a->strings['Connected Apps'] = 'Verbundene Programme';
 $a->strings['Remove authorization'] = 'Autorisierung entziehen';
-$a->strings['Profile Name is required.'] = 'Profilname ist erforderlich.';
+$a->strings['Display Name is required.'] = 'Der Anzeigename ist erforderlich.';
 $a->strings['Profile couldn\'t be updated.'] = 'Das Profil konnte nicht aktualisiert werden.';
 $a->strings['Label:'] = 'Bezeichnung:';
 $a->strings['Value:'] = 'Wert:';
@@ -2488,7 +2668,16 @@ $a->strings['Location'] = 'Wohnort';
 $a->strings['Miscellaneous'] = 'Verschiedenes';
 $a->strings['Custom Profile Fields'] = 'Benutzerdefinierte Profilfelder';
 $a->strings['Upload Profile Photo'] = 'Profilbild hochladen';
-$a->strings['Display name:'] = 'Anzeigename:';
+$a->strings['<p>Custom fields appear on <a href="%s">your profile page</a>.</p>
+				<p>You can use BBCodes in the field values.</p>
+				<p>Reorder by dragging the field title.</p>
+				<p>Empty the label field to remove a custom field.</p>
+				<p>Non-public fields can only be seen by the selected Friendica contacts or the Friendica contacts in the selected circles.</p>'] = '<p>Die benutzerdefinierten Felder erscheinen auf <a href="%s">deiner Profil-Seite</a></p>.
+
+<p>BBCode kann verwendet werden</p>
+<p>Die Reihenfolge der Felder kann durch Ziehen des Feld-Titels mit der Maus angepasst werden.</p>
+<p>Wird die Bezeichnung des Felds geleert, wird das Feld beim Speichern aus dem Profil entfernt.</p>
+<p>Nicht öffentliche Felder können nur von den ausgewählten Friendica Circles gesehen werden.</p>';
 $a->strings['Street Address:'] = 'Adresse:';
 $a->strings['Locality/City:'] = 'Wohnort:';
 $a->strings['Region/State:'] = 'Region/Bundesstaat:';
@@ -2503,16 +2692,6 @@ $a->strings['Public Keywords:'] = 'Öffentliche Schlüsselwörter:';
 $a->strings['(Used for suggesting potential friends, can be seen by others)'] = '(Wird verwendet, um potentielle Kontakte zu finden, kann von Kontakten eingesehen werden)';
 $a->strings['Private Keywords:'] = 'Private Schlüsselwörter:';
 $a->strings['(Used for searching profiles, never shown to others)'] = '(Wird für die Suche nach Profilen verwendet und niemals veröffentlicht)';
-$a->strings['<p>Custom fields appear on <a href="%s">your profile page</a>.</p>
-				<p>You can use BBCodes in the field values.</p>
-				<p>Reorder by dragging the field title.</p>
-				<p>Empty the label field to remove a custom field.</p>
-				<p>Non-public fields can only be seen by the selected Friendica contacts or the Friendica contacts in the selected circles.</p>'] = '<p>Die benutzerdefinierten Felder erscheinen auf <a href="%s">deiner Profil-Seite</a></p>.
-
-<p>BBCode kann verwendet werden</p>
-<p>Die Reihenfolge der Felder kann durch Ziehen des Feld-Titels mit der Maus angepasst werden.</p>
-<p>Wird die Bezeichnung des Felds geleert, wird das Feld beim Speichern aus dem Profil entfernt.</p>
-<p>Nicht öffentliche Felder können nur von den ausgewählten Friendica Circles gesehen werden.</p>';
 $a->strings['Image size reduction [%s] failed.'] = 'Verkleinern der Bildgröße von [%s] scheiterte.';
 $a->strings['Shift-reload the page or clear browser cache if the new photo does not display immediately.'] = 'Drücke Umschalt+Neu Laden oder leere den Browser-Cache, falls das neue Foto nicht gleich angezeigt wird.';
 $a->strings['Unable to process image'] = 'Bild konnte nicht verarbeitet werden';
@@ -2529,14 +2708,24 @@ $a->strings['Upload Picture:'] = 'Bild hochladen';
 $a->strings['or'] = 'oder';
 $a->strings['skip this step'] = 'diesen Schritt überspringen';
 $a->strings['select a photo from your photo albums'] = 'wähle ein Foto aus deinen Fotoalben';
+$a->strings['There was a validation error, please make sure you\'re logged in with the account you want to remove and try again.'] = 'Es gab einen Überprüfungsfehler. Bitte vergewisser dich, dass du mit dem Konto, das du entfernen möchtest angemeldet bist, und versuche es erneut.';
+$a->strings['If this error persists, please contact your administrator.'] = 'Wenn dieser Fehler weiterhin besteht, wende dich bitte an den Administrator deiner Instanz.';
 $a->strings['[Friendica System Notify]'] = '[Friendica-Systembenachrichtigung]';
 $a->strings['User deleted their account'] = 'Gelöschter Nutzeraccount';
 $a->strings['On your Friendica node an user deleted their account. Please ensure that their data is removed from the backups.'] = 'Ein Nutzer deiner Friendica-Instanz hat seinen Account gelöscht. Bitte stelle sicher, dass dessen Daten aus deinen Backups entfernt werden.';
 $a->strings['The user id is %d'] = 'Die ID des Users lautet %d';
-$a->strings['Your user account has been successfully removed. Bye bye!'] = 'Dein Nutzeraccount wurde erfolgreich entfernt. Bye bye!';
+$a->strings['Your account has been successfully removed. Bye bye!'] = 'Ihr Konto wurde erfolgreich gelöscht. Auf Wiedersehen!';
 $a->strings['Remove My Account'] = 'Konto löschen';
 $a->strings['This will completely remove your account. Once this has been done it is not recoverable.'] = 'Dein Konto wird endgültig gelöscht. Es gibt keine Möglichkeit, es wiederherzustellen.';
 $a->strings['Please enter your password for verification:'] = 'Bitte gib dein Passwort zur Verifikation ein:';
+$a->strings['Do you want to ignore this server?'] = 'Möchtest du diese Instanz ignorieren?';
+$a->strings['Do you want to unignore this server?'] = 'Möchtest du diese Instanz nicht mehr ignorieren?';
+$a->strings['Remote server settings'] = 'Einstellungen der Remote-Instanz';
+$a->strings['Server URL'] = 'Server URL';
+$a->strings['Settings saved'] = 'Einstellungen gespeichert';
+$a->strings['Here you can find all the remote servers you have taken individual moderation actions against. For a list of servers your node has blocked, please check out the <a href="friendica">Information</a> page.'] = 'Hier findest du alle Entfernten-Server, gegen die du individuelle Moderationsmaßnahmen ergriffen hast. Eine Liste der Server, die deine Instanz blockiert hat, findest du auf der <a href="friendica">Informationseite</a> .';
+$a->strings['Delete all your settings for the remote server'] = 'Lösche alle deine Einstellungen für die Entfernte-Instanz';
+$a->strings['Save changes'] = 'Einstellungen speichern';
 $a->strings['Please enter your password to access this page.'] = 'Bitte gib dein Passwort ein, um auf diese Seite zuzugreifen.';
 $a->strings['App-specific password generation failed: The description is empty.'] = 'Die Erzeugung des App spezifischen Passworts ist fehlgeschlagen. Die Beschreibung ist leer.';
 $a->strings['App-specific password generation failed: This description already exists.'] = 'Die Erzeugung des App spezifischen Passworts ist fehlgeschlagen. Die Beschreibung existiert bereits.';
@@ -2546,7 +2735,6 @@ $a->strings['App-specific password successfully revoked.'] = 'App spezifisches P
 $a->strings['Two-factor app-specific passwords'] = 'Zwei-Faktor App spezifische Passwörter.';
 $a->strings['<p>App-specific passwords are randomly generated passwords used instead your regular password to authenticate your account on third-party applications that don\'t support two-factor authentication.</p>'] = '<p>App spezifische Passwörter sind zufällig generierte Passwörter die anstelle des regulären Passworts zur Anmeldung mit Client Anwendungen verwendet werden, wenn diese Anwendungen die Zwei-Faktor-Authentifizierung nicht unterstützen.</p>';
 $a->strings['Make sure to copy your new app-specific password now. You won’t be able to see it again!'] = 'Das neue App spezifische Passwort muss jetzt übertragen werden. Später wirst du es nicht mehr einsehen können!';
-$a->strings['Description'] = 'Beschreibung';
 $a->strings['Last Used'] = 'Zuletzt verwendet';
 $a->strings['Revoke'] = 'Widerrufen';
 $a->strings['Revoke All'] = 'Alle widerrufen';
@@ -2631,22 +2819,14 @@ $a->strings['Export all'] = 'Alles exportieren';
 $a->strings['Export your account info, contacts and all your items as json. Could be a very big file, and could take a lot of time. Use this to make a full backup of your account (photos are not exported)'] = 'Exportiere deine Account Informationen, Kontakte und alle Einträge als JSON Datei. Dies könnte eine sehr große Datei werden und dementsprechend viel Zeit benötigen. Verwende dies um ein komplettes Backup deines Accounts anzulegen (Photos werden nicht exportiert).';
 $a->strings['Export Contacts to CSV'] = 'Kontakte nach CSV exportieren';
 $a->strings['Export the list of the accounts you are following as CSV file. Compatible to e.g. Mastodon.'] = 'Exportiert die Liste der Nutzerkonten denen du folgst in eine CSV Datei. Das Format ist z.B. zu Mastodon kompatibel.';
-$a->strings['Not Found'] = 'Nicht gefunden';
-$a->strings['<p>Unfortunately, the requested conversation isn\'t available to you.</p>
-<p>Possible reasons include:</p>
-<ul>
-	<li>The top-level post isn\'t visible.</li>
-	<li>The top-level post was deleted.</li>
-	<li>The node has blocked the top-level author or the author of the shared post.</li>
-	<li>You have ignored or blocked the top-level author or the author of the shared post.</li>
-</ul>'] = '<p>Leider ist die gewünschte Konversation für Sie nicht verfügbar.</p>
-<p>Mögliche Gründe sind::</p>
-<ul>
-	<li>Der Beitrag der obersten Ebene ist nicht sichtbar,</li>
-	<li>Der Beitrag der obersten Ebene wurde gelöscht.</li>
-	<li>Die Instanz hat den Autor der obersten Ebene oder den Autor des freigegebenen Beitrags blockiert.</li>
-	<li>Sie haben den Autor der obersten Ebene oder den Autor des freigegebenen Beitrags ignoriert oder blockiert.</li>
-</ul>';
+$a->strings['The top-level post isn\'t visible.'] = 'Der Beitrag der obersten Ebene ist nicht sichtbar.';
+$a->strings['The top-level post was deleted.'] = 'Der Beitrag auf der obersten Ebene wurde gelöscht.';
+$a->strings['This node has blocked the top-level author or the author of the shared post.'] = 'Diese Instanz hat den Top-Level-Autor oder den Autor des freigegebenen Beitrags gesperrt.';
+$a->strings['You have ignored or blocked the top-level author or the author of the shared post.'] = 'Du hast den Autor der obersten Ebene oder den Autor des freigegebenen Beitrags ignoriert oder blockiert.';
+$a->strings['You have ignored the top-level author\'s server or the shared post author\'s server.'] = 'Du hast die Instanz des übergeordneten Autors oder die Instanz des Autors des freigegebenen Beitrags ignoriert.';
+$a->strings['Conversation Not Found'] = 'Konversation nicht gefunden';
+$a->strings['Unfortunately, the requested conversation isn\'t available to you.'] = 'Leider ist die gewünschte Konversation für dich nicht verfügbar.';
+$a->strings['Possible reasons include:'] = 'Mögliche Gründe sind:';
 $a->strings['Stack trace:'] = 'Stack trace:';
 $a->strings['Exception thrown in %s:%d'] = 'Exception thrown in %s:%d';
 $a->strings['At the time of registration, and for providing communications between the user account and their contacts, the user has to provide a display name (pen name), an username (nickname) and a working email address. The names will be accessible on the profile page of the account by any visitor of the page, even if other profile details are not displayed. The email address will only be used to send the user notifications about interactions, but wont be visibly displayed. The listing of an account in the node\'s user directory or the global user directory is optional and can be controlled in the user settings, it is not necessary for communication.'] = 'Zum Zwecke der Registrierung und um die Kommunikation zwischen dem Nutzer und seinen Kontakten zu gewährleisten, muß der Nutzer einen Namen (auch Pseudonym) und einen Nutzernamen (Spitzname) sowie eine funktionierende E-Mail-Adresse angeben. Der Name ist auf der Profilseite für alle Nutzer sichtbar, auch wenn die Profildetails nicht angezeigt werden.
@@ -2656,6 +2836,12 @@ $a->strings['At any point in time a logged in user can export their account data
 $a->strings['Privacy Statement'] = 'Datenschutzerklärung';
 $a->strings['Rules'] = 'Regeln';
 $a->strings['Parameter uri_id is missing.'] = 'Der Parameter uri_id fehlt.';
+$a->strings['The requested item doesn\'t exist or has been deleted.'] = 'Der angeforderte Beitrag existiert nicht oder wurde gelöscht.';
+$a->strings['You are now logged in as %s'] = 'Du bist jetzt als %s angemeldet';
+$a->strings['Switch between your accounts'] = 'Wechsle deine Konten';
+$a->strings['Manage your accounts'] = 'Verwalte deine Konten';
+$a->strings['Toggle between different identities or community/group pages which share your account details or which you have been granted "manage" permissions'] = 'Zwischen verschiedenen Identitäten oder Gemeinschafts-/Gruppenseiten wechseln, die deine Kontoinformationen teilen oder zu denen du „Verwalten“-Befugnisse bekommen hast.';
+$a->strings['Select an identity to manage: '] = 'Wähle eine Identität zum Verwalten aus: ';
 $a->strings['User imports on closed servers can only be done by an administrator.'] = 'Auf geschlossenen Servern können ausschließlich die Administratoren Benutzerkonten importieren.';
 $a->strings['Move account'] = 'Account umziehen';
 $a->strings['You can import an account from another Friendica server.'] = 'Du kannst einen Account von einem anderen Friendica Server importieren.';
@@ -2698,7 +2884,7 @@ $a->strings['Finding New People'] = 'Neue Leute kennenlernen';
 $a->strings['On the side panel of the Contacts page are several tools to find new friends. We can match people by interest, look up people by name or interest, and provide suggestions based on network relationships. On a brand new site, friend suggestions will usually begin to be populated within 24 hours.'] = 'Im seitlichen Bedienfeld der Kontakteseite gibt es diverse Werkzeuge, um neue Personen zu finden. Wir können Menschen mit den gleichen Interessen finden, anhand von Namen oder Interessen suchen oder aber aufgrund vorhandener Kontakte neue Leute vorschlagen.
 Auf einer brandneuen - soeben erstellten - Seite starten die Kontaktvorschläge innerhalb von 24 Stunden.';
 $a->strings['Add Your Contacts To Circle'] = 'Kontakte zum Circle hinzufügen';
-$a->strings['Once you have made some friends, organize them into private conversation circles from the sidebar of your Contacts page and then you can interact with each circle privately on your Network page.'] = 'Sobald Sie einige Freunde gefunden haben, können Sie diese in der Seitenleiste Ihrer Kontaktseite in private Circles einteilen und dann mit jedem Circle auf Ihrer Netzwerkseite privat interagieren.';
+$a->strings['Once you have made some friends, organize them into private conversation circles from the sidebar of your Contacts page and then you can interact with each circle privately on your Network page.'] = 'Sobald du einige Freunde gefunden hast, kannst du diese in der Seitenleiste deiner Kontaktseite in private Circles einteilen und dann mit jedem Circle auf deiner Netzwerkseite privat interagieren.';
 $a->strings['Why Aren\'t My Posts Public?'] = 'Warum sind meine Beiträge nicht öffentlich?';
 $a->strings['Friendica respects your privacy. By default, your posts will only show up to people you\'ve added as friends. For more information, see the help section from the link above.'] = 'Friendica respektiert Deine Privatsphäre. Mit der Grundeinstellung werden Deine Beiträge ausschließlich Deinen Kontakten angezeigt. Für weitere Informationen diesbezüglich lies dir bitte den entsprechenden Abschnitt in der Hilfe unter dem obigen Link durch.';
 $a->strings['Getting Help'] = 'Hilfe bekommen';
@@ -2782,9 +2968,9 @@ $a->strings['Please visit %s  if you wish to make any changes to this relationsh
 $a->strings['registration request'] = 'Registrierungsanfrage';
 $a->strings['You\'ve received a registration request from \'%1$s\' at %2$s'] = 'Du hast eine Registrierungsanfrage von %2$s auf \'%1$s\' erhalten';
 $a->strings['You\'ve received a [url=%1$s]registration request[/url] from %2$s.'] = 'Du hast eine [url=%1$s]Registrierungsanfrage[/url] von %2$s erhalten.';
-$a->strings['Full Name:	%s
+$a->strings['Display Name:	%s
 Site Location:	%s
-Login Name:	%s (%s)'] = 'Kompletter Name: %s
+Login Name:	%s (%s)'] = 'Anzeigename: %s
 URL der Seite: %s
 Login Name: %s(%s)';
 $a->strings['Please visit %s to approve or reject the request.'] = 'Bitte besuche %s, um die Anfrage zu bearbeiten.';
@@ -2811,6 +2997,7 @@ $a->strings['Remove locally'] = 'Lokal entfernen';
 $a->strings['Block %s'] = 'Blockiere %s';
 $a->strings['Ignore %s'] = 'Ignoriere %s';
 $a->strings['Collapse %s'] = 'Verberge %s';
+$a->strings['Report post'] = 'Beitrag melden';
 $a->strings['Save to folder'] = 'In Ordner speichern';
 $a->strings['I will attend'] = 'Ich werde teilnehmen';
 $a->strings['I will not attend'] = 'Ich werde nicht teilnehmen';
@@ -2837,6 +3024,9 @@ $a->strings['Comment this item on your system'] = 'Kommentiere diesen Beitrag vo
 $a->strings['Remote comment'] = 'Entfernter Kommentar';
 $a->strings['Share via ...'] = 'Teile mit...';
 $a->strings['Share via external services'] = 'Teile mit einem externen Dienst';
+$a->strings['Unknown parent'] = 'Unbekannter Ursprungsbeitrag';
+$a->strings['in reply to %s'] = 'Als Antwort auf %s';
+$a->strings['Parent is probably private or not federated.'] = 'Der Urspungsbeitrag ist wahrscheinlich privat oder nicht föderiert.';
 $a->strings['to'] = 'zu';
 $a->strings['via'] = 'via';
 $a->strings['Wall-to-Wall'] = 'Wall-to-Wall';
@@ -2856,12 +3046,16 @@ $a->strings['Show more'] = 'Zeige mehr';
 $a->strings['Show fewer'] = 'Zeige weniger';
 $a->strings['Reshared by: %s'] = 'Geteilt von: %s';
 $a->strings['Viewed by: %s'] = 'Gesehen von: %s';
+$a->strings['Read by: %s'] = 'Gelesen von: %s';
 $a->strings['Liked by: %s'] = 'Diese Menschen mögen das: %s';
 $a->strings['Disliked by: %s'] = 'Unbeliebt bei: %s';
 $a->strings['Attended by: %s'] = 'Besucht von: %s';
 $a->strings['Maybe attended by: %s'] = 'Vielleicht besucht von: %s';
 $a->strings['Not attended by: %s'] = 'Nicht besucht von: %s';
+$a->strings['Commented by: %s'] = 'Kommentiert von: %s';
 $a->strings['Reacted with %s by: %s'] = 'Reagierte mit %s von: %s';
+$a->strings['Quote shared by: %s'] = 'Zitat geteilt von: %s';
+$a->strings['Chat'] = 'Chat';
 $a->strings['(no subject)'] = '(kein Betreff)';
 $a->strings['%s is now following %s.'] = '%s folgt nun %s';
 $a->strings['following'] = 'folgen';

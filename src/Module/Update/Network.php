@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -35,23 +35,21 @@ class Network extends NetworkModule
 
 		$this->parseRequest($request);
 
-		$profile_uid = intval($request['p']);
-
 		$o = '';
 
-		if (empty($request['force'])) {
+		if (!$this->update && !$this->force) {
 			System::htmlUpdateExit($o);
 		}
 
-		if ($this->timeline->isChannel($this->selectedTab)) {
+		if ($this->channel->isTimeline($this->selectedTab) || $this->userDefinedChannel->isTimeline($this->selectedTab, $this->session->getLocalUserId())) {
 			$items = $this->getChannelItems();
-		} elseif ($this->timeline->isCommunity($this->selectedTab)) {
+		} elseif ($this->community->isTimeline($this->selectedTab)) {
 			$items = $this->getCommunityItems();
 		} else {
 			$items = $this->getItems();
 		}
 
-		$o = $this->conversation->render($items, Conversation::MODE_NETWORK, $profile_uid, false, $this->getOrder(), $this->session->getLocalUserId());
+		$o = $this->conversation->render($items, Conversation::MODE_NETWORK, true, false, $this->getOrder(), $this->session->getLocalUserId());
 
 		System::htmlUpdateExit($o);
 	}

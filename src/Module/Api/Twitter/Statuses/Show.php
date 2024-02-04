@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -39,7 +39,7 @@ class Show extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_READ);
+		$this->checkAllowedScope(BaseApi::SCOPE_READ);
 		$uid = BaseApi::getCurrentUserID();
 
 		$id = $this->getRequestValue($request, 'id', 0);
@@ -85,10 +85,10 @@ class Show extends BaseApi
 
 		if ($conversation) {
 			$data = ['status' => $ret];
-			$this->response->exit('statuses', $data, $this->parameters['extension'] ?? null, Contact::getPublicIdByUserId($uid));
+			$this->response->addFormattedContent('statuses', $data, $this->parameters['extension'] ?? null, Contact::getPublicIdByUserId($uid));
 		} else {
 			$data = ['status' => $ret[0]];
-			$this->response->exit('status', $data, $this->parameters['extension'] ?? null, Contact::getPublicIdByUserId($uid));
+			$this->response->addFormattedContent('status', $data, $this->parameters['extension'] ?? null, Contact::getPublicIdByUserId($uid));
 		}
 	}
 }

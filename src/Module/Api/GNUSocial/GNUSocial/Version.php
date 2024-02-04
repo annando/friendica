@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -31,6 +31,6 @@ class Version extends BaseApi
 {
 	protected function rawContent(array $request = [])
 	{
-		$this->response->exit('version', ['version' => '0.9.7'], $this->parameters['extension'] ?? null);
+		$this->response->addFormattedContent('version', ['version' => '0.9.7'], $this->parameters['extension'] ?? null);
 	}
 }

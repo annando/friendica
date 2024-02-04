@@ -66,6 +66,8 @@
 						{{include file="field_checkbox.tpl" field=$enable_dislike}}
 						{{include file="field_checkbox.tpl" field=$display_resharer}}
 						{{include file="field_checkbox.tpl" field=$stay_local}}
+						{{include file="field_checkbox.tpl" field=$show_page_drop}}
+						{{include file="field_checkbox.tpl" field=$display_eventlist}}
 						{{include file="field_select.tpl" field=$preview_mode}}
 					</div>
 					<div class="panel-footer">
@@ -84,7 +86,27 @@
 				</div>
 				<div id="timeline-settings-content" class="panel-collapse collapse{{if !$theme && !$mobile_theme && !$theme_config}} in{{/if}}" role="tabpanel" aria-labelledby="timeline-settings">
 					<div class="panel-body">
-						{{include file="field_select.tpl" field=$network_timelines}}
+						{{$timeline_explanation}}
+						<table class="table table-condensed table-striped table-bordered">
+						<thead>
+						<tr>
+							<th>{{$timeline_label}}</th>
+							<th>{{$timeline_descriptiom}}</th>
+							<th>{{$timeline_enable}}</th>
+							<th>{{$timeline_bookmark}}</th>
+						</tr>
+						</thead>
+						<tbody>
+						{{foreach $timelines as $t}}
+							<tr>
+								<td>{{$t.label}}</td>
+								<td>{{$t.description}}</td>
+								<td>{{include file="field_checkbox.tpl" field=$t.enable}}</td>
+								<td>{{include file="field_checkbox.tpl" field=$t.bookmark}}</td>
+							</tr>
+						{{/foreach}}
+						</tbody>
+						</table>
 					</div>
 					<div class="panel-footer">
 						<button type="submit" name="submit" class="btn btn-primary" value="{{$submit}}">{{$submit}}</button>

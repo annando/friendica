@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -25,13 +25,12 @@ use Friendica\Content\Text\BBCode;
 use Friendica\Core\Cache\Enum\Duration;
 use Friendica\Core\Logger;
 use Friendica\Core\Protocol;
-use Friendica\Core\System;
 use Friendica\Database\Database;
 use Friendica\Database\DBA;
 use Friendica\DI;
 use Friendica\Protocol\ActivityPub;
 use Friendica\Util\DateTimeFormat;
-use Friendica\Util\Network;
+use Friendica\Util\HTTPSignature;
 use Friendica\Util\Strings;
 
 /**
@@ -60,6 +59,10 @@ class Tag
 	const BCC        = 13;
 	const AUDIENCE   = 14;
 	const ATTRIBUTED = 15;
+
+	const CAN_ANNOUNCE = 20;
+	const CAN_LIKE     = 21;
+	const CAN_REPLY    = 22;
 
 	const ACCOUNT             = 1;
 	const GENERAL_COLLECTION  = 2;
@@ -112,7 +115,7 @@ class Tag
 			}
 
 			if ((substr($url, 0, 7) == 'https//') || (substr($url, 0, 6) == 'http//')) {
-				Logger::notice('Wrong scheme in url', ['url' => $url, 'callstack' => System::callstack(20)]);
+				Logger::notice('Wrong scheme in url', ['url' => $url]);
 			}
 
 			$cid = Contact::getIdForURL($url, 0, false);
@@ -159,7 +162,7 @@ class Tag
 
 		DBA::insert('post-tag', $fields, Database::INSERT_IGNORE);
 
-		Logger::debug('Stored tag/mention', ['uri-id' => $uriId, 'tag-id' => $tagid, 'contact-id' => $cid, 'name' => $name, 'type' => $type, 'callstack' => System::callstack(8)]);
+		Logger::debug('Stored tag/mention', ['uri-id' => $uriId, 'tag-id' => $tagid, 'contact-id' => $cid, 'name' => $name, 'type' => $type]);
 	}
 
 	/**
@@ -197,7 +200,7 @@ class Tag
 				$target = self::ACCOUNT;
 				Logger::debug('URL is an account', ['url' => $url]);
 			} elseif ($fetch && ($target != self::GENERAL_COLLECTION)) {
-				$content = ActivityPub::fetchContent($url);
+				$content = HTTPSignature::fetch($url);
 				if (!empty($content['type']) && ($content['type'] == 'OrderedCollection')) {
 					$target = self::GENERAL_COLLECTION;
 					Logger::debug('URL is an ordered collection', ['url' => $url]);
@@ -316,7 +319,7 @@ class Tag
 	 */
 	public static function storeFromArray(array $item, string $tags = null)
 	{
-		Logger::info('Check for tags', ['uri-id' => $item['uri-id'], 'hash' => $tags, 'callstack' => System::callstack()]);
+		Logger::info('Check for tags', ['uri-id' => $item['uri-id'], 'hash' => $tags]);
 
 		if (is_null($tags)) {
 			$tags = self::TAG_CHARACTER[self::HASHTAG] . self::TAG_CHARACTER[self::MENTION] . self::TAG_CHARACTER[self::EXCLUSIVE_MENTION];
@@ -339,7 +342,7 @@ class Tag
 	/**
 	 * Store raw tags (not encapsulated in links) from the body
 	 * This function is needed in the intermediate phase.
-	 * Later we can call item::setHashtags in advance to have all tags converted.
+	 * Later we can call Item::setHashtags in advance to have all tags converted.
 	 *
 	 * @param integer $uriId URI-Id
 	 * @param string  $body   Body of the post
@@ -347,7 +350,7 @@ class Tag
 	 */
 	public static function storeRawTagsFromBody(int $uriId, string $body)
 	{
-		Logger::info('Check for tags', ['uri-id' => $uriId, 'callstack' => System::callstack()]);
+		Logger::info('Check for tags', ['uri-id' => $uriId]);
 
 		$result = BBCode::getTags($body);
 		if (empty($result)) {
@@ -396,7 +399,7 @@ class Tag
 			return;
 		}
 
-		Logger::debug('Removing tag/mention', ['uri-id' => $uriId, 'tid' => $tag['tid'], 'name' => $name, 'url' => $url, 'callstack' => System::callstack(8)]);
+		Logger::debug('Removing tag/mention', ['uri-id' => $uriId, 'tid' => $tag['tid'], 'name' => $name, 'url' => $url]);
 		DBA::delete('post-tag', ['uri-id' => $uriId, 'type' => $type, 'tid' => $tag['tid'], 'cid' => $tag['cid']]);
 	}
 
@@ -664,12 +667,11 @@ class Tag
 	 */
 	private static function getBlockedSQL(): string
 	{
-		$blocked_txt = DI::config()->get('system', 'blocked_tags');
-		if (empty($blocked_txt)) {
+		$blocked = Strings::getTagArrayByString(DI::config()->get('system', 'blocked_tags'));
+		if (empty($blocked)) {
 			return '';
 		}
 
-		$blocked = explode(',', $blocked_txt);
 		array_walk($blocked, function (&$value) {
 			$value = "'" . DBA::escape(trim($value)) . "'";
 		});

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -41,15 +41,15 @@ class Destroy extends BaseApi
 	/** @var Database */
 	private $dba;
 
-	public function __construct(Database $dba, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, array $server, array $parameters = [])
+	public function __construct(Database $dba, \Friendica\Factory\Api\Mastodon\Error $errorFactory, App $app, L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, ApiResponse $response, array $server, array $parameters = [])
 	{
-		parent::__construct($app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
+		parent::__construct($errorFactory, $app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 
 		$this->dba = $dba;
 	}
 	protected function rawContent(array $request = [])
 	{
-		BaseApi::checkAllowedScope(BaseApi::SCOPE_WRITE);
+		$this->checkAllowedScope(BaseApi::SCOPE_WRITE);
 		$uid = BaseApi::getCurrentUserID();
 
 		$id = $this->getRequestValue($request, 'id', 0);
@@ -61,7 +61,7 @@ class Destroy extends BaseApi
 		// error if no id or parenturi specified (for clients posting parent-uri as well)
 		if ($verbose && $id == 0 && $parenturi == "") {
 			$answer = ['result' => 'error', 'message' => 'message id or parenturi not specified'];
-			$this->response->exit('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
+			$this->response->addFormattedContent('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
 			return;
 		}
 
@@ -72,7 +72,7 @@ class Destroy extends BaseApi
 		if (!$this->dba->exists('mail', ["`uid` = ? AND `id` = ? " . $sql_extra, $uid, $id])) {
 			if ($verbose) {
 				$answer = ['result' => 'error', 'message' => 'message id not in database'];
-				$this->response->exit('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
+				$this->response->addFormattedContent('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
 				return;
 			}
 			throw new BadRequestException('message id not in database');
@@ -85,10 +85,10 @@ class Destroy extends BaseApi
 			if ($result) {
 				// return success
 				$answer = ['result' => 'ok', 'message' => 'message deleted'];
-				$this->response->exit('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
+				$this->response->addFormattedContent('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
 			} else {
 				$answer = ['result' => 'error', 'message' => 'unknown error'];
-				$this->response->exit('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
+				$this->response->addFormattedContent('direct_messages_delete', ['direct_messages_delete' => $answer], $this->parameters['extension'] ?? null);
 			}
 		}
 	}

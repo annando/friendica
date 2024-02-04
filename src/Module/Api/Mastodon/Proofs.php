@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -34,6 +34,6 @@ class Proofs extends BaseApi
 	 */
 	protected function rawContent(array $request = [])
 	{
-		System::jsonError(404, ['error' => 'Record not found']);
+		$this->jsonError(404, ['error' => 'Record not found']);
 	}
 }

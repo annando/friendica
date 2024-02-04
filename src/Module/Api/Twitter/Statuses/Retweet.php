@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -41,7 +41,7 @@ class Retweet extends BaseApi
 {
 	protected function post(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid = self::getCurrentUserID();
 
 		$id = $this->getRequestValue($request, 'id', 0);
@@ -69,6 +69,6 @@ class Retweet extends BaseApi
 
 		$status_info = DI::twitterStatus()->createFromItemId($item_id, $uid)->toArray();
 
-		DI::apiResponse()->exit('statuses', ['status' => $status_info], $this->parameters['extension'] ?? null);
+		DI::apiResponse()->addFormattedContent('statuses', ['status' => $status_info], $this->parameters['extension'] ?? null);
 	}
 }

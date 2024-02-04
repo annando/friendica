@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -22,7 +22,6 @@
 namespace Friendica\Content\Text;
 
 use Friendica\Core\Logger;
-use Friendica\Core\System;
 use Friendica\DI;
 use Friendica\Model\Contact;
 
@@ -112,7 +111,7 @@ class Markdown
 	{
 		// @TODO Temporary until we find the source of the null value to finally set the correct type-hint
 		if (is_null($s)) {
-			Logger::warning('Received null value', ['callstack' => System::callstack()]);
+			Logger::warning('Received null value');
 			return '';
 		}
 

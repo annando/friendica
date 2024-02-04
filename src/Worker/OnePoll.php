@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -172,7 +172,7 @@ class OnePoll
 			return false;
 		}
 
-		$xml = $curlResult->getBody();
+		$xml = $curlResult->getBodyString();
 		if (empty($xml)) {
 			Logger::notice('Empty content', ['id' => $contact['id'], 'url' => $contact['poll']]);
 			return false;

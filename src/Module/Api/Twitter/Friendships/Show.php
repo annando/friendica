@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -35,7 +35,7 @@ class Show extends ContactEndpoint
 {
 	protected function rawContent(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_READ);
+		$this->checkAllowedScope(self::SCOPE_READ);
 		$uid = BaseApi::getCurrentUserID();
 
 		$source_cid = BaseApi::getContactIDForSearchterm($this->getRequestValue($request, 'source_screen_name', ''), '', $this->getRequestValue($request, 'source_id', 0), $uid);
@@ -112,6 +112,6 @@ class Show extends ContactEndpoint
 			]
 		];
 
-		DI::apiResponse()->exit('relationship', ['relationship' => $relationship], $this->parameters['extension'] ?? null);
+		DI::apiResponse()->addFormattedContent('relationship', ['relationship' => $relationship], $this->parameters['extension'] ?? null);
 	}
 }

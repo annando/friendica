@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -796,7 +796,7 @@ class Diaspora
 	 */
 	private static function key(WebFingerUri $uri): string
 	{
-		Logger::info('Fetching diaspora key', ['handle' => $uri->getAddr(), 'callstack' => System::callstack(20)]);
+		Logger::info('Fetching diaspora key', ['handle' => $uri->getAddr()]);
 		try {
 			return DI::dsprContact()->getByAddr($uri)->pubKey;
 		} catch (HTTPException\NotFoundException | \InvalidArgumentException $e) {
@@ -1192,6 +1192,7 @@ class Diaspora
 	{
 		$fields = [
 			'id', 'parent', 'body', 'wall', 'uri', 'guid', 'private', 'origin',
+			'allow_cid', 'allow_gid', 'deny_cid', 'deny_gid',
 			'author-name', 'author-link', 'author-avatar', 'gravity',
 			'owner-name', 'owner-link', 'owner-avatar'
 		];
@@ -1567,6 +1568,12 @@ class Diaspora
 		$datarray['verb'] = Activity::POST;
 		$datarray['gravity'] = Item::GRAVITY_COMMENT;
 
+		$datarray['private']   = $toplevel_parent_item['private'];
+		$datarray['allow_cid'] = $toplevel_parent_item['allow_cid'];
+		$datarray['allow_gid'] = $toplevel_parent_item['allow_gid'];
+		$datarray['deny_cid']  = $toplevel_parent_item['deny_cid'];
+		$datarray['deny_gid']  = $toplevel_parent_item['deny_gid'];
+
 		$datarray['thr-parent'] = $thr_parent ?: $toplevel_parent_item['uri'];
 
 		$datarray['object-type'] = Activity\ObjectType::COMMENT;
@@ -1823,6 +1830,13 @@ class Diaspora
 
 		$datarray['verb'] = $verb;
 		$datarray['gravity'] = Item::GRAVITY_ACTIVITY;
+
+		$datarray['private']   = $toplevel_parent_item['private'];
+		$datarray['allow_cid'] = $toplevel_parent_item['allow_cid'];
+		$datarray['allow_gid'] = $toplevel_parent_item['allow_gid'];
+		$datarray['deny_cid']  = $toplevel_parent_item['deny_cid'];
+		$datarray['deny_gid']  = $toplevel_parent_item['deny_gid'];
+
 		$datarray['thr-parent'] = $toplevel_parent_item['uri'];
 
 		$datarray['object-type'] = Activity\ObjectType::NOTE;
@@ -3022,7 +3036,7 @@ class Diaspora
 			// The "addr" field should always be filled.
 			// If this isn't the case, it will raise a notice some lines later.
 			// And in the log we will see where it came from, and we can handle it there.
-			Logger::notice('Empty addr', ['contact' => $contact ?? [], 'callstack' => System::callstack(20)]);
+			Logger::notice('Empty addr', ['contact' => $contact ?? []]);
 		}
 
 		$envelope = self::buildMessage($msg, $owner, $contact, $owner['uprvkey'], $pubkey ?? '', $public_batch);
@@ -3245,7 +3259,9 @@ class Diaspora
 		/// @todo - establish "all day" events in Friendica
 		$eventdata['all_day'] = 'false';
 
-		$eventdata['timezone'] = 'UTC';
+		// @todo Should be user timezone - but only if the event is supposed to be displayed
+		// in that specific timezone and not the user's timezone.
+		// $eventdata['timezone'] = 'UTC';
 
 		if ($event['start']) {
 			$eventdata['start'] = DateTimeFormat::utc($event['start'], $mask);
@@ -3870,7 +3886,7 @@ class Diaspora
 	 */
 	private static function createProfileData(int $uid): array
 	{
-		$profile = DBA::selectFirst('owner-view', ['uid', 'addr', 'name', 'location', 'net-publish', 'dob', 'about', 'pub_keywords'], ['uid' => $uid]);
+		$profile = DBA::selectFirst('owner-view', ['uid', 'addr', 'name', 'location', 'net-publish', 'dob', 'about', 'pub_keywords', 'updated'], ['uid' => $uid]);
 
 		if (!DBA::isResult($profile)) {
 			return [];
@@ -3880,17 +3896,21 @@ class Diaspora
 
 		$data = [
 			'author'           => $profile['addr'],
+			'edited_at'        => DateTimeFormat::utc($profile['updated']),
+			'full_name'        => $profile['name'],
 			'first_name'       => $split_name['first'],
 			'last_name'        => $split_name['last'],
 			'image_url'        => DI::baseUrl() . '/photo/custom/300/' . $profile['uid'] . '.jpg',
 			'image_url_medium' => DI::baseUrl() . '/photo/custom/100/' . $profile['uid'] . '.jpg',
 			'image_url_small'  => DI::baseUrl() . '/photo/custom/50/'  . $profile['uid'] . '.jpg',
-			'searchable'       => ($profile['net-publish'] ? 'true' : 'false'),
+			'bio'              => null,
 			'birthday'         => null,
-			'about'            => null,
+			'gender'           => null,
 			'location'         => null,
-			'tag_string'       => null,
+			'searchable'       => ($profile['net-publish'] ? 'true' : 'false'),
+			'public'           => 'false',
 			'nsfw'             => 'false',
+			'tag_string'       => null,
 		];
 
 		if ($data['searchable'] === 'true') {
@@ -3904,7 +3924,7 @@ class Diaspora
 				$data['birthday'] = DateTimeFormat::utc($year . '-' . $month . '-' . $day, 'Y-m-d');
 			}
 
-			$data['about'] = BBCode::toMarkdown($profile['about'] ?? '');
+			$data['bio'] = BBCode::toMarkdown($profile['about'] ?? '');
 
 			$data['location'] = $profile['location'];
 			$data['tag_string'] = '';
@@ -3963,8 +3983,10 @@ class Diaspora
 
 		// @todo Split this into single worker jobs
 		foreach ($recipients as $recipient) {
-			Logger::info('Send updated profile data for user ' . $uid . ' to contact ' . $recipient['id']);
-			self::buildAndTransmit($owner, $recipient, 'profile', $message);
+			if ((empty($recipient['gsid']) || GServer::isReachableById($recipient['gsid'])) && !Contact\User::isBlocked($recipient['id'], $uid)) {
+				Logger::info('Send updated profile data for user ' . $uid . ' to contact ' . $recipient['id']);
+				self::buildAndTransmit($owner, $recipient, 'profile', $message);
+			}
 		}
 	}
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -23,7 +23,6 @@ namespace Friendica\Util;
 
 use Friendica\Core\Hook;
 use Friendica\Core\Logger;
-use Friendica\Core\System;
 use Friendica\DI;
 use phpseclib3\Crypt\PublicKeyLoader;
 
@@ -42,7 +41,7 @@ class Crypto
 	public static function rsaSign($data, $key, $alg = 'sha256')
 	{
 		if (empty($key)) {
-			Logger::warning('Empty key parameter', ['callstack' => System::callstack()]);
+			Logger::warning('Empty key parameter');
 		}
 		openssl_sign($data, $sig, $key, (($alg == 'sha1') ? OPENSSL_ALGO_SHA1 : $alg));
 		return $sig;
@@ -58,7 +57,7 @@ class Crypto
 	public static function rsaVerify($data, $sig, $key, $alg = 'sha256')
 	{
 		if (empty($key)) {
-			Logger::warning('Empty key parameter', ['callstack' => System::callstack()]);
+			Logger::warning('Empty key parameter');
 		}
 		return openssl_verify($data, $sig, $key, (($alg == 'sha1') ? OPENSSL_ALGO_SHA1 : $alg));
 	}

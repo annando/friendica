@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -21,7 +21,6 @@
 
 namespace Friendica\Module\ActivityPub;
 
-use Friendica\Core\System;
 use Friendica\Model\User;
 use Friendica\Module\BaseApi;
 use Friendica\Protocol\ActivityPub;
@@ -36,7 +35,7 @@ class Outbox extends BaseApi
 	protected function rawContent(array $request = [])
 	{
 		if (empty($this->parameters['nickname'])) {
-			throw new \Friendica\Network\HTTPException\NotFoundException();
+			$this->jsonExit([], 'application/activity+json');
 		}
 
 		$owner = User::getOwnerDataByNick($this->parameters['nickname']);
@@ -53,12 +52,12 @@ class Outbox extends BaseApi
 
 		$outbox = ActivityPub\ClientToServer::getOutbox($owner, $uid, $page, $request['max_id'] ?? null, HTTPSignature::getSigner('', $_SERVER));
 
-		System::jsonExit($outbox, 'application/activity+json');
+		$this->jsonExit($outbox, 'application/activity+json');
 	}
 
 	protected function post(array $request = [])
 	{
-		self::checkAllowedScope(self::SCOPE_WRITE);
+		$this->checkAllowedScope(self::SCOPE_WRITE);
 		$uid      = self::getCurrentUserID();
 		$postdata = Network::postdata();
 
@@ -79,6 +78,6 @@ class Outbox extends BaseApi
 			throw new \Friendica\Network\HTTPException\BadRequestException();
 		}
 
-		System::jsonExit(ActivityPub\ClientToServer::processActivity($activity, $uid, self::getCurrentApplication() ?? []));
+		$this->jsonExit(ActivityPub\ClientToServer::processActivity($activity, $uid, self::getCurrentApplication() ?? []));
 	}
 }

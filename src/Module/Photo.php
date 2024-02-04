@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -77,7 +77,7 @@ class Photo extends BaseApi
 			throw new NotModifiedException();
 		}
 
-		Profile::addVisitorCookieForHTTPSigner();
+		Profile::addVisitorCookieForHTTPSigner($this->server);
 
 		$customsize = 0;
 		$square_resize = true;

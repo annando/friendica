@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -47,6 +47,6 @@ class Following extends BaseModule
 
 		$following = ActivityPub\Transmitter::getContacts($owner, [Contact::SHARING, Contact::FRIEND], 'following', $page);
 
-		System::jsonExit($following, 'application/activity+json');
+		$this->jsonExit($following, 'application/activity+json');
 	}
 }

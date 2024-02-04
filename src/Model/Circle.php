@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -169,16 +169,17 @@ class Circle
 	 *
 	 * Count unread items of each circle of the local user
 	 *
+	 * @param int $uid
 	 * @return array
 	 *    'id' => circle id
 	 *    'name' => circle name
 	 *    'count' => counted unseen circle items
 	 * @throws \Exception
 	 */
-	public static function countUnseen()
+	public static function countUnseen(int $uid)
 	{
 		$stmt = DBA::p("SELECT `circle`.`id`, `circle`.`name`,
-				(SELECT COUNT(*) FROM `post-user-view`
+				(SELECT COUNT(*) FROM `post-user`
 					WHERE `uid` = ?
 					AND `unseen`
 					AND `contact-id` IN
@@ -188,8 +189,8 @@ class Circle
 					) AS `count`
 				FROM `group` AS `circle`
 				WHERE `circle`.`uid` = ?;",
-			DI::userSession()->getLocalUserId(),
-			DI::userSession()->getLocalUserId()
+			$uid,
+			$uid
 		);
 
 		return DBA::toArray($stmt);
@@ -427,7 +428,7 @@ class Circle
 					'uid' => $uid,
 					'rel' => [Contact::FOLLOWER, Contact::FRIEND],
 					'network' => $networks,
-					'contact-type' => [Contact::TYPE_UNKNOWN, Contact::TYPE_PERSON],
+					'contact-type' => [Contact::TYPE_UNKNOWN, Contact::TYPE_PERSON, Contact::TYPE_NEWS, Contact::TYPE_ORGANISATION],
 					'archive' => false,
 					'pending' => false,
 					'blocked' => false,

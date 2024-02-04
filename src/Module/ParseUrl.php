@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -100,9 +100,9 @@ class ParseUrl extends BaseModule
 
 		if ($arr['text']) {
 			if ($format == 'json') {
-				System::jsonExit($arr['text']);
+				$this->jsonExit($arr['text']);
 			} else {
-				System::httpExit($arr['text']);
+				$this->httpExit($arr['text']);
 			}
 		}
 
@@ -133,9 +133,9 @@ class ParseUrl extends BaseModule
 				$ret['success'] = true;
 			}
 
-			System::jsonExit($ret);
+			$this->jsonExit($ret);
 		} else {
-			System::httpExit(BBCode::embedURL($url, empty($_GET['noAttachment']), $title, $description, $_GET['tags'] ?? ''));
+			$this->httpExit(BBCode::embedURL($url, empty($_GET['noAttachment']), $title, $description, $_GET['tags'] ?? ''));
 		}
 	}
 }

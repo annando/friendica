@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -612,6 +612,7 @@ class Image
 		$dest = imagecreatetruecolor($max, $max);
 		imagealphablending($dest, false);
 		imagesavealpha($dest, true);
+
 		if ($this->type=='image/png') {
 			imagefill($dest, 0, 0, imagecolorallocatealpha($dest, 0, 0, 0, 127)); // fill with alpha
 		}

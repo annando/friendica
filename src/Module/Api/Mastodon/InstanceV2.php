@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -54,6 +54,7 @@ class InstanceV2 extends BaseApi
 	private $contactHeader;
 
 	public function __construct(
+		\Friendica\Factory\Api\Mastodon\Error $errorFactory,
 		App $app,
 		L10n $l10n,
 		App\BaseURL $baseUrl,
@@ -66,7 +67,7 @@ class InstanceV2 extends BaseApi
 		array $server,
 		array $parameters = []
 	) {
-		parent::__construct($app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
+		parent::__construct($errorFactory, $app, $l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 
 		$this->database      = $database;
 		$this->config        = $config;
@@ -85,6 +86,7 @@ class InstanceV2 extends BaseApi
 		$domain               = $this->baseUrl->getHost();
 		$title                = $this->config->get('config', 'sitename');
 		$version              = '2.8.0 (compatible; Friendica ' . App::VERSION . ')';
+		$source_url           = 'https://git.friendi.ca/friendica/friendica';
 		$description          = $this->config->get('config', 'info');
 		$usage                = $this->buildUsageInfo();
 		$thumbnail            = new InstanceEntity\Thumbnail($this->baseUrl . $this->contactHeader->getMastodonBannerPath());
@@ -94,10 +96,11 @@ class InstanceV2 extends BaseApi
 		$contact              = $this->buildContactInfo();
 		$friendica_extensions = $this->buildFriendicaExtensionInfo();
 		$rules                = System::getRules();
-		System::jsonExit(new InstanceEntity(
+		$this->jsonExit(new InstanceEntity(
 			$domain,
 			$title,
 			$version,
+			$source_url,
 			$description,
 			$usage,
 			$thumbnail,
@@ -116,13 +119,21 @@ class InstanceV2 extends BaseApi
 			'config',
 			'api_import_size',
 			$this->config->get('config', 'max_import_size')
-		));
+		), 99, 23);
 
 		$image_size_limit = Strings::getBytesFromShorthand($this->config->get('system', 'maximagesize'));
+		$max_image_length = $this->config->get('system', 'max_image_length');
+		if ($max_image_length > 0) {
+			$image_matrix_limit = pow($max_image_length, 2);
+		} else {
+			$image_matrix_limit = 33177600; // 5760^2
+		}
 
 		return new InstanceEntity\Configuration(
 			$statuses_config,
-			new InstanceEntity\MediaAttachmentsConfig(Images::supportedTypes(), $image_size_limit),
+			new InstanceEntity\MediaAttachmentsConfig(array_keys(Images::supportedTypes()), $image_size_limit, $image_matrix_limit),
+			new InstanceEntity\Polls(),
+			new InstanceEntity\Accounts(),
 		);
 	}
 

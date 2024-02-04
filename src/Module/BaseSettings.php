@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright Copyright (C) 2010-2023, the Friendica project
+ * @copyright Copyright (C) 2010-2024, the Friendica project
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -119,6 +119,13 @@ class BaseSettings extends BaseModule
 			'url'       => 'settings/display',
 			'selected'  => static::class == Settings\Display::class ? 'active' : '',
 			'accesskey' => 'i',
+		];
+
+		$tabs[] = [
+			'label'     => $this->t('Channels'),
+			'url'       => 'settings/channels',
+			'selected'  => static::class == Settings\Channels::class ? 'active' : '',
+			'accesskey' => '',
 		];
 
 		$tabs[] = [
