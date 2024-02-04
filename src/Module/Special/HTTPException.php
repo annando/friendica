@@ -36,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class HTTPException
 {
-	/** @var Mode */
-	protected $mode;
 	/** @var L10n */
 	protected $l10n;
 	/** @var LoggerInterface */
@@ -53,7 +51,6 @@ class HTTPException
 
 	public function __construct(L10n $l10n, LoggerInterface $logger, App\Arguments $args, UserSession $session, App\Request $request, array $server = [])
 	{
-		$this->mode        = $mode;
 		$this->logger      = $logger;
 		$this->l10n        = $l10n;
 		$this->args        = $args;
