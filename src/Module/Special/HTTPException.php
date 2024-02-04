@@ -22,6 +22,7 @@
 namespace Friendica\Module\Special;
 
 use Friendica\App;
+use Friendica\App\Mode;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Model\UserSession;
@@ -36,6 +37,8 @@ use Psr\Log\LoggerInterface;
  */
 class HTTPException
 {
+	/** @var Mode */
+	protected $mode;
 	/** @var L10n */
 	protected $l10n;
 	/** @var LoggerInterface */
@@ -49,8 +52,9 @@ class HTTPException
 	/** @var string */
 	protected $requestId;
 
-	public function __construct(L10n $l10n, LoggerInterface $logger, App\Arguments $args, UserSession $session, App\Request $request, array $server = [])
+	public function __construct(Mode $mode, L10n $l10n, LoggerInterface $logger, App\Arguments $args, UserSession $session, App\Request $request, array $server = [])
 	{
+		$this->mode        = $mode;
 		$this->logger      = $logger;
 		$this->l10n        = $l10n;
 		$this->args        = $args;
