@@ -21,6 +21,7 @@
 
 namespace Friendica\Core;
 
+use Friendica\App;
 use Friendica\Core\Cache\Enum\Duration;
 use Friendica\Core\Worker\Entity\Process;
 use Friendica\Database\DBA;
@@ -333,7 +334,7 @@ class Worker
 		$mypid = getmypid();
 
 		// Quit when in maintenance
-		if (DI::config()->get('system', 'maintenance', false)) {
+		if (!DI::mode()->has(App\Mode::MAINTENANCEDISABLED) && ($queue['priority'] != self::PRIORITY_CRITICAL)) {
 			Logger::notice('Maintenance mode - quit process', ['pid' => $mypid]);
 			return false;
 		}
@@ -960,6 +961,11 @@ class Worker
 	 */
 	private static function nextPriority()
 	{
+		if (!DI::mode()->has(App\Mode::MAINTENANCEDISABLED)) {
+			Logger::notice('Maintenance mode - only fetch critical queue jobs');
+			return self::PRIORITY_CRITICAL;
+		}
+
 		$waiting = [];
 		$priorities = [self::PRIORITY_CRITICAL, self::PRIORITY_HIGH, self::PRIORITY_MEDIUM, self::PRIORITY_LOW, self::PRIORITY_NEGLIGIBLE];
 		foreach ($priorities as $priority) {
