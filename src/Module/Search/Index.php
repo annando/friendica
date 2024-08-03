@@ -45,7 +45,11 @@ class Index extends BaseSearch
 
 	protected function content(array $request = []): string
 	{
-		$search = (!empty($_GET['q']) ? trim(rawurldecode($_GET['q'])) : '');
+		if (!empty($request['tag'])) {
+			$search = '#' . $request['tag'];
+		} else {
+			$search = (!empty($request['q']) ? trim(rawurldecode($request['q'])) : '');
+		}
 
 		if (DI::config()->get('system', 'block_public') && !DI::userSession()->isAuthenticated()) {
 			throw new HTTPException\ForbiddenException(DI::l10n()->t('Public access denied.'));
