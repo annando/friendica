@@ -8,7 +8,6 @@
 namespace Friendica\Module\ActivityPub;
 
 use Friendica\Content\Text\BBCode;
-use Friendica\Core\System;
 use Friendica\DI;
 use Friendica\Model\User;
 use Friendica\Module\BaseApi;
@@ -39,6 +38,7 @@ class Whoami extends BaseApi
 		$data['alsoKnownAs']               = [];
 		$data['manuallyApprovesFollowers'] = in_array($owner['page-flags'], [User::PAGE_FLAGS_NORMAL, User::PAGE_FLAGS_PRVGROUP, User::PAGE_FLAGS_COMM_MAN]);
 		$data['discoverable']              = (bool)$owner['net-publish'];
+		$data['indexable']                 = (bool)$owner['net-publish'];
 		$data['tag']                       = [];
 
 		$data['icon'] = [

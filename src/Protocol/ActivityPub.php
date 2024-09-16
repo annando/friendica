@@ -68,6 +68,7 @@ class ActivityPub
 			'conversation' => 'ostatus:conversation',
 			'directMessage' => 'litepub:directMessage',
 			'discoverable' => 'toot:discoverable',
+			'indexable' => 'toot:indexable',
 			'PropertyValue' => 'schema:PropertyValue',
 			'value' => 'schema:value',
 		]
