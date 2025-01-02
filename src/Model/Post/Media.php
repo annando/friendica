@@ -1130,4 +1130,19 @@ class Media
 			(Proxy::getPixelsFromSize($size) ? Proxy::getPixelsFromSize($size) . '/' : '') .
 			$id;
 	}
+
+	/**
+	 * Fetch the uri-id of an attached uri-post for a given uri-id
+	 *
+	 * @param integer $uri_id Uri-Id of the post
+	 * @return integer uri-id of the first attached post
+	 */
+	public static function getActivityUriId(int $uri_id): int
+	{
+		$posts = self::getByURIId($uri_id, [self::ACTIVITY]);
+		if (!$posts) {
+			return 0;
+		}
+		return reset($posts)['media-uri-id'];
+	}
 }

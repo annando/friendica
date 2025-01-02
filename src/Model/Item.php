@@ -232,6 +232,14 @@ class Item
 
 				$content_fields = ['raw-body' => trim($fields['raw-body'] ?? $fields['body'])];
 
+				if ($item['origin'] && empty($item['quote-uri-id'])) {
+					$quote_id = Post\Media::getActivityUriId($item['uri-id']);
+					if (!empty($quote_id)) {
+						Logger::notice('Found attached post', ['id' => $quote_id, 'guid' => $item['guid'], 'uri-id' => $item['uri-id']]);
+						$content_fields['quote-uri-id'] = $quote_id;
+					}
+				}
+
 				// Remove all media attachments from the body and store them in the post-media table
 				// @todo On shared postings (Diaspora style and commented reshare) don't fetch content from the shared part
 				$content_fields['raw-body'] = Post\Media::insertFromBody($item['uri-id'], $content_fields['raw-body']);
@@ -1216,6 +1224,14 @@ class Item
 		// Filling item related side tables
 		if (!empty($item['attach'])) {
 			Post\Media::insertFromAttachment($item['uri-id'], $item['attach']);
+		}
+
+		if ($item['origin'] && empty($item['quote-uri-id'])) {
+			$quote_id = Post\Media::getActivityUriId($item['uri-id']);
+			if (!empty($quote_id)) {
+				Logger::notice('Found attached post', ['id' => $quote_id, 'guid' => $item['guid'], 'uri-id' => $item['uri-id']]);
+				$item['quote-uri-id'] = $quote_id;
+			}
 		}
 
 		if (empty($item['event-id'])) {
@@ -4242,9 +4258,10 @@ class Item
 	}
 
 	/**
-	 * Fetch the uri-id of a quote
+	 * Fetch the uri-id of a quoted post by searching for data in the body or attached media
 	 *
-	 * @param string $body
+	 * @param string $body   The body of the 
+	 * @param int    $uid    The id of the user
 	 * @return integer
 	 */
 	public static function getQuoteUriId(string $body, int $uid = 0): int
