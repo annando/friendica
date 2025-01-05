@@ -2031,7 +2031,13 @@ class Receiver
 		// Support for quoted posts (Pleroma, Fedibird and Misskey)
 		$object_data['quote-url'] = JsonLD::fetchElement($object, 'as:quoteUrl', '@id');
 		if (empty($object_data['quote-url'])) {
+			$object_data['quote-url'] = JsonLD::fetchElement($object, 'as:quoteUrl', '@value');
+		}
+		if (empty($object_data['quote-url'])) {
 			$object_data['quote-url'] = JsonLD::fetchElement($object, 'fedibird:quoteUri', '@id');
+		}
+		if (empty($object_data['quote-url'])) {
+			$object_data['quote-url'] = JsonLD::fetchElement($object, 'fedibird:quoteUri', '@value');
 		}
 		if (empty($object_data['quote-url'])) {
 			$object_data['quote-url'] = JsonLD::fetchElement($object, 'misskey:_misskey_quote', '@id');

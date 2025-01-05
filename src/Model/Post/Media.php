@@ -184,7 +184,7 @@ class Media
 		}
 
 		// Fetch the mimetype or size if missing.
-		if (Network::isValidHttpUrl($media['url']) && empty($media['mimetype']) && !in_array($media['type'], [self::IMAGE, self::HLS])) {
+		if (Network::isValidHttpUrl($media['url']) && (empty($media['mimetype']) || $media['type'] == self::HTML) && !in_array($media['type'], [self::IMAGE, self::HLS])) {
 			$timeout = DI::config()->get('system', 'xrd_timeout');
 			try {
 				$curlResult = DI::httpClient()->head($media['url'], [HttpClientOptions::ACCEPT_CONTENT => HttpClientAccept::AS_DEFAULT, HttpClientOptions::TIMEOUT => $timeout, HttpClientOptions::REQUEST => HttpClientRequest::CONTENTTYPE]);
@@ -194,8 +194,8 @@ class Media
 					$curlResult = DI::httpClient()->get($media['url'], HttpClientAccept::AS_DEFAULT, [HttpClientOptions::TIMEOUT => $timeout]);
 				}
 				if ($curlResult->isSuccess()) {
-					if (empty($media['mimetype'])) {
-						$media['mimetype'] = $curlResult->getContentType() ?? '';
+					if (!empty($curlResult->getContentType())) {
+						$media['mimetype'] = $curlResult->getContentType();
 					}
 					if (empty($media['size'])) {
 						$media['size'] = (int)($curlResult->getHeader('Content-Length')[0] ?? strlen($curlResult->getBodyString() ?? ''));
