@@ -476,6 +476,8 @@ class Photo
 			'backend-ref' => $backend_ref
 		];
 
+		$fields = DI::dbaDefinition()->truncateFieldsForTable('photo', $fields);
+
 		if (DBA::isResult($existing_photo)) {
 			$r = DBA::update('photo', $fields, ['id' => $existing_photo['id']]);
 		} else {
