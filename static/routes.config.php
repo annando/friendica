@@ -602,6 +602,8 @@ return [
 		'/{type:users}/{guid}' => [Module\Diaspora\Receive::class, [        R::POST]],
 	],
 
+	'/remote_follow/{nickname}' => [Module\Profile\RemoteFollow::class,  [R::GET, R::POST]],
+
 	'/security' => [
 		'/password_too_long' => [Module\Security\PasswordTooLong::class, [R::GET, R::POST]],
 	],
