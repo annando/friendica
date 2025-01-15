@@ -27,6 +27,7 @@ use Friendica\Network\HTTPException;
 use Friendica\Network\HTTPException\NotModifiedException;
 use Friendica\Object\Image;
 use Friendica\Security\OpenWebAuth;
+use Friendica\Util\DateTimeFormat;
 use Friendica\Util\Images;
 use Friendica\Util\ParseUrl;
 use Friendica\Util\Proxy;
@@ -293,7 +294,7 @@ class Photo extends BaseApi
 
 				return MPhoto::createPhotoForExternalResource($link['url'], (int)DI::userSession()->getLocalUserId(), $link['mimetype'] ?? '', $link['blurhash'] ?? '', $link['width'] ?? 0, $link['height'] ?? 0);
 			case 'contact':
-				$fields = ['uid', 'uri-id', 'url', 'nurl', 'avatar', 'photo', 'blurhash', 'xmpp', 'addr', 'network', 'failed', 'updated'];
+				$fields = ['uid', 'uri-id', 'url', 'nurl', 'avatar', 'photo', 'blurhash', 'xmpp', 'addr', 'network', 'failed', 'updated', 'next-update'];
 				$contact = Contact::getById($id, $fields);
 				if (empty($contact)) {
 					return false;
@@ -351,7 +352,7 @@ class Photo extends BaseApi
 					} else {
 						// Only update federated accounts that hadn't failed before and hadn't been updated recently
 						$update = in_array($contact['network'], Protocol::FEDERATED) && !$contact['failed']
-							&& ((time() - strtotime($contact['updated']) > 86400));
+							&& ($contact['next-update'] < DateTimeFormat::utcNow());
 						if ($update) {
 							$curlResult = DI::httpClient()->head($url, [HttpClientOptions::ACCEPT_CONTENT => HttpClientAccept::IMAGE, HttpClientOptions::REQUEST => HttpClientRequest::CONTENTTYPE]);
 							$update = !$curlResult->isSuccess() && ($curlResult->getReturnCode() == 404);
