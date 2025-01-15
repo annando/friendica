@@ -616,7 +616,7 @@ class HTTPSignature
 	 * @return string|null|false Signer
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
-	public static function getSigner(string $content, array $http_headers)
+	public static function getSigner(string $content, array $http_headers, bool $update = null)
 	{
 		if (empty($http_headers['HTTP_SIGNATURE'])) {
 			Logger::debug('No HTTP_SIGNATURE header');
@@ -706,7 +706,7 @@ class HTTPSignature
 			return false;
 		}
 
-		$key = self::fetchKey($sig_block['keyId'], $actor);
+		$key = self::fetchKey($sig_block['keyId'], $actor, $update);
 		if (empty($key)) {
 			Logger::info('Empty key');
 			return false;
@@ -814,11 +814,11 @@ class HTTPSignature
 	 * @return array with actor url and public key
 	 * @throws \Exception
 	 */
-	private static function fetchKey(string $id, string $actor): array
+	private static function fetchKey(string $id, string $actor, bool $update = null): array
 	{
 		$url = (strpos($id, '#') ? substr($id, 0, strpos($id, '#')) : $id);
 
-		$profile = APContact::getByURL($url);
+		$profile = APContact::getByURL($url, $update);
 		if (!empty($profile)) {
 			Logger::info('Taking key from id', ['id' => $id]);
 			return ['url' => $url, 'pubkey' => $profile['pubkey'], 'type' => $profile['type']];
