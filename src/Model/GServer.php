@@ -2492,10 +2492,6 @@ class GServer
 	 */
 	public static function discover()
 	{
-		if (!DI::config('system', 'discover_servers')) {
-			return;
-		}
-
 		// Update the server list
 		self::discoverFederation();
 

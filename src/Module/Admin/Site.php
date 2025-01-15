@@ -105,6 +105,7 @@ class Site extends BaseAdmin
 		$optimize_tables        = (!empty($_POST['optimize_tables'])        ? intval(trim($_POST['optimize_tables']))        : false);
 		$contact_discovery      = (!empty($_POST['contact_discovery'])      ? intval(trim($_POST['contact_discovery']))      : Contact\Relation::DISCOVERY_NONE);
 		$update_active_contacts = (!empty($_POST['update_active_contacts']) ? intval(trim($_POST['update_active_contacts'])) : false);
+		$update_known_contacts  = (!empty($_POST['update_known_contacts'])  ? intval(trim($_POST['update_known_contacts']))  : false);
 		$synchronize_directory  = (!empty($_POST['synchronize_directory'])  ? intval(trim($_POST['synchronize_directory']))  : false);
 		$poco_requery_days      = (!empty($_POST['poco_requery_days'])      ? intval(trim($_POST['poco_requery_days']))      : 7);
 		$poco_discovery         = (!empty($_POST['poco_discovery'])         ? intval(trim($_POST['poco_discovery']))         : false);
@@ -178,6 +179,7 @@ class Site extends BaseAdmin
 		$transactionConfig->set('system', 'optimize_tables'        , $optimize_tables);
 		$transactionConfig->set('system', 'contact_discovery'      , $contact_discovery);
 		$transactionConfig->set('system', 'update_active_contacts' , $update_active_contacts);
+		$transactionConfig->set('system', 'update_known_contacts'  , $update_known_contacts);
 		$transactionConfig->set('system', 'synchronize_directory'  , $synchronize_directory);
 		$transactionConfig->set('system', 'poco_requery_days'      , $poco_requery_days);
 		$transactionConfig->set('system', 'poco_discovery'         , $poco_discovery);
@@ -546,6 +548,7 @@ class Site extends BaseAdmin
 				'<li>' . DI::l10n()->t('Interactors - contacts of our local contacts and contacts who interacted on locally visible postings are discovered for their followers/followings.') . '</li></ul>',
 				$discovery_choices],
 			'$update_active_contacts' => ['update_active_contacts', DI::l10n()->t('Only update contacts/servers with local data'), DI::config()->get('system', 'update_active_contacts'), DI::l10n()->t('If enabled, the system will only look for changes in contacts and servers that engaged on this system by either being in a contact list of a user or when posts or comments exists from the contact on this system.')],	
+			'$update_known_contacts'  => ['update_known_contacts', DI::l10n()->t('Only update contacts with relations'), DI::config()->get('system', 'update_known_contacts'), DI::l10n()->t('If enabled, the system will only look for changes in contacts that are in a contact list of a user on this system.')],	
 			'$synchronize_directory'  => ['synchronize_directory', DI::l10n()->t('Synchronize the contacts with the directory server'), DI::config()->get('system', 'synchronize_directory'), DI::l10n()->t('if enabled, the system will check periodically for new contacts on the defined directory server.')],
 
 			'$poco_discovery'         => ['poco_discovery', DI::l10n()->t('Discover contacts from other servers'), DI::config()->get('system', 'poco_discovery'), DI::l10n()->t('Periodically query other servers for contacts and servers that they know of. The system queries Friendica, Mastodon and Hubzilla servers. Keep it deactivated on small machines to decrease the database size and load.')],

@@ -257,6 +257,10 @@ return [
 		// When activated, only public contacts will be activated regularly that are used for example in items or tags.
 		'update_active_contacts' => false,
 
+		// update_known_contacts (Boolean)
+		// When activated, only public contacts will be activated regularly that are in a contact list of a local user.
+		'update_known_contacts' => false,
+
 		// url (String)
 		// The fully-qualified URL of this Friendica node.
 		// Used by the worker in a non-HTTP execution environment.

@@ -362,10 +362,8 @@ class Contact
 			return [];
 		}
 
-		$background_update = DI::config()->get('system', 'update_active_contacts') ? $contact['local-data'] : true;
-
 		// Update the contact in the background if needed
-		if ($background_update && !self::isLocal($url) && Protocol::supportsProbe($contact['network']) && ($contact['next-update'] < DateTimeFormat::utcNow())) {
+		if (UpdateContact::isUpdatable($contact['id'])) {
 			try {
 				UpdateContact::add(['priority' => Worker::PRIORITY_LOW, 'dont_fork' => true], $contact['id']);
 			} catch (\InvalidArgumentException $e) {
@@ -535,6 +533,17 @@ class Contact
 	public static function hasFollowers(int $cid): bool
 	{
 		return DBA::exists('account-user-view', ["`pid` = ? AND `uid` != ? AND `rel` IN (?, ?)", $cid, 0, self::SHARING, self::FRIEND]);
+	}
+
+	/**
+	 * Checks if the provided public contact id has got relations with someone on this system
+	 *
+	 * @param integer $cid Public Contact Id
+	 * @return boolean Contact has followers or sharers on this system
+	 */
+	public static function hasRelations(int $cid): bool
+	{
+		return DBA::exists('account-user-view', ["`pid` = ? AND `uid` != ? AND `rel` IN (?, ?, ?)", $cid, 0, self::FOLLOWER, self::SHARING, self::FRIEND]);
 	}
 
 	/**
@@ -1318,9 +1327,7 @@ class Contact
 		if (!empty($contact)) {
 			$contact_id = $contact['id'];
 
-			$background_update = DI::config()->get('system', 'update_active_contacts') ? $contact['local-data'] : true;
-
-			if ($background_update && !self::isLocal($url) && Protocol::supportsProbe($contact['network']) && ($contact['next-update'] < DateTimeFormat::utcNow())) {
+			if (UpdateContact::isUpdatable($contact['id'])) {
 				try {
 					UpdateContact::add(['priority' => Worker::PRIORITY_LOW, 'dont_fork' => true], $contact['id']);
 				} catch (\InvalidArgumentException $e) {

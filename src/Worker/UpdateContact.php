@@ -8,9 +8,12 @@
 namespace Friendica\Worker;
 
 use Friendica\Core\Logger;
+use Friendica\Core\Protocol;
 use Friendica\Core\Worker;
+use Friendica\DI;
 use Friendica\Model\Contact;
 use Friendica\Network\HTTPException\InternalServerErrorException;
+use Friendica\Util\DateTimeFormat;
 
 class UpdateContact
 {
@@ -51,6 +54,41 @@ class UpdateContact
 			return 0;
 		}
 
+		Logger::debug('Update contact', ['id' => $contact_id]);
 		return Worker::add($run_parameters, 'UpdateContact', $contact_id);
+	}
+
+	public static function isUpdatable(int $contact_id): bool
+	{
+		$contact = Contact::selectFirst(['next-update', 'local-data', 'url', 'network', 'uid'], ['id' => $contact_id]);
+		if (empty($contact)) {
+			return false;
+		}
+
+		if ($contact['next-update'] > DateTimeFormat::utcNow()) {
+			return false;
+		}
+
+		if (DI::config()->get('system', 'update_known_contacts') && ($contact['uid'] == 0) && !Contact::hasRelations($contact_id)) {
+			Logger::debug('No local relations, contact will not be updated', ['id' => $contact_id, 'url' => $contact['url'], 'network' => $contact['network']]);
+			return false;
+		}
+
+		if (DI::config()->get('system', 'update_active_contacts') && $contact['local-data']) {
+			Logger::debug('No local data, contact will not be updated', ['id' => $contact_id, 'url' => $contact['url'], 'network' => $contact['network']]);
+			return false;
+		}
+
+		if (Contact::isLocal($contact['url'])) {
+			Logger::debug('Local contact will not be updated', ['id' => $contact_id, 'url' => $contact['url'], 'network' => $contact['network']]);
+			return false;
+		}
+
+		if (!Protocol::supportsProbe($contact['network'])) {
+			Logger::debug('Contact does not support probe, it will not be updated', ['id' => $contact_id, 'url' => $contact['url'], 'network' => $contact['network']]);
+			return false;
+		}
+
+		return true;
 	}
 }
