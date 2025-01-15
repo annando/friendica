@@ -352,6 +352,10 @@ class Processor
 			'source'        => json_encode($data),
 		];
 
+		if ((time() - strtotime($item['created'])) > 600) {
+			$item['received'] = $item['created'];
+		}
+
 		if ($this->postExists($item['uri'], [$uid])) {
 			$this->logger->info('Post already exists for user', ['uri' => $item['uri'], 'uid' => $uid]);
 			return [];
