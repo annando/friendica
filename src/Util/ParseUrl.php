@@ -455,7 +455,8 @@ class ParseUrl
 		$list = $xpath->query("//script[@type='application/ld+json']");
 		foreach ($list as $node) {
 			if (!empty($node->nodeValue)) {
-				if ($jsonld = json_decode($node->nodeValue, true)) {
+				$jsonld = json_decode($node->nodeValue, true);
+				if (is_array($jsonld)) {
 					$siteinfo = self::parseParts($siteinfo, $jsonld);
 				}
 			}
