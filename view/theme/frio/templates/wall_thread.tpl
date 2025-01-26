@@ -265,7 +265,7 @@ as the value of $top_child_total (this is done at the end of this file)
 		<div class="clearfix"></div>
 
 		{{* Insert Line to separate item header and item content visually *}}
-		{{if $item.thread_level==1}}<span aria-hidden="true"><hr /></div>{{/if}}
+		{{if $item.thread_level==1}}<span aria-hidden="true"><hr /></span>{{/if}}
 
 		{{* item content *}}
 		<div class="wall-item-content {{$item.type}}" id="wall-item-content-{{$item.id}}">
