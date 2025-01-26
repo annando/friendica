@@ -388,7 +388,7 @@ class Contact extends BaseModule
 		];
 
 		$tabs_tpl = Renderer::getMarkupTemplate('common_tabs.tpl');
-		$tabs_html = Renderer::replaceMacros($tabs_tpl, ['$tabs' => $tabs]);
+		$tabs_html = Renderer::replaceMacros($tabs_tpl, ['$tabs' => $tabs, '$more' => DI::l10n()->t('More')]);
 
 		switch ($rel) {
 			case 'followers':
@@ -535,7 +535,7 @@ class Contact extends BaseModule
 		}
 
 		$tab_tpl = Renderer::getMarkupTemplate('common_tabs.tpl');
-		$tab_str = Renderer::replaceMacros($tab_tpl, ['$tabs' => $tabs]);
+		$tab_str = Renderer::replaceMacros($tab_tpl, ['$tabs' => $tabs, '$more' => DI::l10n()->t('More')]);
 
 		return $tab_str;
 	}

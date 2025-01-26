@@ -138,7 +138,7 @@ as the value of $top_child_total (this is done at the end of this file)
 			</div>
 		{{if $item.thread_level==1}}
 			<div class="hidden-sm hidden-xs media-body"><!-- <= For computer -->
-				<h4 class="media-heading">
+				<h1 class="media-heading">
 					<a href="{{$item.profile_url}}" title="{{$item.linktitle}}" class="wall-item-name-link userinfo hover-card">
 						<span class="wall-item-name {{$item.sparkle}}">{{$item.name}}</span>
 					</a>
@@ -148,7 +148,7 @@ as the value of $top_child_total (this is done at the end of this file)
 						<span class="wall-item-name {{$item.osparkle}}" id="wall-item-ownername-{{$item.id}}">{{$item.owner_name}}</span>
 					</a>
 				{{/if}}
-				</h4>
+				</h1>
 
 				<div class="additional-info text-muted">
 					<div id="wall-item-ago-{{$item.id}}" class="wall-item-ago">
@@ -189,7 +189,7 @@ as the value of $top_child_total (this is done at the end of this file)
 
 			{{* contact info header for smartphones *}}
 			<div class="contact-info-xs hidden-lg hidden-md"><!-- <= For smartphone (responsive) -->
-				<h5 class="media-heading">
+				<h2 class="media-heading">
 					<a href="{{$item.profile_url}}" title="{{$item.linktitle}}" class="wall-item-name-link userinfo hover-card"><span>{{$item.name}}</span></a>
 					<p class="text-muted">
 						<small>
@@ -214,15 +214,15 @@ as the value of $top_child_total (this is done at the end of this file)
 							{{/if}}
 						</small>
 					</p>
-				</h5>
+				</h2>
 			</div>
 		{{else}} {{* End of if $item.thread_level == 1 *}}
 			{{* contact info header for comments *}}
 			<div class="contact-info-comment">
-				<h5 class="media-heading">
+				<h2 class="media-heading">
 					<a href="{{$item.profile_url}}" title="{{$item.linktitle}}" class="wall-item-name-link userinfo hover-card"><span class="fakelink">{{$item.name}}</span></a>
 					<span class="text-muted">
-				</h5>
+				</h2>
 				<small>
 					{{if $item.parentguid}}
 						<span class="hidden-xs hidden-sm">
@@ -270,12 +270,12 @@ as the value of $top_child_total (this is done at the end of this file)
 		{{* item content *}}
 		<div class="wall-item-content {{$item.type}}" id="wall-item-content-{{$item.id}}">
 			{{if $item.title}}
-			<span class="wall-item-title" id="wall-item-title-{{$item.id}}"><h4 class="media-heading" dir="auto"><a href="{{$item.plink.href}}" class="{{$item.sparkle}} p-name" target="_blank">{{$item.title}}</a></h4><br /></span>
+			<span class="wall-item-title" id="wall-item-title-{{$item.id}}"><h3 class="media-heading" dir="auto"><a href="{{$item.plink.href}}" class="{{$item.sparkle}} p-name" target="_blank">{{$item.title}}</a></h3><br /></span>
 			{{/if}}
 			{{if $item.summary}}
 			<summary class="wall-item-summary" id="wall-item-summary-{{$item.id}}">{{$item.summary}}</summary>
 			{{/if}}
-			<div class="wall-item-body e-content {{if !$item.title}}p-name{{/if}}" id="wall-item-body-{{$item.id}}" dir="auto">{{$item.body_html nofilter}}</div>
+			<div class="wall-item-body e-content {{if !$item.title}}p-name{{/if}}" id="wall-item-body-{{$item.id}}" dir="auto" lang="{{$item.lang}}">{{$item.body_html nofilter}}</div>
 		</div>
 
 		<!-- TODO -->

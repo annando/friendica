@@ -135,6 +135,6 @@ class BaseProfile extends BaseModule
 
 		$tpl = Renderer::getMarkupTemplate('common_tabs.tpl');
 
-		return Renderer::replaceMacros($tpl, ['$tabs' => $arr['tabs']]);
+		return Renderer::replaceMacros($tpl, ['$tabs' => $arr['tabs'], '$more' => DI::l10n()->t('More')]);
 	}
 }

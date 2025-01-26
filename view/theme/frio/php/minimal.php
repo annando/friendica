@@ -5,6 +5,9 @@
  *
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
+use Friendica\DI;
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -27,7 +30,7 @@
 		<div class="modal-dialog modal-full-screen">
 			<div class="modal-content">
 				<div id="modal-header" class="modal-header">
-					<button id="modal-close" type="button" class="close" data-dismiss="modal">
+					<button id="modal-close" type="button" class="close" data-dismiss="modal" title="<?php echo DI::l10n()->t('Close'); ?>">
 						&times;
 					</button>
 					<h4 id="modal-title" class="modal-title"></h4>

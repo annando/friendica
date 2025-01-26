@@ -88,7 +88,7 @@ class Community extends Timeline
 		if (!$this->raw) {
 			$tabs    = $this->getTabArray($this->community->getTimelines($this->session->isAuthenticated()), 'community');
 			$tab_tpl = Renderer::getMarkupTemplate('common_tabs.tpl');
-			$o .= Renderer::replaceMacros($tab_tpl, ['$tabs' => $tabs]);
+			$o .= Renderer::replaceMacros($tab_tpl, ['$tabs' => $tabs, '$more' => $this->l10n->t('More')]);
 
 			Nav::setSelected('community');
 

@@ -95,7 +95,7 @@ class Channel extends Timeline
 			$tabs = array_merge($tabs, $this->getTabArray($this->community->getTimelines(true), 'channel'));
 
 			$tab_tpl = Renderer::getMarkupTemplate('common_tabs.tpl');
-			$o .= Renderer::replaceMacros($tab_tpl, ['$tabs' => $tabs]);
+			$o .= Renderer::replaceMacros($tab_tpl, ['$tabs' => $tabs, '$more' => $this->l10n->t('More')]);
 
 			Nav::setSelected('channel');
 
