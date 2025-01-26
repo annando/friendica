@@ -163,14 +163,14 @@ as the value of $top_child_total (this is done at the end of this file)
 								{{include file="sub/direction.tpl" direction=$item.direction}}
 							{{/if}}
 							{{if $item.pinned}}
-								&bull; <i class="fa fa-thumb-tack" aria-hidden="true" title="{{$item.pinned}}"></i>
+								<span role="presentation" class="separator">&bull;</span> <i class="fa fa-thumb-tack" aria-hidden="true" title="{{$item.pinned}}"></i>
 								<span class="sr-only">{{$item.pinned}}</span>
 							{{/if}}
 							{{if $item.connector}}
-								&bull;
+								<span role="presentation" class="separator">&bull;</span>
 								<small><i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i></small>
 							{{else}}
-								&bull;
+								<span role="presentation" class="separator">&bull;</span>
 								<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
 									<small><i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i></small>
 								</span>
@@ -204,10 +204,10 @@ as the value of $top_child_total (this is done at the end of this file)
 								{{include file="sub/direction.tpl" direction=$item.direction}}
 							{{/if}}
 							{{if $item.connector}}
-								&bull;
+								<span role="presentation" class="separator">&bull;</span>
 								<small><i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i></small>
 							{{else}}
-								&bull;
+								<span role="presentation" class="separator">&bull;</span>
 								<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
 								<i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i>
 								</span>
@@ -248,11 +248,11 @@ as the value of $top_child_total (this is done at the end of this file)
 						{{include file="sub/direction.tpl" direction=$item.direction}}
 					{{/if}}
 					{{if $item.connector}}
-						&bull;
+						<span role="presentation" class="separator">&bull;</span>
 						<small><i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i></small>
 					{{else}}
 						<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
-							&bull;
+							<span role="presentation" class="separator">&bull;</span>
 							<small><i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i></small>
 						</span>
 					{{/if}}
