@@ -69,7 +69,7 @@
 									<time class="time" title="{{$item.localtime}}" data-toggle="tooltip" datetime="{{$item.utc}}">{{$item.ago}}</time>
 								</a>
 								{{if $item.pinned}}
-									<span role="presentation" class="separator">&bull;</span> <i class="fa fa-thumb-tack" aria-hidden="true" title="{{$item.pinned}}"></i>
+									<span aria-hidden="true">&bull;</span> <i class="fa fa-thumb-tack" aria-hidden="true" title="{{$item.pinned}}"></i>
 									<span class="sr-only">{{$item.pinned}}</span>
 								{{/if}}
 							</small>
