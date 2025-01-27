@@ -17,11 +17,11 @@ function showHideDates() {
 }
 </script>
 
-<span id="datebrowse-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('datebrowse-sidebar', 'datebrowse-sidebar-inflated');">
+<span id="datebrowse-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('datebrowse-sidebar', 'datebrowse-sidebar-inflated');" aria-expanded="false">
 	<h3>{{$title}}</h3>
 </span>
 <div id="datebrowse-sidebar" class="widget">
-	<span class="fakelink" onclick="openCloseWidget('datebrowse-sidebar', 'datebrowse-sidebar-inflated');">
+	<span class="fakelink" onclick="openCloseWidget('datebrowse-sidebar', 'datebrowse-sidebar-inflated');" aria-expanded="true">
 		<h3>{{$title}}</h3>
 	</span>
 	<ul id="posted-date-selector" class="datebrowse-ul">

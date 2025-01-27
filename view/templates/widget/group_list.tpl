@@ -18,19 +18,19 @@ function showHideGroupList() {
 }
 </script>
 <span id="group-list-sidebar-frame">
-<span id="group-list-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('group-list-sidebar', 'group-list-sidebar-inflated');">
+<span id="group-list-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('group-list-sidebar', 'group-list-sidebar-inflated');" aria-expanded="false">
 	<h3>{{$title}}</h3>
 </span>
 <div id="group-list-sidebar" class="widget">
 <div id="sidebar-group-header" class="sidebar-widget-header">
-	<span class="fakelink" onclick="openCloseWidget('group-list-sidebar', 'group-list-sidebar-inflated');">
+	<span class="fakelink" onclick="openCloseWidget('group-list-sidebar', 'group-list-sidebar-inflated');" aria-expanded="true">
 		<h3>{{$title}}</h3>
 	</span>
 	<a class="group-new-tool pull-right widget-action faded-icon" id="sidebar-new-group" href="{{$new_group_page}}" data-toggle="tooltip" title="{{$create_new_group}}">
 			<i class="fa fa-plus" aria-hidden="true"></i>
 		</a>
 	</div>
-	<div id="sidebar-group-list" class="sidebar-widget-list">
+	<nav id="sidebar-group-list" class="sidebar-widget-list">
 		{{* The list of available groups *}}
 	<ul id="group-list-sidebar-ul" role="menu">
 		{{foreach $groups as $group}}
@@ -59,7 +59,7 @@ function showHideGroupList() {
 		<li onclick="showHideGroupList(); return false;" id="group-widget-collapse" class="group-widget-link fakelink tool">{{$showmore}}</li>
 		{{/if}}
 	</ul>
-</div>
+</nav>
 </div>
 </span>
 <script>

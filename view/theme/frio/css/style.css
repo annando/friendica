@@ -1313,13 +1313,13 @@ aside #follow-sidebar .form-group-search .form-button-search {
 	padding: 2px 8px;
 }
 
-div#sidebar-circle-header h3,
-div#sidebar-group-header h3 {
+nav#sidebar-circle-header h3,
+nav#sidebar-group-header h3 {
 	float: left;
 }
 
-div#sidebar-circle-list,
-div#sidebar-group-list {
+nav#sidebar-circle-list,
+nav#sidebar-group-list {
 	clear: both;
 }
 

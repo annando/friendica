@@ -4,11 +4,11 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<span id="tagblock-inflated" class="widget inflated fakelink" onclick="openCloseWidget('tagblock', 'tagblock-inflated');">
+<span id="tagblock-inflated" class="widget inflated fakelink" onclick="openCloseWidget('tagblock', 'tagblock-inflated');" aria-expanded="false">
 	<h3>{{$title}}</h3>
 </span>
 <div id="tagblock" class="tagblock widget">
-	<span class="fakelink" onclick="openCloseWidget('tagblock', 'tagblock-inflated');">
+	<span class="fakelink" onclick="openCloseWidget('tagblock', 'tagblock-inflated');" aria-expanded="true">
 		<h3>{{$title}}</h3>
         </span>
 

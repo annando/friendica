@@ -4,13 +4,14 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<span id="sidebar-accounts-inflated" class="widget inflated fakelink" onclick="openCloseWidget('sidebar-accounts', 'sidebar-accounts-inflated');">
+<span id="sidebar-accounts-inflated" class="widget inflated fakelink" onclick="openCloseWidget('sidebar-accounts', 'sidebar-accounts-inflated');" aria-expanded="false">
 	<h3>{{$title}}</h3>
 </span>
 <div id="sidebar-accounts" class="widget">
-	<span class="fakelink" onclick="openCloseWidget('sidebar-accounts', 'sidebar-accounts-inflated');">
+	<span class="fakelink" onclick="openCloseWidget('sidebar-accounts', 'sidebar-accounts-inflated');" aria-expanded="true">
 		<h3>{{$title}}</h3>
 	</span>
+	<nav>
 	<ul class="sidebar-accounts-ul">
 		<li role="menuitem" class="sidebar-accounts-li{{if !$accounttype}} selected{{/if}}"><a href="{{$content}}">{{$all}}</a></li>
 		<li role="menuitem" class="sidebar-accounts-li{{if $accounttype == 'person'}} selected{{/if}}"><a href="{{$content}}/person">{{$person}}</a></li>
@@ -18,6 +19,7 @@
 		<li role="menuitem" class="sidebar-accounts-li{{if $accounttype == 'news'}} selected{{/if}}"><a href="{{$content}}/news">{{$news}}</a></li>
 		<li role="menuitem" class="sidebar-accounts-li{{if $accounttype == 'community'}} selected{{/if}}"><a href="{{$content}}/community">{{$community}}</a></li>
 	</ul>
+	</nav>
 </div>
 <script>
 initWidget('sidebar-accounts', 'sidebar-accounts-inflated');

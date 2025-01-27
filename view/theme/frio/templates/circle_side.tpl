@@ -4,12 +4,12 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<span id="circle-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('circle-sidebar', 'circle-sidebar-inflated');">
+<span id="circle-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('circle-sidebar', 'circle-sidebar-inflated');" aria-expanded="false">
         <h3>{{$title}}</h3>
 </span>
 <div class="widget" id="circle-sidebar">
 	<div id="sidebar-circle-header" class="sidebar-widget-header">
-		<span class="fakelink" onclick="openCloseWidget('circle-sidebar', 'circle-sidebar-inflated');">
+		<span class="fakelink" onclick="openCloseWidget('circle-sidebar', 'circle-sidebar-inflated');" aria-expanded="true">
 			<h3>{{$title}}</h3>
 		</span>
 		{{if ! $new_circle}}
@@ -28,7 +28,7 @@
 		</form>
 		{{/if}}
 	</div>
-	<div id="sidebar-circle-list" class="sidebar-widget-list">
+	<nav id="sidebar-circle-list" class="sidebar-widget-list">
 		{{* The list of available circles *}}
 		<ul role="menu" id="sidebar-circle-ul">
 			{{foreach $circles as $circle}}
@@ -60,7 +60,7 @@
 			{{if $uncircled}}<li class="{{if $uncircled_selected}}selected{{/if}} sidebar-circle-li" id="sidebar-uncircled"><a href="nocircle">{{$uncircled}}</a></li>{{/if}}
 		</ul>
 	</div>
-</div>
+</nav>
 <script>
 initWidget('circle-sidebar', 'circle-sidebar-inflated');
 </script>

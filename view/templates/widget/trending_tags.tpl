@@ -4,13 +4,14 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<span id="trending-tags-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('trending-tags-sidebar', 'trending-tags-sidebar-inflated');">
+<span id="trending-tags-sidebar-inflated" class="widget inflated fakelink" onclick="openCloseWidget('trending-tags-sidebar', 'trending-tags-sidebar-inflated');" aria-expanded="false">
 	<h3>{{$title}}</h3>
 </span>
 <div id="trending-tags-sidebar" class="widget">
-	<span class="fakelink" onclick="openCloseWidget('trending-tags-sidebar', 'trending-tags-sidebar-inflated');">
+	<span class="fakelink" onclick="openCloseWidget('trending-tags-sidebar', 'trending-tags-sidebar-inflated');" aria-expanded="true">
 		<h3>{{$title}}</h3>
 	</span>
+	<nav>
 	<ul id="tags-list" style="list-style-type: none; padding: 0; margin: 0;">
 	{{section name=ol loop=$tags max=10}}
 		<li style="margin-bottom: 5px;">
@@ -20,6 +21,7 @@
 		</li>
 	{{/section}}
 	</ul>
+	</nav>
 	{{if $tags|count > 10}}
 	<div style="text-align: left; margin-top: 10px;">
 		<a href="#"
