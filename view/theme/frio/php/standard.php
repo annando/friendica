@@ -45,7 +45,7 @@ $frio = 'view/theme/frio';
 						'; include('includes/photo_side.php'); echo'
 					</aside>
 
-					<div class="col-lg-8 col-md-8 col-sm-12 col-xs-12" id="content">
+					<div class="col-lg-8 col-md-8 col-sm-12 col-xs-12" id="content" tabindex="0">
 						<section class="sectiontop">
 								<div class="panel ' . DI::args()->get(0, 'generic') . '-content-wrapper">
 									<div class="panel-body">';

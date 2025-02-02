@@ -112,7 +112,7 @@ $is_singleuser_class = $is_singleuser ? "is-singleuser" : "is-not-singleuser";
 						echo '
 					</aside>
 
-					<div class="col-lg-7 col-md-7 col-sm-12 col-xs-12" id="content">
+					<div class="col-lg-7 col-md-7 col-sm-12 col-xs-12" id="content" tabindex="0">
 						<section class="sectiontop ';
 							echo $page['section'] ?? '';
 							echo '-content-wrapper">';
@@ -126,7 +126,7 @@ $is_singleuser_class = $is_singleuser ? "is-singleuser" : "is-not-singleuser";
 						';
 				} else {
 					echo '
-					<section class="col-lg-12 col-md-12 col-sm-12 col-xs-12" id="content" style="margin-top:50px;">';
+					<section class="col-lg-12 col-md-12 col-sm-12 col-xs-12" id="content" tabindex="0" style="margin-top:50px;">';
 						if (!empty($page['content'])) {
 							echo $page['content'];
 						}
