@@ -152,30 +152,28 @@ as the value of $top_child_total (this is done at the end of this file)
 
 				<div class="additional-info text-muted">
 					<div id="wall-item-ago-{{$item.id}}" class="wall-item-ago">
-						<small>
-							<a href="{{$item.plink.orig}}">
-								<time class="time dt-published" title="{{$item.localtime}}" data-toggle="tooltip" datetime="{{$item.utc}}">{{$item.ago}}</time>
-							</a>
-							{{if $item.owner_self}}
-								{{include file="sub/delivery_count.tpl" delivery=$item.delivery}}
-							{{/if}}
-							{{if $item.direction}}
-								{{include file="sub/direction.tpl" direction=$item.direction}}
-							{{/if}}
-							{{if $item.pinned}}
-								<span aria-hidden="true">&bull;</span> <i class="fa fa-thumb-tack" aria-hidden="true" title="{{$item.pinned}}"></i>
-								<span class="sr-only">{{$item.pinned}}</span>
-							{{/if}}
-							{{if $item.connector}}
-								<span aria-hidden="true">&bull;</span>
-								<small><i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i></small>
-							{{else}}
-								<span aria-hidden="true">&bull;</span>
-								<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
-									<small><i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i></small>
-								</span>
-							{{/if}}
-						</small>
+						<a href="{{$item.plink.orig}}">
+							<time class="time dt-published" title="{{$item.localtime}}" data-toggle="tooltip" datetime="{{$item.utc}}">{{$item.ago}}</time>
+						</a>
+						{{if $item.owner_self}}
+							{{include file="sub/delivery_count.tpl" delivery=$item.delivery}}
+						{{/if}}
+						{{if $item.direction}}
+							{{include file="sub/direction.tpl" direction=$item.direction}}
+						{{/if}}
+						{{if $item.pinned}}
+							<span aria-hidden="true">&bull;</span> <i class="fa fa-thumb-tack" aria-hidden="true" title="{{$item.pinned}}"></i>
+							<span class="sr-only">{{$item.pinned}}</span>
+						{{/if}}
+						{{if $item.connector}}
+							<span aria-hidden="true">&bull;</span>
+							<i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i>
+						{{else}}
+							<span aria-hidden="true">&bull;</span>
+							<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
+								<i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i>
+							</span>
+						{{/if}}
 					</div>
 
 					{{if $item.location_html}}
@@ -205,7 +203,7 @@ as the value of $top_child_total (this is done at the end of this file)
 							{{/if}}
 							{{if $item.connector}}
 								<span aria-hidden="true">&bull;</span>
-								<small><i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i></small>
+								<i class="fa fa-plug" title="{{$item.connector}}"></i>
 							{{else}}
 								<span aria-hidden="true">&bull;</span>
 								<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
@@ -249,11 +247,11 @@ as the value of $top_child_total (this is done at the end of this file)
 					{{/if}}
 					{{if $item.connector}}
 						<span aria-hidden="true">&bull;</span>
-						<small><i class="fa fa-plug" title="{{$item.connector}}" aria-hidden="true"></i></small>
+						<i class="fa fa-plug" title="{{$item.connector}}"></i>
 					{{else}}
 						<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
 							<span aria-hidden="true">&bull;</span>
-							<small><i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i></small>
+							<i class="fa {{if $item.private == 1}}fa-lock{{elseif $item.private == 0}}fa-globe{{else}}fa-low-vision{{/if}}" aria-hidden="true"></i>
 						</span>
 					{{/if}}
 				</small>
@@ -502,7 +500,7 @@ as the value of $top_child_total (this is done at the end of this file)
 			</ul>
 		</span>
 		{{if $item.drop.pagedrop}}
-		<span class="pull-right checkbox">
+		<span class="pull-right checkbox" aria-hidden="true">
 			{{if $item.drop}}
 				<input type="checkbox" title="{{$item.drop.select}}" name="itemselected[]" id="checkbox-{{$item.id}}" class="item-select" value="{{$item.id}}" />
 				<label for="checkbox-{{$item.id}}"></label>

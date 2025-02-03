@@ -53,6 +53,9 @@
 					{{* Left section of the NavBar with navigation shortcuts/icons *}}
 					<ul class="nav navbar-left">
 						<li class="sr-only">
+							<button class="sr-only" onclick="document.getElementById('content').scrollIntoView(); document.getElementById('content').focus();">{{$skip}}</button>
+						</li>
+						<li class="sr-only">
 							<a class="sr-only" href="{{$baseurl}}">{{$home}}</a>
 						</li>
 						{{if $nav.network}}
