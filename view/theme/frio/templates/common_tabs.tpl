@@ -4,7 +4,7 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<div class="tabbar-wrapper" role="menubar" >
+<nav class="tabbar-wrapper" role="menubar">
 	{{* Tab navigation bar for tablets and computer *}}
 	<ul class="tabbar list-inline visible-lg visible-md visible-sm hidden-xs">
 		{{* The normal tabbar *}}
@@ -75,4 +75,4 @@
 			</ul>
 		</li>
 	</ul>
-</div>
+</nav>

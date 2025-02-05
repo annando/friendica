@@ -7,7 +7,7 @@
 <script type="text/javascript">
 	// update pending count //
 	$(function(){
-		$("nav").bind('nav-update', function(e,data){
+		$('#topbar-first').bind('nav-update', function(e,data){
 			var elm = $('#pending-update');
 			var register = parseInt($(data).find('register').text());
 			if (register > 0) {
@@ -34,8 +34,8 @@
 	</ul>
 
 	{{if $admin.update}}
-	<ul role="menu">
-		<li role="menuitem" class="{{$admin.update.2}}">
+	<ul>
+		<li class="{{$admin.update.2}}">
 			<a href="{{$admin.update.0}}" {{if $admin.update.accesskey}}accesskey="{{$admin.update.accesskey}}"{{/if}}>
 				{{$admin.update.1}}
 			</a>

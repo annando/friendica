@@ -141,7 +141,7 @@
 </div>
 
 {{if $contact_block}}
-<div class="widget" id="widget-contacts">
+<nav class="widget" id="widget-contacts">
 	{{$contact_block nofilter}}
-</div>
+</nav>
 {{/if}}

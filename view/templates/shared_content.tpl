@@ -7,7 +7,7 @@
 <div class="shared-wrapper well well-sm">
 	<div class="shared_header">
 		{{if $avatar}}
-			<a href="{{$profile}}" target="_blank" rel="noopener noreferrer" class="avatar shared-userinfo">
+			<a href="{{$profile}}" target="_blank" rel="noopener noreferrer" class="avatar shared-userinfo" aria-hidden="true">
 				<img src="{{$avatar}}" alt="">
 			</a>
 		{{/if}}

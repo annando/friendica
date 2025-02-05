@@ -87,7 +87,7 @@ $frio = 'view/theme/frio';
 
 <script>
 var pagetitle = null;
-$('nav').bind('nav-update', function(e,data)
+$('#topbar-first').bind('nav-update', function(e,data)
 {
 	if (pagetitle==null) pagetitle = document.title;
 	var count = $(data).find('notif').attr('count');

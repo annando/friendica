@@ -4,7 +4,7 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<div id="message-sidebar" class="widget">
+<nav id="message-sidebar" class="widget">
 	{{if $tabs}}
 	<div id="message-preview" class="panel panel-default">
 		<ul class="media-list">
@@ -13,4 +13,4 @@
 	</div>
 	{{/if}}
 
-</div>
+</nav>

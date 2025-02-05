@@ -4,7 +4,7 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<div id="sidebar-photos-albums" class="widget">
+<nav id="sidebar-photos-albums" class="widget">
 	<h3>{{$title}}</h3>
 	<ul role="menubar" class="sidebar-photos-albums-ul">
 		<li role="menuitem" class="sidebar-photos-albums-li">
@@ -27,4 +27,4 @@
 	{{if $can_post}}
 	<div class="photos-upload-link"><a href="{{$upload.1}}">{{$upload.0}}</a></div>
 	{{/if}}
-</div>
+</nav>

@@ -203,7 +203,9 @@ as the value of $top_child_total (this is done at the end of this file)
 							{{/if}}
 							{{if $item.connector}}
 								<span aria-hidden="true">&bull;</span>
-								<i class="fa fa-plug" title="{{$item.connector}}"></i>
+								<span title="{{$item.connector}}">
+									<i class="fa fa-plug" aria-hidden="true"></i>
+								</span>
 							{{else}}
 								<span aria-hidden="true">&bull;</span>
 								<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
@@ -246,8 +248,10 @@ as the value of $top_child_total (this is done at the end of this file)
 						{{include file="sub/direction.tpl" direction=$item.direction}}
 					{{/if}}
 					{{if $item.connector}}
-						<span aria-hidden="true">&bull;</span>
-						<i class="fa fa-plug" title="{{$item.connector}}"></i>
+						<span title="{{$item.connector}}">
+							<span aria-hidden="true">&bull;</span>
+							<i class="fa fa-plug" aria-hidden="true"></i>
+						</span>
 					{{else}}
 						<span class="navicon lock fakelink" onClick="lockview(event, 'item', {{$item.id}});" title="{{$item.privacy}}" data-toggle="tooltip">
 							<span aria-hidden="true">&bull;</span>

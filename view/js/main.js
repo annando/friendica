@@ -65,10 +65,12 @@ function openCloseWidget(inflated, deflated) {
 		elInf.style.display = "block";
 		elDef.style.display = "none";
 		localStorage.setItem(window.location.pathname.split("/")[1] + ":" + inflated, "block");
+		elInf.querySelector("button").focus();
 	} else {
 		elInf.style.display = "none";
 		elDef.style.display = "block";
 		localStorage.setItem(window.location.pathname.split("/")[1] + ":" + inflated, "none");
+		elDef.querySelector("button").focus();
 	}
 }
 
@@ -251,7 +253,7 @@ $(function() {
 	$('#nav-notifications-menu, aside').perfectScrollbar();
 
 	/* nav update event  */
-	$('nav').bind('nav-update', function(e, data) {
+	$('#topbar-first').bind('nav-update', function(e, data) {
 		var invalid = data.invalid || 0;
 		if (invalid == 1) {
 			window.location.href=window.location.href
@@ -495,7 +497,7 @@ function NavUpdate() {
 		$.get(pingCmd, function(data) {
 			if (data.result) {
 				// send nav-update event
-				$('nav').trigger('nav-update', data.result);
+				$('#topbar-first').trigger('nav-update', data.result);
 
 				// start live update
 				['network', 'profile', 'channel', 'community', 'notes', 'display', 'contact'].forEach(function (src) {

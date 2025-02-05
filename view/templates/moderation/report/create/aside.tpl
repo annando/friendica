@@ -4,7 +4,7 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<div class="widget">
+<nav class="widget">
 	<p><strong>{{$l10n.contact_title}}</strong></p>
 {{if $contact}}
     {{include file="contact/entry.tpl"}}
@@ -28,4 +28,4 @@
 {{if $posts}}
 	<p><strong>{{$l10n.posts_title}} ({{$posts}})</strong></p>
 {{/if}}
-</div>
+</nav>

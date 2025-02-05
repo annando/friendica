@@ -4,7 +4,7 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
-<div id="sidebar-photos-albums" class="widget">
+<nav id="sidebar-photos-albums" class="widget">
 	<div class="pull-left">
 		<h3>{{$title}}</h3>
 	</div>
@@ -36,4 +36,4 @@
 		{{/foreach}}
 		{{/if}}
 	</ul>
-</div>
+</nav>

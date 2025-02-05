@@ -7,7 +7,7 @@
 <script type="text/javascript">
 	// update pending count //
 	$(function(){
-		$("nav").bind('nav-update', function(e,data){
+		$('#topbar-first').bind('nav-update', function(e,data){
 			var elm = $('#pending-update');
 			var register = parseInt($(data).find('register').text());
 			if (register > 0) {

@@ -5,7 +5,7 @@
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
 
-<div id="peoplefind-sidebar" class="widget">
+<nav id="peoplefind-sidebar" class="widget">
 	<h3>{{$nv.findpeople}}</h3>
 	<div id="peoplefind-desc">{{$nv.desc}}</div>
 	<form action="dirfind" method="get" />
@@ -19,5 +19,5 @@
 	{{if $nv.inv}} 
 	<div class="side-link" id="side-invite-link"><a href="invite">{{$nv.inv}}</a></div>
 	{{/if}}
-</div>
+</nav>
 
