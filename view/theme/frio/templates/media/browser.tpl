@@ -14,10 +14,10 @@
 		</div>
 
 		{{* The breadcrumb navigation *}}
-		<ol class="path breadcrumb" aria-label="Breadcrumb" role="menu">
+		<ol class="path breadcrumb" aria-label="Breadcrumb">
 		{{foreach $path as $folder => $name}}
 			<li>
-				<button type="button" class="btn btn-link" data-folder="{{$folder}}" role="menuitem">{{$name}}</button>
+				<button type="button" class="btn btn-link" data-folder="{{$folder}}">{{$name}}</button>
 			</li>
 		{{/foreach}}
 
@@ -37,10 +37,10 @@
 			{{* List of photo albums *}}
 			{{if $folders }}
 			<nav class="folders media-left" aria-label="Album Navigation">
-				<ul role="menu">
+				<ul>
 					{{foreach $folders as $folder}}
 					<li>
-						<button type="button" data-folder="{{$folder}}" role="menuitem">{{$folder}}</button>
+						<button type="button" data-folder="{{$folder}}">{{$folder}}</button>
 					</li>
 					{{/foreach}}
 				</ul>

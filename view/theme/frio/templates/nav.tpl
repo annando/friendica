@@ -26,7 +26,7 @@
 			{{/if}}
 		</div>
 	</header>
-	<nav id="topbar-first" class="topbar" role="menubar">
+	<nav id="topbar-first" class="topbar">
 		<div class="container">
 			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 no-padding">
 				<!-- div for navbar width-->

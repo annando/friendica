@@ -9,7 +9,7 @@
 	<p id="identity-delegation-desc">{{$l10n.desc}}</p>
 	<p id="identity-delegation-choose">{{$l10n.choose}}</p>
 
-	<div id="identity-selector-wrapper" role="menu">
+	<nav id="identity-selector-wrapper">
 		<form action="delegation" method="post">
 
 {{foreach $identities as $identity}}
@@ -40,7 +40,7 @@
 		<div class="identity-match-break"></div>
 
 		</form>
-	</div>
+	</nav>
 
 	<p>
 		<a href="settings/delegation" class="btn btn-primary"><i class="fa fa-cog"></i> {{$l10n.settings_label}}</a>

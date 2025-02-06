@@ -51,7 +51,7 @@
 			</ul>
 
 			{{* The Jot navigation menu for small displays (text input, permissions, preview, filebrowser) *}}
-			<div class="dropdown dropdown-head dropdown-mobile-jot jot-nav hidden-lg hidden-md hidden-sm" role="menubar" data-tabs="tabs" style="float: left;">
+			<div class="dropdown dropdown-head dropdown-mobile-jot jot-nav hidden-lg hidden-md hidden-sm" data-tabs="tabs" style="float: left;">
 				<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true">{{$message}}&nbsp;<span class="caret"></span></button>
 				<ul class="dropdown-menu nav nav-pills" aria-label="submenu">
 					{{* mark the first list entry as active because it is the first which is active after opening

@@ -11,7 +11,7 @@
 	<div id="site-location">{{$sitelocation}}</div>
 	<div id="banner">{{$banner nofilter}}</div>
 </header>
-<nav role="menubar">
+<nav>
 	<ul>
 		<li class="mobile-aside-toggle" style="display:none;">
 			<a href="#">

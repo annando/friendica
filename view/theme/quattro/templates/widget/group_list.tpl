@@ -22,10 +22,10 @@ function showHideGroupList() {
 <div id="group-list-sidebar" class="widget">
 	<h3 id="group-list">{{$title}}</h3>
 
-	<ul id="group-list-sidebar-ul" role="menu">
+	<ul id="group-list-sidebar-ul">
 		{{foreach $groups as $group}}
 		{{if $group.id <= $visible_groups}}
-		<li class="group-widget-entry group-{{$group.cid}} tool" id="group-widget-entry-{{$group.id}}" role="menuitem">
+		<li class="group-widget-entry group-{{$group.cid}} tool" id="group-widget-entry-{{$group.id}}">
 			<span class="notify badge pull-right"></span>
 			<a href="{{$group.external_url}}" title="{{$group.link_desc}}" class="label sparkle" target="_blank" rel="noopener noreferrer">
 				<img class="group-list-img" src="{{$group.micro}}" alt="{{$group.link_desc}}" />
@@ -35,7 +35,7 @@ function showHideGroupList() {
 		{{/if}}
 
 		{{if $group.id > $visible_groups}}
-		<li class="group-widget-entry group-{{$group.cid}} tool" id="group-widget-entry-extended-{{$group.id}}" role="menuitem" style="display: none;">
+		<li class="group-widget-entry group-{{$group.cid}} tool" id="group-widget-entry-extended-{{$group.id}}" style="display: none;">
 			<span class="notify badge pull-right"></span>
 			<a href="{{$group.external_url}}" title="{{$group.link_desc}}" class="label sparkle" target="_blank" rel="noopener noreferrer">
 				<img class="group-list-img" src="{{$group.micro}}" alt="{{$group.link_desc}}" />

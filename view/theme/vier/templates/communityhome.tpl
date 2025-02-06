@@ -25,7 +25,7 @@
 {{if $helpers}}
 <div id="right_helpers" class="widget">
 <h3>{{$helpers.title.1}}</h3>
-<ul role="menu">
+<ul>
 {{foreach $helpers_items as $i}}
 	{{$i nofilter}}
 {{/foreach}}
