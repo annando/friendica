@@ -49,6 +49,7 @@
 		"mattwright/urlresolver": "^2.0",
 		"michelf/php-markdown": "^1.7",
 		"minishlink/web-push": "^6.0",
+		"ml/json-ld": "^1.2",
 		"mobiledetect/mobiledetectlib": "^3.74",
 		"mpratt/embera": "~2.0",
 		"nikic/fast-route": "^1.3",

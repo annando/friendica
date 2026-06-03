@@ -77,7 +77,7 @@ class JsonLD
 						$url = DI::basePath() . '/static/apschema.jsonld';
 						break;
 					default:
-						DI::logger()->info('Got url', ['url' => $url]);
+						//DI::logger()->info('Got url', ['url' => $url]);
 						break;
 				}
 		}
@@ -163,6 +163,23 @@ class JsonLD
 			DI::logger()->debug('JsonLD normalize error', ['jsonobj' => $jsonobj]);
 		}
 
+		if (!$normalized) {
+			$normalized = JsonLDProcessor::normalize($json, 'RDFC-1.0');
+			if (!$normalized) {
+				DI::logger()->error('Both JsonLD normalize and JsonLDProcessor normalize failed');
+			} else {
+				DI::logger()->debug('JsonLD normalize failed, but JsonLDProcessor normalize succeeded');
+			}
+		} else {
+			$normalized2 = JsonLDProcessor::normalize($json, 'RDFC-1.0');
+			if ($normalized2) {
+				//DI::logger()->error('Both JsonLD normalize and JsonLDProcessor normalize succeeded');
+				//self::compareNormalizeWithNewProcessor($json, $normalized);
+			} else {
+				DI::logger()->debug('JsonLD normalize succeeded, but JsonLDProcessor normalize failed');
+			}
+		}
+
 		return $normalized;
 	}
 
@@ -227,7 +244,80 @@ class JsonLD
 			$json = [];
 		}
 
+		if (!$json) {
+			$json = JsonLDProcessor::compact($orig_json);
+			if (!$json) {
+				DI::logger()->error('Both JsonLD compact and JsonLDProcessor compact failed');
+			} else {
+				DI::logger()->debug('JsonLD compact failed, but JsonLDProcessor compact succeeded');
+			}
+		} else {
+			$json2 = JsonLDProcessor::compact($orig_json);
+			if ($json2) {
+				//DI::logger()->error('Both JsonLD compact and JsonLDProcessor compact succeeded');
+				//self::compareCompactWithNewProcessor($orig_json, $json);
+			} else {
+				DI::logger()->debug('JsonLD compact succeeded, but JsonLDProcessor compact failed');
+			}
+		}
 		return $json;
+	}
+
+	private static function compareNormalizeWithNewProcessor(array $input, $legacyResult): void
+	{
+		try {
+			$newResult = JsonLDProcessor::normalize($input, 'RDFC-1.0');
+
+			if (self::normalizeForComparison($legacyResult) !== self::normalizeForComparison($newResult)) {
+				DI::logger()->notice('Blubb-1-JsonLD normalize mismatch between legacy and new processor', [
+					'legacy_hash' => self::resultHash($legacyResult),
+					'new_hash'    => self::resultHash($newResult),
+				]);
+			} else {
+				DI::logger()->debug('JsonLD normalize match between legacy and new processor', [
+					'legacy_hash' => self::resultHash($legacyResult),
+					'new_hash'    => self::resultHash($newResult),
+				]);
+			}
+		} catch (Exception $e) {
+			DI::logger()->info('JsonLD normalize compare failed', ['message' => $e->getMessage()]);
+		}
+	}
+
+	private static function compareCompactWithNewProcessor(array $input, array $legacyResult): void
+	{
+		try {
+			$newResult = JsonLDProcessor::compact($input, false);
+
+			if (self::normalizeForComparison($legacyResult) !== self::normalizeForComparison($newResult)) {
+				DI::logger()->notice('Blubb-JsonLD compact mismatch between legacy and new processor', [
+					'legacy_hash' => self::resultHash($legacyResult),
+					'new_hash'    => self::resultHash($newResult),
+				]);
+			} else {
+				DI::logger()->debug('JsonLD compact match between legacy and new processor', [
+					'legacy_hash' => self::resultHash($legacyResult),
+					'new_hash'    => self::resultHash($newResult),
+				]);
+			}
+		} catch (Exception $e) {
+			DI::logger()->info('JsonLD compact compare failed', ['message' => $e->getMessage()]);
+		}
+	}
+
+	private static function normalizeForComparison($value): string
+	{
+		if (is_string($value)) {
+			$value = preg_replace("/\r\n|\r/", "\n", $value);
+			return trim($value);
+		}
+
+		return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR) ?: '';
+	}
+
+	private static function resultHash($value): string
+	{
+		return hash('sha256', self::normalizeForComparison($value));
 	}
 
 	private static function fixInvalidJsonLD(array $json): stdClass
@@ -248,7 +338,7 @@ class JsonLD
 			// Workaround for servers with missing context
 			// See issue https://github.com/nextcloud/social/issues/330
 			if (!in_array('https://w3id.org/security/v1', $json['@context'])) {
-				DI::logger()->debug('Missing security context');
+				//DI::logger()->debug('Missing security context');
 				$json['@context'][] = 'https://w3id.org/security/v1';
 			}
 		}
@@ -260,12 +350,12 @@ class JsonLD
 				$value = '@id';
 			}
 			if ($key == 'sc' && $value == 'http://schema.org/') {
-				DI::logger()->debug('schema.org path fixed');
+				//DI::logger()->debug('schema.org path fixed');
 				$value = 'http://schema.org#';
 			}
 			// Issue 14630: Wordpress Event Bridge uses a URL that cannot be retrieved
 			if (is_int($key) && $value == 'https://schema.org/') {
-				DI::logger()->debug('https schema.org path fixed');
+				//DI::logger()->debug('https schema.org path fixed');
 				$value = 'https://schema.org/docs/jsonldcontext.json#';
 			}
 		});
