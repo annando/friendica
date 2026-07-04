@@ -11,7 +11,10 @@ namespace Friendica\Content\Conversation;
 
 use Friendica\AppHelper;
 use Friendica\BaseModule;
+use Friendica\Content\Conversation\Collection\Threads;
+use Friendica\Content\Conversation\Entity\Thread;
 use Friendica\Content\Conversation\Factory\Channel as ChannelFactory;
+use Friendica\Content\Conversation\Factory\Thread as ThreadFactory;
 use Friendica\Content\Conversation\Repository\UserDefinedChannel;
 use Friendica\Content\Item;
 use Friendica\Core\Config\Capability\IManageConfigValues;
@@ -50,6 +53,7 @@ final readonly class ConversationDataProvider
 		private IHandleUserSessions $session,
 		private PostTemplateBuilder $postTemplateBuilder,
 		private Activity $activity,
+		private ThreadFactory $threadFactory,
 	) {}
 
 	/**
@@ -105,10 +109,8 @@ final readonly class ConversationDataProvider
 			return null;
 		}
 
-		// Set pagedrop for the resolved parent item
-		$resolvedItem['pagedrop'] = $pagedrop;
-
-		$renderUserId = $viewerUid ?: (int) $resolvedItem['uid'];
+		$threadItem = $this->threadFactory->createFromArray($resolvedItem);
+		$renderUserId = $viewerUid ?: (int) $threadItem->uid;
 
 		if ($mode === ConversationRenderer::MODE_COMMENTS) {
 			$sinceId   = $item['gravity'] !== ItemModel::GRAVITY_PARENT ? $item['uri-id'] : 0;
@@ -118,16 +120,17 @@ final readonly class ConversationDataProvider
 			$sinceDate = '';
 		}
 
-		$items = $this->populateThreadWithChildren([$resolvedItem], false, ConversationRenderer::ORDER_COMMENTED, $renderUserId, $mode, $sinceId, $sinceDate, $existing, $pagedrop);
+		$threads = new Threads([$threadItem]);
+		$items = $this->populateThreadWithChildren($threads, false, ConversationRenderer::ORDER_COMMENTED, $renderUserId, $mode, $sinceId, $sinceDate, $existing, $pagedrop);
 
-		return $this->buildRootTemplateData($items, (int) $resolvedItem['uid'], $viewerUid, $mode, $pagedrop);
+		return $this->buildRootTemplateData($items, (int) $threadItem->uid, $viewerUid, $mode, $pagedrop);
 	}
 
 	/**
 	 * Get the root template data for multiple threads from existing item arrays.
 	 * This is similar to getRootTemplateDataFromItem but works with multiple parent items.
 	 *
-	 * @param array<int, array> $items The parent item arrays
+	 * @param Threads $items The parent thread entities
 	 * @param int $viewerUid The user ID of the viewer
 	 * @param string $mode The rendering mode
 	 * @param string $order One of ConversationRenderer::ORDER_*
@@ -135,19 +138,13 @@ final readonly class ConversationDataProvider
 	 * @return array<int, array> The thread template data for all items
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
-	public function getRootTemplateDataFromItems(array $items, int $viewerUid, string $mode = ConversationRenderer::MODE_DISPLAY, string $order = ConversationRenderer::ORDER_COMMENTED, bool $pagedrop = false): array
+	public function getRootTemplateDataFromItems(Threads $items, int $viewerUid, string $mode = ConversationRenderer::MODE_DISPLAY, string $order = ConversationRenderer::ORDER_COMMENTED, bool $pagedrop = false): array
 	{
-		if (empty($items)) {
+		if ($items->count() === 0) {
 			return [];
 		}
 
-		// Set pagedrop for parent items before passing to populateThreadWithChildren
-		foreach ($items as &$item) {
-			$item['pagedrop'] = $pagedrop;
-		}
-		unset($item);
-
-		$renderUserId = $viewerUid ?: (int) ($items[0]['uid'] ?? 0);
+		$renderUserId = $viewerUid ?: (int) ($items->first()?->uid ?? 0);
 
 		$itemsWithChildren = $this->populateThreadWithChildren($items, false, $order, $renderUserId, $mode, 0, '', [], $pagedrop);
 
@@ -186,7 +183,7 @@ final readonly class ConversationDataProvider
 		if (in_array($mode, [ConversationRenderer::MODE_CHANNEL, ConversationRenderer::MODE_COMMUNITY, ConversationRenderer::MODE_CONTACTS, ConversationRenderer::MODE_PROFILE])) {
 			$writable = true;
 		} else {
-			$writable = $items[0]['writable'] || (($items[0]['uid'] === 0) && in_array($items[0]['network'], Protocol::FEDERATED));
+			$writable = $items[0]->writable ?? ($items[0]['writable'] ?? false) || (($items[0]->uid ?? $items[0]['uid'] ?? 0) === 0) && in_array($items[0]->network ?? $items[0]['network'] ?? '', Protocol::FEDERATED);
 		}
 
 		if (!$uid) {
@@ -197,7 +194,9 @@ final readonly class ConversationDataProvider
 		foreach ($items as $item) {
 			$this->processActivityReactions($item, $convResponses, $pcid);
 
-			if ($item['network'] === Protocol::MAIL && $uid !== $item['uid']) {
+			$network = ($item instanceof Thread) ? $item->network : ($item['network'] ?? '');
+			$itemUid = ($item instanceof Thread) ? $item->uid : ($item['uid'] ?? 0);
+			if ($network === Protocol::MAIL && $uid !== $itemUid) {
 				continue;
 			}
 
@@ -205,8 +204,13 @@ final readonly class ConversationDataProvider
 				continue;
 			}
 
-			$item['pagedrop'] = $pagedrop;
-			if ($item['gravity'] === ItemModel::GRAVITY_PARENT) {
+			// Set pagedrop for array items (Thread objects already have it in constructor)
+			if (!($item instanceof Thread) && !isset($item['pagedrop'])) {
+				$item['pagedrop'] = $pagedrop;
+			}
+
+			$gravity = ($item instanceof Thread) ? $item->gravity : ($item['gravity'] ?? 0);
+			if ($gravity === ItemModel::GRAVITY_PARENT) {
 				$parentItems[] = $item;
 			}
 		}
@@ -282,18 +286,18 @@ final readonly class ConversationDataProvider
 	/**
 	 * Populate thread items with their children.
 	 *
-	 * @param array<int, array> $parents The parent items
+	 * @param Threads $parents The parent thread entities
 	 * @param bool $blockAuthors Whether to block hidden authors
 	 * @param string $order The sorting order
 	 * @param int $uid The user ID
 	 * @param string $mode The rendering mode
 	 * @param int $sinceId Only load comments with id > sinceId
-	 * @param array $existing Existing comment URI IDs to exclude
+	 * @param array<int> $existing Existing comment URI IDs to exclude
 	 * @param bool $pagedrop Whether to enable page drop functionality
 	 * @return array<int, array> The items with children added
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
-	private function populateThreadWithChildren(array $parents, bool $blockAuthors, string $order, int $uid, string $mode, int $sinceId = 0, string $sinceDate = '', array $existing = [], bool $pagedrop = false): array
+	private function populateThreadWithChildren(Threads $parents, bool $blockAuthors, string $order, int $uid, string $mode, int $sinceId = 0, string $sinceDate = '', array $existing = [], bool $pagedrop = false): array
 	{
 		$userGservers = $this->userGServer->listIgnoredByUser($uid);
 		$ignoredGsids = array_map(static function (UserGServerEntity $userGServer) {
@@ -313,28 +317,25 @@ final readonly class ConversationDataProvider
 		// Initialize items array with parent items, ensuring they have pagedrop set
 		$items = [];
 		foreach ($parents as $parent) {
-			// Ensure parent has pagedrop set
-			if (!isset($parent['pagedrop'])) {
-				$parent['pagedrop'] = $pagedrop;
-			}
-			$items[$parent['uri-id']] = $parent;
-			if (!empty($parent['thr-parent-id']) && !empty($parent['gravity']) && ($parent['gravity'] === ItemModel::GRAVITY_ACTIVITY)) {
-				$uriId = $parent['thr-parent-id'];
-				if (!empty($parent['author-id'])) {
-					$activities[$uriId] = ['causer-id' => $parent['author-id']];
+			// $parent is a Thread object from the Threads collection
+			$items[$parent->uriId] = $parent;
+			if (!empty($parent->thrParentId) && !empty($parent->gravity) && ($parent->gravity === ItemModel::GRAVITY_ACTIVITY)) {
+				$uriId = $parent->thrParentId;
+				if (!empty($parent->authorId)) {
+					$activities[$uriId] = ['causer-id' => $parent->authorId];
 					foreach (['commented', 'received', 'created'] as $field) {
-						if (!empty($parent[$field])) {
-							$activities[$uriId][$field] = $parent[$field];
+						if (!empty($parent->$field)) {
+							$activities[$uriId][$field] = $parent->$field;
 						}
 					}
 				}
 			} else {
-				$uriId = $parent['uri-id'];
+				$uriId = $parent->uriId;
 			}
 
 			$uriIds[]              = $uriId;
-			$postChannels[$uriId]  = $parent['channel'] ?? '';
-			$parentAuthors[$uriId] = $parent['author-id'];
+			$postChannels[$uriId]  = $parent->channel ?? '';
+			$parentAuthors[$uriId] = $parent->authorId;
 		}
 
 		$filterAuthors = array_values($parentAuthors);

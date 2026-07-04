@@ -16,6 +16,8 @@ use Friendica\Content\Item;
 use Friendica\Core\L10n;
 use Friendica\Core\PConfig\Capability\IManagePersonalConfigValues;
 use Friendica\Core\Protocol;
+use Friendica\Content\Conversation\Collection\Threads;
+use Friendica\Content\Conversation\Factory\Thread as ThreadFactory;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
 use Friendica\Event\ArrayFilterEvent;
@@ -66,6 +68,7 @@ final readonly class ConversationRenderer
 		private Profiler $profiler,
 		private \Friendica\App\Arguments $args,
 		private StatusEditor $statusEditor,
+		private ThreadFactory $threadFactory,
 	) {}
 
 	/**
@@ -103,7 +106,8 @@ final readonly class ConversationRenderer
 
 		$items = $cb['items'];
 
-		$timelineHtml = $this->renderTimelineByItems($items, $viewerUid, $mode, $order, $update);
+		$threads = new Threads($this->threadFactory->createFromArrayList($items));
+		$timelineHtml = $this->renderTimelineByItems($threads, $viewerUid, $mode, $order, $update);
 		$html         = $live_update_div . $timelineHtml;
 
 		if (!$update) {
@@ -335,7 +339,7 @@ final readonly class ConversationRenderer
 	 * Render a timeline from multiple item arrays.
 	 * Similar to renderThreadByItem but works with multiple parent items.
 	 *
-	 * @param array<int, array> $items The parent items to render
+	 * @param Threads $items The parent threads to render
 	 * @param int $uid The user ID of the viewer
 	 * @param string $mode The rendering mode (e.g., self::MODE_DISPLAY)
 	 * @param string $order One of self::ORDER_*
@@ -343,7 +347,7 @@ final readonly class ConversationRenderer
 	 * @throws ImagickException
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
-	private function renderTimelineByItems(array $items, int $uid, string $mode, string $order, bool $update): string
+	private function renderTimelineByItems(Threads $items, int $uid, string $mode, string $order, bool $update): string
 	{
 		$page_dropping = $uid && $this->pConfig->get($uid, 'system', 'show_page_drop', true);
 		$roots         = $this->dataProvider->getRootTemplateDataFromItems($items, $uid, $mode, $order, $page_dropping);
