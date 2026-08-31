@@ -39,6 +39,7 @@ Commands:
 	daemon                 Interact with the Friendica daemon
 	help                   Show help about a command, e.g (bin/console help config)
 	jetstream              Interact with the Jetstream daemon
+	ircgateway             Interact with the IRC gateway daemon
 	worker                 Start worker process
 	fedibuzzrelay          Interact with the FediBuzz relay daemon
 
@@ -100,6 +101,7 @@ HELP;
 		'fixapdeliveryworkertaskparameters' => Friendica\Console\FixAPDeliveryWorkerTaskParameters::class,
 		'globalcommunityblock'              => Friendica\Console\GlobalCommunityBlock::class,
 		'globalcommunitysilence'            => Friendica\Console\GlobalCommunitySilence::class,
+		'ircgateway'                        => Friendica\Console\IrcGatewayDaemon::class,
 		'lock'                              => Friendica\Console\Lock::class,
 		'maintenance'                       => Friendica\Console\Maintenance::class,
 		'mergecontacts'                     => Friendica\Console\MergeContacts::class,
