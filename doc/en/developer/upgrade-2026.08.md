@@ -14,6 +14,12 @@ Mandatory (Breaking changes)
 
 This section contains backward compatibility breaks, make sure your code is compatible with these entries before upgrading.
 
+- `phrity/websocket` was updated from 1.7 to 3.x. Addons using the `\WebSocket\` classes must follow its API changes.
+
+   `WebSocket\Client::receive()` now returns a `WebSocket\Message\Message` object instead of a string, `send()` takes a `Message` (use `text()` for strings), the `WebSocket\ConnectionException` class was replaced by the `WebSocket\Exception\*` hierarchy, logger and timeout are set through a `WebSocket\Configuration` passed to the constructor, and `CloseHandler` / `PingResponder` middleware have to be added explicitly to keep answering pings and close frames.
+
+- A new `bin/console.php ircgateway` command runs the IRC-over-WebSocket gateway for the chat addon, configured through the new `irc_gateway` config section.
+
 - Outbound requests to non-public IP addresses are blocked by default.
 
    This can affect internal feed servers, mail servers, media proxies and other services using private network addresses.
