@@ -801,6 +801,45 @@ return [
 		// The higher the number, the more likely the system won't be able to process the posts on time.
 		'did_limit' => 1000,
 	],
+	'irc_gateway' => [
+		// pidfile (Path)
+		// IRC gateway pid file path. For example: pidfile = /path/to/irc_gateway.pid
+		'pidfile' => '',
+		// listen (String)
+		// Address the daemon listens on. Terminate wss:// in the web server and proxy it here.
+		// A bare port stays on 127.0.0.1; a wider bind must be given explicitly (e.g. '0.0.0.0:8765').
+		'listen' => '127.0.0.1:8765',
+		// networks (Array)
+		// Map of path token to the IRC destination it is allowed to reach. The browser picks a token
+		// via the URL path (/irc/<token>) or a ?net=<token> parameter and can never name a host itself.
+		// Each entry: 'host', 'port', 'tls' (bool), optional 'verify' (bool, default true) and optional
+		// 'webirc_password' / 'webirc_name' to pass the real client address to the IRC server.
+		//     'libera' => ['host' => 'irc.libera.chat', 'port' => 6697, 'tls' => true],
+		'networks' => [],
+		// allowed_origin (String)
+		// When set, only accept connections whose Origin header matches this value (e.g. the Friendica base URL).
+		'allowed_origin' => '',
+		// trusted_proxies (Array)
+		// Addresses allowed to connect and whose X-Forwarded-For header is used as the real client address.
+		// Empty is treated as loopback only. Add the web server address when it proxies wss:// from another host.
+		'trusted_proxies' => ['127.0.0.1', '::1'],
+		// max_clients (Integer) / max_clients_per_ip (Integer)
+		'max_clients' => 200,
+		'max_clients_per_ip' => 5,
+		// idle_timeout (Integer)
+		// Seconds without traffic before the daemon pings the browser and then drops the connection.
+		'idle_timeout' => 240,
+		// connect_timeout (Integer)
+		// Seconds to wait for the outbound IRC connection.
+		'connect_timeout' => 10,
+		// flood_lines (Integer) / flood_seconds (Integer)
+		// Token bucket for browser to IRC lines: 'flood_lines' lines are allowed per 'flood_seconds'.
+		'flood_lines' => 8,
+		'flood_seconds' => 4,
+		// max_message_bytes (Integer) / max_sendbuf_bytes (Integer)
+		'max_message_bytes' => 16384,
+		'max_sendbuf_bytes' => 262144,
+	],
 	'atprotocol' => [
 		// appview_api (URL)
 		// Path to a public AppView server.

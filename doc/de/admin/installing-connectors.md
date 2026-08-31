@@ -27,3 +27,27 @@ Um die Jetstream-Verarbeitung zu aktivieren, führe `bin/console.php daemon' üb
 Du musst vorher die Prozess-ID-Datei in local.config.php im Abschnitt „jetstream“ mit dem Schlüssel „pidfile“ definieren.
 
 Um die verarbeiteten Nachrichten und die Drift (die Zeitdifferenz zwischen dem Datum der Nachricht und dem Datum, an dem das System diese Nachricht verarbeitet hat) zu verfolgen, wurden dem Statistik-Endpunkt einige Felder hinzugefügt.
+
+## IRC-Gateway
+
+Das Chat-Addon bietet einen IRC-Client an, aber Browser können keine rohen IRC-Verbindungen öffnen, daher verbindet sich der Client stattdessen über WebSocket.
+Friendica bringt einen Gateway-Daemon mit, der diese WebSocket-Verbindungen annimmt und jede davon auf eine TCP- oder TLS-Verbindung zu einem IRC-Netzwerk überbrückt.
+Er ersetzt externe Gateways wie das webircgateway von kiwiirc.
+
+Zum Betrieb setzt du `irc_gateway.pidfile` in der local.config.php und startest `bin/console.php ircgateway start`.
+
+Der Daemon lauscht auf der unverschlüsselten Adresse aus `irc_gateway.listen` (Vorgabe `127.0.0.1:8765`); `wss://` wird im Webserver terminiert und dorthin weitergereicht, genau wie beim XMPP-WebSocket-Endpunkt.
+Jedes IRC-Netzwerk, das das Gateway erreichen darf, wird in `irc_gateway.networks` unter einem kurzen Token eingetragen:
+
+```php
+'irc_gateway' => [
+	'pidfile'  => '/run/friendica/irc_gateway.pid',
+	'networks' => [
+		'libera' => ['host' => 'irc.libera.chat', 'port' => 6697, 'tls' => true],
+	],
+],
+```
+
+Der Browser wählt ein Netzwerk über dieses Token im URL-Pfad, aus `irc_websocket_url` im Chat-Addon wird also `wss://gateway.example.com/irc/libera`.
+Ein Client kann niemals selbst einen IRC-Host angeben, nur ein konfiguriertes Token.
+Die übrigen `irc_gateway`-Schlüssel begrenzen die Anzahl der Clients, den Leerlauf-Timeout und die Flood-Limits; die vollständige Liste steht in der static/defaults.config.php.
