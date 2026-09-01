@@ -817,7 +817,9 @@ return [
 		//     'libera' => ['host' => 'irc.libera.chat', 'port' => 6697, 'tls' => true],
 		'networks' => [],
 		// allowed_origin (String)
-		// When set, only accept connections whose Origin header matches this value (e.g. the Friendica base URL).
+		// Origin header the browser must send, checked exactly and scheme included. Empty uses this node's
+		// own base URL (so only pages served from Friendica connect); a missing Origin header is rejected
+		// too, so non-browser clients have to send a matching one. Set to '*' to accept any origin.
 		'allowed_origin' => '',
 		// trusted_proxies (Array)
 		// Addresses allowed to connect and whose X-Forwarded-For header is used as the real client address.

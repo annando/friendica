@@ -51,3 +51,36 @@ Jedes IRC-Netzwerk, das das Gateway erreichen darf, wird in `irc_gateway.network
 Der Browser wählt ein Netzwerk über dieses Token im URL-Pfad, aus `irc_websocket_url` im Chat-Addon wird also `wss://gateway.example.com/irc/libera`.
 Ein Client kann niemals selbst einen IRC-Host angeben, nur ein konfiguriertes Token.
 Die übrigen `irc_gateway`-Schlüssel begrenzen die Anzahl der Clients, den Leerlauf-Timeout und die Flood-Limits; die vollständige Liste steht in der static/defaults.config.php.
+
+Der Daemon bindet nur an `127.0.0.1` und nimmt nur Verbindungen von den Adressen in `irc_gateway.trusted_proxies` an (Vorgabe: Loopback), ist von außerhalb des Hosts also nicht erreichbar.
+Zusätzlich prüft er den `Origin`-Header des Browsers gegen `irc_gateway.allowed_origin`, was standardmäßig die eigene Basis-URL des Knotens ist, sodass von Haus aus nur von Friendica ausgelieferte Seiten eine Verbindung öffnen können.
+Der Webserver terminiert `wss://` und reicht die Anfrage dorthin weiter.
+
+### nginx
+
+```nginx
+location /irc/ {
+	proxy_pass http://127.0.0.1:8765/;
+	proxy_http_version 1.1;
+	proxy_set_header Upgrade $http_upgrade;
+	proxy_set_header Connection "upgrade";
+	proxy_set_header Host $host;
+	proxy_set_header X-Forwarded-For $remote_addr;
+	proxy_set_header X-Forwarded-Proto $scheme;
+	proxy_read_timeout 3600s;
+}
+```
+
+### Apache
+
+`proxy`, `proxy_http`, `proxy_wstunnel` und `headers` aktivieren, dann im `https`-VirtualHost ergänzen:
+
+```apache
+ProxyPass        /irc/  ws://127.0.0.1:8765/
+ProxyPassReverse /irc/  ws://127.0.0.1:8765/
+RequestHeader set X-Forwarded-Proto "https"
+```
+
+`mod_proxy` setzt `X-Forwarded-For` von sich aus.
+Das Gateway sieht den Webserver als Peer, trage dessen Adresse in `irc_gateway.trusted_proxies` ein, wenn der Webserver auf einem anderen Host läuft; die echte Client-Adresse wird dann aus `X-Forwarded-For` gelesen.
+Falls deine Instanz einen Content-Security-Policy-Header schickt, muss `connect-src` die Gateway-Origin erlauben, sonst blockt der Browser die Verbindung vor dem Handshake.
