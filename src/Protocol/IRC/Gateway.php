@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Friendica\Protocol\IRC;
 
+use Friendica\App\BaseURL;
 use Friendica\Core\Config\Capability\IManageConfigValues;
 use Friendica\Core\KeyValueStorage\Capability\IManageKeyValuePairs;
 use Friendica\Util\Strings;
@@ -79,6 +80,7 @@ final class Gateway
 		private readonly LoggerInterface $logger,
 		private readonly IManageConfigValues $config,
 		private readonly IManageKeyValuePairs $keyValue,
+		private readonly BaseURL $baseUrl,
 	) {}
 
 	/**
@@ -281,8 +283,9 @@ final class Gateway
 		}
 
 		if ($this->allowedOrigin !== '') {
+			// Once an origin is configured the header must match it exactly, a missing one is rejected too
 			$origin = rtrim($request->getHeaderLine('Origin'), '/');
-			if ($origin !== '' && $origin !== $this->allowedOrigin) {
+			if ($origin !== $this->allowedOrigin) {
 				$this->logger->warning('Rejected connection from foreign origin', ['origin' => $origin]);
 				return [new Response(403), ''];
 			}
@@ -613,6 +616,12 @@ final class Gateway
 		$this->floodSeconds       = (int) ($this->config->get('irc_gateway', 'flood_seconds') ?? 4);
 		$this->maxMessageBytes    = (int) ($this->config->get('irc_gateway', 'max_message_bytes') ?? 16384);
 		$this->maxSendBufferBytes = (int) ($this->config->get('irc_gateway', 'max_sendbuf_bytes') ?? 262144);
-		$this->allowedOrigin      = rtrim((string) ($this->config->get('irc_gateway', 'allowed_origin') ?: ''), '/');
+
+		// Empty config falls back to this node's own origin, '*' turns the check off
+		$origin = (string) ($this->config->get('irc_gateway', 'allowed_origin') ?: '');
+		if ($origin === '') {
+			$origin = $this->baseUrl->getScheme() . '://' . $this->baseUrl->getAuthority();
+		}
+		$this->allowedOrigin = $origin === '*' ? '' : rtrim($origin, '/');
 	}
 }
