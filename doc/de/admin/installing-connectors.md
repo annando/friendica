@@ -54,6 +54,7 @@ Die übrigen `irc_gateway`-Schlüssel begrenzen die Anzahl der Clients, den Leer
 
 Der Daemon bindet nur an `127.0.0.1` und nimmt nur Verbindungen von den Adressen in `irc_gateway.trusted_proxies` an (Vorgabe: Loopback), ist von außerhalb des Hosts also nicht erreichbar.
 Zusätzlich prüft er den `Origin`-Header des Browsers gegen `irc_gateway.allowed_origin`, was standardmäßig die eigene Basis-URL des Knotens ist, sodass von Haus aus nur von Friendica ausgelieferte Seiten eine Verbindung öffnen können.
+Darüber hinaus muss jede Verbindung ein kurzlebiges Token mitbringen, das das Chat-Addon für den angemeldeten Nutzer signiert, sodass sich ein nicht angemeldeter Besucher nicht verbinden kann (`irc_gateway.require_token`, standardmäßig an; das gemeinsame Geheimnis wird aus dem privaten Schlüssel des Knotens abgeleitet und braucht keine Konfiguration).
 Der Webserver terminiert `wss://` und reicht die Anfrage dorthin weiter.
 
 ### nginx

@@ -12,6 +12,7 @@ namespace Friendica\Protocol\IRC;
 use Friendica\App\BaseURL;
 use Friendica\Core\Config\Capability\IManageConfigValues;
 use Friendica\Core\KeyValueStorage\Capability\IManageKeyValuePairs;
+use Friendica\Database\Database;
 use Friendica\Util\Strings;
 use Nyholm\Psr7\Response;
 use Phrity\Net\StreamFactory;
@@ -75,12 +76,15 @@ final class Gateway
 	private int $maxMessageBytes    = 16384;
 	private int $maxSendBufferBytes = 262144;
 	private string $allowedOrigin   = '';
+	private bool $requireToken      = true;
+	private string $authSecret      = '';
 
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly IManageConfigValues $config,
 		private readonly IManageKeyValuePairs $keyValue,
 		private readonly BaseURL $baseUrl,
+		private readonly Database $database,
 	) {}
 
 	/**
@@ -213,7 +217,7 @@ final class Gateway
 			if (!$request instanceof ServerRequestInterface) {
 				throw new \RuntimeException('Unexpected handshake request');
 			}
-			[$response, $token] = $this->handshake($request);
+			[$response, $token, $uid] = $this->handshake($request);
 			$connection->pushHttp($response);
 		} catch (Throwable $e) {
 			$this->logger->info('Handshake failed', ['address' => $peerIp, 'error' => $e->getMessage()]);
@@ -241,6 +245,7 @@ final class Gateway
 			$connection,
 			$this->floodLines,
 			$this->floodSeconds,
+			$uid,
 		);
 
 		if (!$this->connectIrc($session)) {
@@ -255,18 +260,18 @@ final class Gateway
 		$this->sessions[$id] = $session;
 		$this->clients[$id]  = $socket;
 
-		$this->logger->notice('Client connected', ['id' => $id, 'network' => $token, 'address' => $clientIp]);
+		$this->logger->notice('Client connected', ['id' => $id, 'uid' => $uid, 'network' => $token, 'address' => $clientIp]);
 	}
 
 	/**
-	 * Validate the upgrade request and pick the target network.
+	 * Validate the upgrade request, authenticate it and pick the target network.
 	 *
-	 * @return array{0: Response, 1: string} the response to send and the network token
+	 * @return array{0: Response, 1: string, 2: int|null} response to send, network token, Friendica user id
 	 */
 	private function handshake(ServerRequestInterface $request): array
 	{
 		if ($request->getMethod() !== 'GET') {
-			return [new Response(405), ''];
+			return [new Response(405), '', null];
 		}
 
 		if (
@@ -274,12 +279,12 @@ final class Gateway
 			|| strtolower($request->getHeaderLine('Upgrade')) !== 'websocket'
 			|| trim($request->getHeaderLine('Sec-WebSocket-Version')) !== '13'
 		) {
-			return [new Response(426), ''];
+			return [new Response(426), '', null];
 		}
 
 		$key = trim($request->getHeaderLine('Sec-WebSocket-Key'));
 		if (strlen(base64_decode($key, true) ?: '') !== 16) {
-			return [new Response(400), ''];
+			return [new Response(400), '', null];
 		}
 
 		if ($this->allowedOrigin !== '') {
@@ -287,14 +292,23 @@ final class Gateway
 			$origin = rtrim($request->getHeaderLine('Origin'), '/');
 			if ($origin !== $this->allowedOrigin) {
 				$this->logger->warning('Rejected connection from foreign origin', ['origin' => $origin]);
-				return [new Response(403), ''];
+				return [new Response(403), '', null];
+			}
+		}
+
+		$uid = null;
+		if ($this->requireToken) {
+			$uid = $this->validateToken($this->queryParam($request, 'token'));
+			if ($uid === null) {
+				$this->logger->warning('Rejected connection with missing or invalid token');
+				return [new Response(403), '', null];
 			}
 		}
 
 		$token = $this->requestToken($request);
 		if (!isset($this->networks[$token])) {
 			$this->logger->warning('Unknown network requested', ['token' => $token]);
-			return [new Response(404), ''];
+			return [new Response(404), '', null];
 		}
 
 		$accept   = base64_encode(pack('H*', sha1($key . self::HANDSHAKE_GUID)));
@@ -303,7 +317,46 @@ final class Gateway
 			->withHeader('Connection', 'Upgrade')
 			->withHeader('Sec-WebSocket-Accept', $accept);
 
-		return [$response, $token];
+		return [$response, $token, $uid];
+	}
+
+	/**
+	 * Verify a token minted by the chat addon: `<uid>.<expires>.<hmac>`, signed with the shared secret.
+	 *
+	 * @return int|null the Friendica user id, or null when the token is missing, forged, expired or unknown
+	 */
+	private function validateToken(string $token): ?int
+	{
+		$parts = explode('.', $token);
+		if (count($parts) !== 3 || !ctype_digit($parts[0]) || !ctype_digit($parts[1])) {
+			return null;
+		}
+
+		[$uid, $expires, $signature] = $parts;
+
+		if ((int) $expires < time()) {
+			return null;
+		}
+
+		$expected = hash_hmac('sha256', $uid . '.' . $expires, $this->authSecret);
+		if (!hash_equals($expected, $signature)) {
+			return null;
+		}
+
+		if (!$this->database->exists('user', ['uid' => (int) $uid, 'blocked' => false, 'account_removed' => false])) {
+			return null;
+		}
+
+		return (int) $uid;
+	}
+
+	/**
+	 * Read a single query string parameter from the upgrade request.
+	 */
+	private function queryParam(ServerRequestInterface $request, string $name): string
+	{
+		parse_str($request->getUri()->getQuery(), $query);
+		return isset($query[$name]) ? (string) $query[$name] : '';
 	}
 
 	/**
@@ -311,9 +364,9 @@ final class Gateway
 	 */
 	private function requestToken(ServerRequestInterface $request): string
 	{
-		parse_str($request->getUri()->getQuery(), $query);
-		if (!empty($query['net'])) {
-			return (string) $query['net'];
+		$net = $this->queryParam($request, 'net');
+		if ($net !== '') {
+			return $net;
 		}
 
 		$segments = array_values(array_filter(
@@ -616,6 +669,7 @@ final class Gateway
 		$this->floodSeconds       = (int) ($this->config->get('irc_gateway', 'flood_seconds') ?? 4);
 		$this->maxMessageBytes    = (int) ($this->config->get('irc_gateway', 'max_message_bytes') ?? 16384);
 		$this->maxSendBufferBytes = (int) ($this->config->get('irc_gateway', 'max_sendbuf_bytes') ?? 262144);
+		$this->requireToken       = (bool) ($this->config->get('irc_gateway', 'require_token') ?? true);
 
 		// Empty config falls back to this node's own origin, '*' turns the check off
 		$origin = (string) ($this->config->get('irc_gateway', 'allowed_origin') ?: '');
@@ -623,5 +677,9 @@ final class Gateway
 			$origin = $this->baseUrl->getScheme() . '://' . $this->baseUrl->getAuthority();
 		}
 		$this->allowedOrigin = $origin === '*' ? '' : rtrim($origin, '/');
+
+		// Shared with the chat addon; falls back to a value derived from the node's private key
+		$secret           = (string) ($this->config->get('irc_gateway', 'auth_secret') ?: '');
+		$this->authSecret = $secret !== '' ? $secret : hash('sha256', (string) $this->config->get('system', 'site_prvkey'));
 	}
 }

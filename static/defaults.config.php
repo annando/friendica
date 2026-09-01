@@ -821,6 +821,18 @@ return [
 		// own base URL (so only pages served from Friendica connect); a missing Origin header is rejected
 		// too, so non-browser clients have to send a matching one. Set to '*' to accept any origin.
 		'allowed_origin' => '',
+		// require_token (Boolean)
+		// Require every connection to carry a valid ?token= signed by the chat addon, so only logged-in
+		// users of this node can connect. Set to false only when a different client without token support
+		// is used against the gateway.
+		'require_token' => true,
+		// auth_secret (String)
+		// Shared secret for the connection token. Empty derives it from system.site_prvkey, which the chat
+		// addon does as well, so no value is needed unless you want to rotate it independently.
+		'auth_secret' => '',
+		// token_ttl (Integer)
+		// Seconds a freshly issued token stays valid. Read by the chat addon when it mints the token.
+		'token_ttl' => 43200,
 		// trusted_proxies (Array)
 		// Addresses allowed to connect and whose X-Forwarded-For header is used as the real client address.
 		// Empty is treated as loopback only. Add the web server address when it proxies wss:// from another host.
