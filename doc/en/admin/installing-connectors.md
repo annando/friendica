@@ -54,6 +54,7 @@ The remaining `irc_gateway` keys cap the number of clients, the idle timeout and
 
 The daemon only binds to `127.0.0.1` and only accepts connections from the addresses in `irc_gateway.trusted_proxies` (loopback by default), so it is not reachable from outside the host.
 It also checks the browser's `Origin` header against `irc_gateway.allowed_origin`, which defaults to this node's own base URL, so by default only pages served from Friendica can open a connection.
+On top of that every connection has to carry a short-lived token that the chat addon signs for the logged-in user, so a visitor who is not logged in cannot connect (`irc_gateway.require_token`, on by default; the shared secret is derived from the node's private key and needs no configuration).
 The web server terminates `wss://` and forwards the request to it.
 
 ### nginx

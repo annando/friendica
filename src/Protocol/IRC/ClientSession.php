@@ -50,6 +50,7 @@ final class ClientSession
 	 * @param Connection $ws        The WebSocket connection to the browser
 	 * @param int        $floodLines Token bucket size
 	 * @param int        $floodSeconds Window the bucket refills over
+	 * @param int|null   $uid       Authenticated Friendica user id, null when token auth is off
 	 */
 	public function __construct(
 		public readonly string $id,
@@ -60,6 +61,7 @@ final class ClientSession
 		public readonly Connection $ws,
 		private readonly int $floodLines,
 		private readonly int $floodSeconds,
+		public readonly ?int $uid = null,
 	) {
 		$this->lastActivity = microtime(true);
 		$this->floodTokens  = $floodLines;
