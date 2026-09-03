@@ -99,7 +99,7 @@ final class Gateway
 		}
 
 		$bind = (string) ($this->config->get('irc_gateway', 'listen') ?: '127.0.0.1:8765');
-		if (strpos($bind, ':') === false) {
+		if (!str_contains($bind, ':')) {
 			// A bare port stays on loopback; a wider bind has to be spelled out
 			$bind = '127.0.0.1:' . $bind;
 		}
@@ -155,9 +155,9 @@ final class Gateway
 		foreach (array_keys($read) as $key) {
 			if ($key === '@listen') {
 				$this->acceptClient();
-			} elseif (strpos($key, 'ws:') === 0) {
+			} elseif (str_starts_with($key, 'ws:')) {
 				$this->readFromClient(substr($key, 3));
-			} elseif (strpos($key, 'irc:') === 0) {
+			} elseif (str_starts_with($key, 'irc:')) {
 				$this->readFromIrc(substr($key, 4));
 			}
 		}

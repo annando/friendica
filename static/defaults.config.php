@@ -838,7 +838,7 @@ return [
 		// Empty is treated as loopback only. Add the web server address when it proxies wss:// from another host.
 		'trusted_proxies' => ['127.0.0.1', '::1'],
 		// max_clients (Integer) / max_clients_per_ip (Integer)
-		'max_clients' => 200,
+		'max_clients'        => 200,
 		'max_clients_per_ip' => 5,
 		// idle_timeout (Integer)
 		// Seconds without traffic before the daemon pings the browser and then drops the connection.
@@ -848,7 +848,7 @@ return [
 		'connect_timeout' => 10,
 		// flood_lines (Integer) / flood_seconds (Integer)
 		// Token bucket for browser to IRC lines: 'flood_lines' lines are allowed per 'flood_seconds'.
-		'flood_lines' => 8,
+		'flood_lines'   => 8,
 		'flood_seconds' => 4,
 		// max_message_bytes (Integer) / max_sendbuf_bytes (Integer)
 		'max_message_bytes' => 16384,
