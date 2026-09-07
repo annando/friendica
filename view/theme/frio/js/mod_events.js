@@ -8,6 +8,26 @@
  * Initialization of the fullCalendar and format the output.
  */
 
+const calendarViewStorageKey = 'friendica-calendar-view';
+
+// localStorage can be unavailable (private browsing, disabled site data), so every
+// access is wrapped and falls back to the server-side default calendar view.
+function getStoredCalendarView() {
+	try {
+		return localStorage.getItem(calendarViewStorageKey);
+	} catch (e) {
+		return null;
+	}
+}
+
+function setStoredCalendarView(viewName) {
+	try {
+		localStorage.setItem(calendarViewStorageKey, viewName);
+	} catch (e) {
+		// ignore, the view just won't be remembered for the next visit
+	}
+}
+
 (function () {
 	const calendarEventNS = '.friendicaEventCalendar';
 
@@ -93,7 +113,7 @@
 						});
 				}
 			},
-			defaultView: aStr.defaultView,
+			defaultView: getStoredCalendarView() || aStr.defaultView,
 			aspectRatio: 1,
 			eventRender: function (event, element, view) {
 				switch (view.name) {
@@ -265,6 +285,9 @@ function showEvent(eventid) {
 
 function changeView(action, viewName) {
 	$("#events-calendar").fullCalendar(action, viewName);
+	if (action === "changeView" && viewName) {
+		setStoredCalendarView(viewName);
+	}
 	var view = $("#events-calendar").fullCalendar("getView");
 	$("#fc-title").text(view.title);
 }
