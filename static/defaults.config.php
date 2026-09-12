@@ -711,6 +711,12 @@ return [
 		// Warning: Lowering this value can help with some PHP memory exhaustion issues, but can also partially break some federation features e.g. large posts may not be fetched or received from remote servers.
 		'max_response_data_size' => 1000000,
 	],
+	'channel' => [
+		// max_search_length (Integer)
+		// Maximum length in bytes of the combined full-text search query used for matching user-defined channels.
+		// Once the search terms of all channels exceed this length, the query gets split into several smaller ones.
+		'max_search_length' => 1000,
+	],
 	'proxy' => [
 		// forwarded_for_headers (String)
 		// A comma separated list of all allowed header values to retrieve the real client IP
