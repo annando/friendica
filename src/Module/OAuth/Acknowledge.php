@@ -23,6 +23,10 @@ class Acknowledge extends BaseApi
 
 	protected function post(array $request = [])
 	{
+		if (($request['action'] ?? '') === 'deny') {
+			DI::appHelper()->redirect(DI::session()->get('return_path') . '&oauth_denied=1');
+		}
+
 		DI::session()->set('oauth_acknowledge', true);
 		DI::appHelper()->redirect(DI::session()->get('return_path'));
 	}
