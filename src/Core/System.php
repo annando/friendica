@@ -507,10 +507,8 @@ class System
 	 * @throws TemporaryRedirectException
 	 *
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
-	 *
-	 * @return never
 	 */
-	public static function externalRedirect($url, $code = 302)
+	public static function externalRedirect($url, $code = 302): never
 	{
 		// Use a regex to detect the presence of a URI scheme, because PHP's
 		// parse_url() returns false/null for some valid custom-scheme URIs such

@@ -135,5 +135,5 @@ interface AppHelper
 	 */
 	public function getBasePath(): string;
 
-	public function redirect(string $toUrl);
+	public function redirect(string $toUrl): never;
 }

@@ -26,6 +26,8 @@ class Application extends BaseDataTransferObject
 	protected $name;
 	/** @var string */
 	protected $redirect_uri;
+	/** @var string[] */
+	protected $redirect_uris;
 	/** @var string */
 	protected $website;
 	/** @var string */
@@ -49,7 +51,8 @@ class Application extends BaseDataTransferObject
 		$this->client_secret = $client_secret;
 		$this->id            = (string) $id;
 		$this->name          = $name;
-		$this->redirect_uri  = $redirect_uri;
+		$this->redirect_uris = $redirect_uri !== null ? explode(' ', $redirect_uri) : null;
+		$this->redirect_uri  = $redirect_uri !== null ? implode("\n", $this->redirect_uris) : null;
 		$this->website       = $website;
 		$this->vapid_key     = $vapid_key;
 	}
@@ -68,6 +71,7 @@ class Application extends BaseDataTransferObject
 			unset($application['client_secret']);
 			unset($application['id']);
 			unset($application['redirect_uri']);
+			unset($application['redirect_uris']);
 		}
 
 		if (empty($application['vapid_key'])) {
