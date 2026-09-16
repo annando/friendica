@@ -355,7 +355,7 @@ final class AppLegacy implements AppHelper
 	 *
 	 * @throws InternalServerErrorException
 	 */
-	public function redirect(string $toUrl)
+	public function redirect(string $toUrl): never
 	{
 		if (!empty(parse_url($toUrl, PHP_URL_SCHEME))) {
 			System::externalRedirect($toUrl);

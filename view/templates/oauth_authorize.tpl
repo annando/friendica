@@ -13,5 +13,8 @@
 </div>
 <p>{{$authorize}}</p>
 <form method="POST">
-<div class="settings-submit-wrapper"><input class="settings-submit" type="submit" name="oauth_yes" value="{{$yes}}" /></div>
+<div class="settings-submit-wrapper">
+	<button class="settings-submit" type="submit" name="action" value="authorize">{{$yes}}</button>
+	<button class="settings-submit" type="submit" name="action" value="deny">{{$no}}</button>
+</div>
 </form>

@@ -29,7 +29,7 @@ class Apps extends BaseApi
 	protected function post(array $request = [])
 	{
 		if (!empty($request['redirect_uris']) && is_array($request['redirect_uris'])) {
-			$request['redirect_uris'] = $request['redirect_uris'][0];
+			$request['redirect_uris'] = implode(' ', $request['redirect_uris']);
 		}
 
 		$request = $this->getRequest([
@@ -48,7 +48,7 @@ class Apps extends BaseApi
 			}
 
 			if (!empty($request['redirect_uris']) && is_array($request['redirect_uris'])) {
-				$request['redirect_uris'] = $request['redirect_uris'][0];
+				$request['redirect_uris'] = implode(' ', $request['redirect_uris']);
 			}
 		}
 

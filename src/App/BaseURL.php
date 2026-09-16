@@ -101,10 +101,8 @@ class BaseURL extends Uri implements UriInterface
 	 * @throws HTTPException\TemporaryRedirectException
 	 *
 	 * @throws HTTPException\InternalServerErrorException In Case the given URL is not relative to the Friendica node
-	 *
-	 * @return never
 	 */
-	public function redirect(string $toUrl = '', bool $ssl = false)
+	public function redirect(string $toUrl = '', bool $ssl = false): never
 	{
 		if (!empty(parse_url($toUrl, PHP_URL_SCHEME))) {
 			throw new HTTPException\InternalServerErrorException("$toUrl is not a relative path, please use System::externalRedirectTo");
