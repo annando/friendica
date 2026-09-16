@@ -68,7 +68,7 @@ class Token extends BaseApi
 
 		if (!in_array($grant_type, ['client_credentials', 'authorization_code'])) {
 			$this->logger->warning('Unsupported or missing grant type', ['request' => $_REQUEST]);
-			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity($this->t('Unsupported or missing grant type')));
+			$this->logAndJsonError(400, $this->errorFactory->BadRequest('unsupported_grant_type', $this->t('Unsupported or missing grant type')));
 		}
 
 		if ($grant_type === 'client_credentials') {
@@ -98,7 +98,7 @@ class Token extends BaseApi
 		$token = DBA::selectFirst('application-view', ['access_token', 'created_at', 'uid'], $condition);
 		if (!DBA::isResult($token)) {
 			$this->logger->notice('Token not found or outdated', $condition);
-			$this->logAndJsonError(401, $this->errorFactory->Unauthorized());
+			$this->logAndJsonError(400, $this->errorFactory->BadRequest('invalid_grant', $this->t('Code not found or expired')));
 		}
 
 		$owner = User::getOwnerDataById($token['uid']);

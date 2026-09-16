@@ -33,6 +33,13 @@ class Error extends BaseFactory
 		return new \Friendica\Object\Api\Mastodon\Error($error, $error_description);
 	}
 
+	// $error is one of the fixed OAuth error codes from RFC 6749 (e.g. "invalid_request"), not a display message
+	public function BadRequest(string $error = '', string $error_description = ''): \Friendica\Object\Api\Mastodon\Error
+	{
+		$error = $error ?: 'invalid_request';
+		return new \Friendica\Object\Api\Mastodon\Error($error, $error_description);
+	}
+
 	public function Unauthorized(string $error = '', string $error_description = ''): \Friendica\Object\Api\Mastodon\Error
 	{
 		$error = $error ?: $this->l10n->t('Unauthorized');

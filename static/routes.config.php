@@ -161,12 +161,12 @@ return [
 	'/' => [Module\Home::class, [R::GET]],
 
 	'/.well-known' => [
-		'/nodeinfo'                   => [Module\WellKnown\NodeInfo::class,         [R::GET]],
-		'/oauth-authorization-server' => [Module\Api\Mastodon\Unimplemented::class, [R::GET]], // not supported
-		'/security.txt'               => [Module\WellKnown\SecurityTxt::class,      [R::GET]],
-		'/webfinger'                  => [Module\Xrd::class,                        [R::GET]],
-		'/x-nodeinfo2'                => [Module\NodeInfo210::class,                [R::GET]],
-		'/x-social-relay'             => [Module\WellKnown\XSocialRelay::class,     [R::GET]],
+		'/nodeinfo'                   => [Module\WellKnown\NodeInfo::class,                 [R::GET]],
+		'/oauth-authorization-server' => [Module\WellKnown\OAuthAuthorizationServer::class, [R::GET]],
+		'/security.txt'               => [Module\WellKnown\SecurityTxt::class,              [R::GET]],
+		'/webfinger'                  => [Module\Xrd::class,                                [R::GET]],
+		'/x-nodeinfo2'                => [Module\NodeInfo210::class,                        [R::GET]],
+		'/x-social-relay'             => [Module\WellKnown\XSocialRelay::class,             [R::GET]],
 	],
 
 	'/2fa' => [

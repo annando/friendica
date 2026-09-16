@@ -36,27 +36,36 @@ class Authorize extends BaseApi
 
 		if ($request['response_type'] != 'code') {
 			$this->logger->warning('Unsupported or missing response type', ['request' => $request]);
-			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity($this->t('Unsupported or missing response type')));
+			$this->logAndJsonError(400, $this->errorFactory->BadRequest('unsupported_response_type', $this->t('Unsupported or missing response type')));
 		}
 
 		if (empty($request['client_id']) || empty($request['redirect_uri'])) {
 			$this->logger->warning('Incomplete request data', ['request' => $request]);
-			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity($this->t('Incomplete request data')));
+			$this->logAndJsonError(400, $this->errorFactory->BadRequest('invalid_request', $this->t('Incomplete request data')));
 		}
 
 		$application = OAuth::getApplication($request['client_id'], $request['client_secret'], $request['redirect_uri']);
 		if (empty($application)) {
 			$this->logger->warning('An application could not be fetched.', ['request' => $request]);
-			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
+			$this->logAndJsonError(401, $this->errorFactory->Unauthorized('invalid_client', $this->t('Invalid data or unknown client')));
 		}
 
 		// @todo Compare the application scope and requested scope
+
+		$uid = DI::userSession()->getLocalUserId();
+
+		if (!empty($request['force_login']) && !empty($uid)) {
+			$this->logger->info('Force fresh login for OAuth authorization', ['uid' => $uid]);
+			DI::session()->clear();
+			// Drop force_login before rebuilding the redirect, otherwise we'd log the freshly authenticated user out again.
+			unset($_REQUEST['force_login']);
+			$uid = 0;
+		}
 
 		$redirect_request = $_REQUEST;
 		unset($redirect_request['pagename']);
 		$redirect = http_build_query($redirect_request);
 
-		$uid = DI::userSession()->getLocalUserId();
 		if (empty($uid)) {
 			$this->logger->info('Redirect to login');
 			DI::appHelper()->redirect('login?' . http_build_query(['return_authorize' => $redirect]));
@@ -73,7 +82,7 @@ class Authorize extends BaseApi
 
 		$token = OAuth::createTokenForUser($application, $uid, $request['scope']);
 		if (!$token) {
-			$this->logAndJsonError(422, $this->errorFactory->UnprocessableEntity());
+			$this->logAndJsonError(500, $this->errorFactory->InternalError());
 		}
 
 		if ($application['redirect_uri'] != 'urn:ietf:wg:oauth:2.0:oob') {

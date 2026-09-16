@@ -28,14 +28,14 @@ class Revoke extends BaseApi
 			'token'         => '', // The previously obtained token, to be invalidated
 		], $request);
 
-		$condition = ['client_id' => $request['client_id'], 'client_secret' => $request['client_secret'], 'access_token' => $request['token']];
-		$token     = DBA::selectFirst('application-view', ['id'], $condition);
-		if (empty($token['id'])) {
-			$this->logger->notice('Token not found', $condition);
-			$this->logAndJsonError(401, $this->errorFactory->Unauthorized());
+		$application = DBA::selectFirst('application', ['id'], ['client_id' => $request['client_id'], 'client_secret' => $request['client_secret']]);
+		if (empty($application['id'])) {
+			$this->logger->notice('Unknown client', ['client_id' => $request['client_id']]);
+			$this->logAndJsonError(401, $this->errorFactory->Unauthorized('invalid_client', $this->t('Invalid client credentials')));
 		}
 
-		DBA::delete('application-token', ['application-id' => $token['id']]);
+		// Revocation is idempotent, see RFC 7009 section 2.2: revoking an unknown or already revoked token isn't an error.
+		DBA::delete('application-token', ['application-id' => $application['id'], 'access_token' => $request['token']]);
 		$this->earlyJsonExit([]);
 	}
 }
