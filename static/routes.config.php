@@ -706,6 +706,10 @@ return [
 			'/photo/crop/{guid}' => [Module\Settings\Profile\Photo\Crop::class,  [R::GET, R::POST]],
 		],
 		'/removeme'              => [Module\Settings\RemoveMe::class,              [R::GET, R::POST]],
+		'/trustedhosts'          => [
+			'[/]'  => [Module\Settings\TrustedHosts\Index::class, [R::GET, R::POST]],
+			'/add' => [Module\Settings\TrustedHosts\Add::class,   [        R::POST]],
+		],
 		'/userexport[/{action}]' => [Module\Settings\UserExport::class,            [R::GET         ]],
 		'/2fa'                   => [
 			'[/]'           => [Module\Settings\TwoFactor\Index::class,       [R::GET, R::POST]],

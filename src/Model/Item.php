@@ -3160,6 +3160,7 @@ class Item
 		}
 
 		$s = DI::postMediaRepository()->addEmbed($s, $uid, $item['uri-id'], $uid != 0);
+		$s = DI::postMediaRepository()->gateEmbeddedIframes($s, $uid);
 
 		$s = HTML::applyContentFilter($s, $filter_reasons);
 
