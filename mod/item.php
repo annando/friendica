@@ -19,6 +19,7 @@
 
 use Friendica\Content\Conversation\ConversationRenderer;
 use Friendica\Content\Text\BBCode;
+use Friendica\Core\L10n;
 use Friendica\Core\Protocol;
 use Friendica\Core\System;
 use Friendica\Core\Worker;
@@ -237,6 +238,10 @@ function item_process(array $post, array $request, bool $preview, string $return
 	$post['body']            = $request['body'] ?? '';
 	$post['location']        = trim($request['location'] ?? '');
 	$post['coord']           = trim($request['coord'] ?? '');
+
+	if (!empty($request['language']) && $request['language'] != L10n::UNDETERMINED_LANGUAGE) {
+		$post['language'] = json_encode([$request['language'] => 1]);
+	}
 
 	$post = DI::contentItem()->addCategories($post, $request['category'] ?? '');
 

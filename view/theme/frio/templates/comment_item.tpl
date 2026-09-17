@@ -69,6 +69,12 @@
 		</p>
 {{/if}}
 		<p class="comment-edit-submit-wrapper">
+			<select name="language" id="jot-language-{{$id}}" class="form-control" title="{{$language_label}}" aria-label="{{$language_label}}" style="display: inline-block; width: auto; margin-right: auto;">
+				{{foreach $languages as $code => $name}}
+					<option value="{{$code}}"{{if $code == $language}} selected{{/if}}>{{$name}}</option>
+				{{/foreach}}
+			</select>
+			<span id="character-counter-{{$id}}" class="grey text-info"></span>
 {{if $preview}}
 			<button type="button" class="btn btn-default comment-edit-preview" onclick="preview_comment({{$id}});" id="comment-edit-preview-link-{{$id}}"><i class="ri ri-eye-line"></i> {{$preview}}</button>
 {{/if}}
@@ -91,4 +97,38 @@
 		$('[id=comment-fake-text-{{$id}}]').prop('focus', null).off('focus');
 		$('[id=comment-{{$id}}]').prop('click', null).off('click');
 	});
+
+	(function () {
+		var $textarea = $('#comment-edit-text-{{$id}}');
+		var $counter = $('#character-counter-{{$id}}');
+		var $language = $('#jot-language-{{$id}}');
+		var languageManuallySet = false;
+		var languageDetectTimer = null;
+
+		$language.off('change.jot-language').on('change.jot-language', function () {
+			languageManuallySet = true;
+		});
+
+		$textarea.off('keyup.comment-counter').on('keyup.comment-counter', function () {
+			$counter.text($textarea.val().length);
+
+			if (languageManuallySet) {
+				return;
+			}
+
+			var body = $textarea.val();
+			clearTimeout(languageDetectTimer);
+			if ($.trim(body).length < 10) {
+				return;
+			}
+
+			languageDetectTimer = setTimeout(function () {
+				$.post(baseurl + '/item/language', {body: body}, function (data) {
+					if (!languageManuallySet && data && data.lang) {
+						$language.val(data.lang);
+					}
+				}, 'json');
+			}, 800);
+		});
+	})();
 </script>

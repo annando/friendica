@@ -120,6 +120,7 @@ class Compose extends BaseModule
 		$body      = $request['body']      ?? '';
 		$location  = $request['location']  ?? $user['default-location'];
 		$wall      = $request['wall']      ?? $type == 'post';
+		$language  = $request['language']  ?? $this->l10n->getCurrentLangIso6391();
 
 		$jotplugins = $this->eventDispatcher->dispatch(
 			new HtmlFilterEvent(HtmlFilterEvent::JOT_TOOL, ''),
@@ -178,6 +179,7 @@ class Compose extends BaseModule
 				'location_clear'       => $this->l10n->t('Clear the location'),
 				'location_unavailable' => $this->l10n->t('Location services are unavailable on your device'),
 				'location_disabled'    => $this->l10n->t('Location services are disabled. Please check the website\'s permissions on your device'),
+				'language_label'       => $this->l10n->t('Language'),
 				'wait'                 => $this->l10n->t('Please wait'),
 				'btnAssistant'         => $this->l10n->t('Writing Assistant'),
 				'btnZen'               => $this->l10n->t('Distraction-Free'),
@@ -216,6 +218,8 @@ class Compose extends BaseModule
 			'$category'   => $category,
 			'$body'       => $body,
 			'$location'   => $location,
+			'$language'   => $language,
+			'$languages'  => $this->l10n->getLanguageCodes(true, true),
 
 			'$contact_allow' => implode(',', $contact_allow_list),
 			'$circle_allow'  => implode(',', $circle_allow_list),

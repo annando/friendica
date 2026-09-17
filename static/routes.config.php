@@ -526,6 +526,8 @@ return [
 		'/testrewrite' => [Module\Install::class, [R::GET]],
 	],
 
+	'/item/language' => [Module\Item\Language::class, [R::POST]],
+
 	'/item/{id:\d+}' => [
 		'/activity/{verb}' => [Module\Item\Activity::class,    [        R::POST]],
 		'/comment'         => [Module\Item\Comment::class,     [R::GET         ]],
