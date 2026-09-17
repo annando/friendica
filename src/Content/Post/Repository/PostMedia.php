@@ -443,8 +443,6 @@ class PostMedia extends BaseRepository
 			return $html;
 		}
 
-		$allow_embed = $this->pConfig->get($uid, 'system', 'embed_remote_media', false);
-
 		$changed = false;
 
 		$tmp = new DOMDocument();
@@ -487,10 +485,10 @@ class PostMedia extends BaseRepository
 				$player = $this->getAudioAttachment($media);
 			} elseif (in_array($media->type, [PostMediaEntity::TYPE_VIDEO, PostMediaEntity::TYPE_HLS])) {
 				$player = $this->getVideoAttachment($media, $uid);
-			} elseif ($allow_embed && $media->hasPlayerUrl() && $media->hasPlayerHeight()) {
-				$player = $this->getPlayerIframe($media, $uid);
-			} elseif ($allow_embed && $media->hasEmbedHtml() && !$media->isPhoto()) {
-				$player = $this->getEmbedIframe($media, $uid);
+			} elseif ($media->hasPlayerUrl() && $media->hasPlayerHeight()) {
+				$player = $this->getPlayerIframe($media);
+			} elseif ($media->hasEmbedHtml() && !$media->isPhoto()) {
+				$player = $this->getEmbedIframe($media);
 			} else {
 				$player = $this->getLinkAttachment($media);
 			}
@@ -531,9 +529,9 @@ class PostMedia extends BaseRepository
 		}
 
 		if ($this->pConfig->get($uid, 'system', 'embed_media', false) && $postMedia->hasPlayerUrl() && $postMedia->hasPlayerHeight()) {
-			$media = $this->getPlayerIframe($postMedia, $uid);
+			$media = $this->getPlayerIframe($postMedia);
 		} elseif ($this->pConfig->get($uid, 'system', 'embed_media', false) && $postMedia->hasEmbedHtml() && !$postMedia->isPhoto()) {
-			$media = $this->getEmbedIframe($postMedia, $uid);
+			$media = $this->getEmbedIframe($postMedia);
 		} else {
 			if ($postMedia->width === 0 && $postMedia->height === 0) {
 				return $this->getAudioAttachment($postMedia);
