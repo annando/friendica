@@ -10,6 +10,8 @@
 
 var editor = false;
 var textlen = 0;
+var languageManuallySet = false;
+var languageDetectTimer = null;
 
 function initEditor(callback) {
 	if (editor == false) {
@@ -30,9 +32,20 @@ function initEditor(callback) {
 		$("a#jot-perms-icon").colorbox(colorbox_options);
 		$(".jothidden").show();
 
+		$("#jot-language").off('change.jot-language').on('change.jot-language', function(){
+			languageManuallySet = true;
+		});
+
 		$("#profile-jot-text").keyup(function(){
 			var textlen = $(this).val().length;
 			$('#character-counter').text(textlen);
+
+			if (!languageManuallySet && $.trim($(this).val()).length >= 10) {
+				clearTimeout(languageDetectTimer);
+				languageDetectTimer = setTimeout(function() {
+					detectJotLanguage($('#profile-jot-text').val());
+				}, 800);
+			}
 		});
 
 		editor = true;
@@ -40,6 +53,14 @@ function initEditor(callback) {
 	if (typeof callback != "undefined") {
 		callback();
 	}
+}
+
+function detectJotLanguage(body) {
+	$.post(baseurl + '/item/language', {body: body}, function (data) {
+		if (!languageManuallySet && data && data.lang) {
+			$('#jot-language').val(data.lang);
+		}
+	}, 'json');
 }
 
 function enableOnUser(){

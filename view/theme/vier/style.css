@@ -2080,6 +2080,11 @@ section.minimal {
 	padding: 0.3em;
 	margin-bottom: 10px;
 }
+#jot-language-wrapper {
+	float: left;
+	margin-left: 15px;
+	margin-top: 3px;
+}
 #post-length {
 	width: 20px;
 	float: left;
