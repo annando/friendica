@@ -101,6 +101,17 @@ class L10n
 	}
 
 	/**
+	 * Returns the current language as an ISO 639-1 code, for use as a fallback
+	 * when automatic language detection of a text doesn't come up with a result.
+	 *
+	 * @return string ISO 639-1 language code
+	 */
+	public function getCurrentLangIso6391(): string
+	{
+		return $this->toISO6391($this->lang);
+	}
+
+	/**
 	 * Set the instance locale based on the HTTP Accept-Language header.
 	 *
 	 * Reads the `HTTP_ACCEPT_LANGUAGE` value from the provided server array

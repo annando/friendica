@@ -20,7 +20,8 @@ use Friendica\Util\Profiler;
 use Psr\Log\LoggerInterface;
 
 /**
- * Return the language of a given item uri-id
+ * Return the language of a given item uri-id, or, without an id, detect the
+ * language of a text that is still being composed.
  */
 class Language extends BaseModule
 {
@@ -36,7 +37,12 @@ class Language extends BaseModule
 		}
 
 		if (empty($this->parameters['id'])) {
-			throw new HTTPException\BadRequestException();
+			$languages = $this->item->getLanguageArray((string) ($request['body'] ?? ''), 1);
+			$lang      = array_key_first($languages);
+			if ($lang === L10n::UNDETERMINED_LANGUAGE) {
+				$lang = $this->l10n->getCurrentLangIso6391();
+			}
+			$this->earlyJsonExit(['lang' => $lang]);
 		}
 
 		$item = Post::selectFirstForUser($this->session->getLocalUserId(), ['language'], ['uid' => [0, $this->session->getLocalUserId()], 'uri-id' => $this->parameters['id']]);

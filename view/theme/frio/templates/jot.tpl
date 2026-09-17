@@ -129,6 +129,13 @@
 						<li><button type="button" class="btn-link" id="profile-location" onclick="jotGetLocation();" title="{{$setloc}}"><i class="ri ri-map-pin-line" aria-hidden="true"></i></button></li>
 						<li><button type="button" class="hidden-xs btn-link icon underline" style="cursor: pointer;" aria-label="{{$contentwarn}}" title="{{$contentwarn}}" onclick="insertFormattingToPost('abstract');"><i class="ri ri-eye-line"></i></button></li>
 						<li><button type="button" class="hidden-xs btn-link" style="cursor: pointer;" aria-label="{{$edcode}}" title="{{$edcode}}" onclick="insertFormattingToPost('code');"><i class="ri ri-code-line"></i></button></li>
+						<li id="jot-language-wrapper" class="jothidden">
+							<select name="language" id="jot-language" class="form-control" title="{{$language_label}}" aria-label="{{$language_label}}" style="display: inline-block; width: 3.5em; height: 36px; padding-left: 4px; padding-right: 4px;">
+								{{foreach $languages as $code => $label}}
+									<option value="{{$code}}"{{if $code == $language}} selected{{/if}}>{{$label}}</option>
+								{{/foreach}}
+							</select>
+						</li>
 						<!-- TODO: waiting for a better placement
 						<li><button type="button" class="btn-link" id="profile-nolocation" onclick="jotClearLocation();" title="{{$noloc}}">{{$shortnoloc}}</button></li>
 						-->
