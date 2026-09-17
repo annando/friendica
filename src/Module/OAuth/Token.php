@@ -89,6 +89,7 @@ class Token extends BaseApi
 
 		// now check for $grant_type === 'authorization_code'
 		// For security reasons only allow freshly created tokens
+		// @todo Verify the PKCE code_verifier against the code_challenge stored for this code, see RFC 7636
 		$redirect_uri = strtok($request['redirect_uri'], '?');
 		$condition    = [
 			"`redirect_uri` LIKE ? AND `id` = ? AND `code` = ? AND `created_at` > ?",
