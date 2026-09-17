@@ -3398,7 +3398,7 @@ class Item
 					$trailing .= $media;
 				}
 			} elseif ($PostMedia->type == PostMedia::TYPE_AUDIO) {
-				$media = DI::postMediaRepository()->getAudioAttachment($PostMedia);
+				$media = DI::postMediaRepository()->getAudioAttachment($PostMedia, $uid);
 				if (($item['post-type'] ?? null) == Item::PT_AUDIO) {
 					$leading .= $media;
 				} else {
