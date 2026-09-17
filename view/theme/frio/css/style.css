@@ -1210,7 +1210,7 @@ ul li .intro-wrapper button.intro-action-link {
 .nav > li > .btn-link {
 	position: relative;
 	display: block;
-	padding: 10px 15px;
+	padding: 10px 13px;
 }
 .nav .open > .btn-link {
 	background-color: #eee;
@@ -2584,6 +2584,8 @@ button[disabled] {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: flex-end;
+	align-items: center;
+	gap: 8px;
 	margin-bottom: 0;
 }
 
