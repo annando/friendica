@@ -487,6 +487,15 @@ class Network extends Timeline
 		if ($this->mention) {
 			$timelineCondition['mention'] = true;
 		}
+		/*
+				$timelinelanguages = $this->pConfig->get($this->session->getLocalUserId(), 'system', 'filter_timeline_language', false)
+					? $this->pConfig->get($this->session->getLocalUserId(), 'system', 'timeline_languages') ?? []
+					: [];
+				if ($timelinelanguages) {
+					$query             = "(`language` IN (" . substr(str_repeat('?, ', count($timelinelanguages)), 0, -2) . ") OR `language` IS NULL)";
+					$timelineCondition = DBA::mergeConditions($timelineCondition, array_merge([$query], $timelinelanguages));
+				}
+		*/
 		if ($this->network) {
 			$commonCondition['network'] = $this->network;
 		}
