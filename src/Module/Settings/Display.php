@@ -96,36 +96,38 @@ class Display extends BaseSettings
 
 		$user = User::getById($uid);
 
-		$theme                   = trim($request['theme']);
-		$mobile_theme            = trim($request['mobile_theme'] ?? '');
-		$enable_smile            = (bool) $request['enable_smile'];
-		$enable_spa              = (bool) $request['enable_spa'];
-		$enable                  = (array) $request['enable'];
-		$bookmark                = (array) $request['bookmark'];
-		$channel_languages       = (array) $request['channel_languages'];
-		$timeline_channels       = isset($request['timeline_channels']) ? (array) $request['timeline_channels'] : null;
-		$filter_channels         = isset($request['filter_channels']) ? (array) $request['filter_channels'] : null;
-		$first_day_of_week       = (int) $request['first_day_of_week'];
-		$calendar_default_view   = trim($request['calendar_default_view']);
-		$infinite_scroll         = (bool) $request['infinite_scroll'];
-		$enable_smart_threading  = (bool) $request['enable_smart_threading'];
-		$enable_dislike          = (bool) $request['enable_dislike'];
-		$display_resharer        = (bool) $request['display_resharer'];
-		$stay_local              = (bool) $request['stay_local'];
-		$compact_timeline        = (bool) $request['compact_timeline'];
-		$hide_empty_descriptions = (bool) $request['hide_empty_descriptions'];
-		$hide_custom_emojis      = (bool) $request['hide_custom_emojis'];
-		$platform_icon_style     = (int) $request['platform_icon_style'];
-		$show_page_drop          = (bool) $request['show_page_drop'];
-		$display_eventlist       = (bool) $request['display_eventlist'];
-		$preview_mode            = (int) $request['preview_mode'];
-		$update_content          = (int) $request['update_content'];
-		$embed_remote_media      = (bool) $request['embed_remote_media'];
-		$embed_media             = (bool) $request['embed_media'];
-		$widget_timelineorder    = trim($request['widget_timelineorder']);
-		$menu_timelineorder      = trim($request['menu_timelineorder']);
-		$widget_timeline_reset   = (bool) $request['widget_timeline_reset'];
-		$menu_timeline_reset     = (bool) $request['menu_timeline_reset'];
+		$theme                    = trim($request['theme']);
+		$mobile_theme             = trim($request['mobile_theme'] ?? '');
+		$enable_smile             = (bool) $request['enable_smile'];
+		$enable_spa               = (bool) $request['enable_spa'];
+		$enable                   = (array) $request['enable'];
+		$bookmark                 = (array) $request['bookmark'];
+		$channel_languages        = (array) $request['channel_languages'];
+		$filter_timeline_language = (bool) $request['filter_timeline_language'];
+		$timeline_languages       = (array) ($request['timeline_languages'] ?? []);
+		$timeline_channels        = isset($request['timeline_channels']) ? (array) $request['timeline_channels'] : null;
+		$filter_channels          = isset($request['filter_channels']) ? (array) $request['filter_channels'] : null;
+		$first_day_of_week        = (int) $request['first_day_of_week'];
+		$calendar_default_view    = trim($request['calendar_default_view']);
+		$infinite_scroll          = (bool) $request['infinite_scroll'];
+		$enable_smart_threading   = (bool) $request['enable_smart_threading'];
+		$enable_dislike           = (bool) $request['enable_dislike'];
+		$display_resharer         = (bool) $request['display_resharer'];
+		$stay_local               = (bool) $request['stay_local'];
+		$compact_timeline         = (bool) $request['compact_timeline'];
+		$hide_empty_descriptions  = (bool) $request['hide_empty_descriptions'];
+		$hide_custom_emojis       = (bool) $request['hide_custom_emojis'];
+		$platform_icon_style      = (int) $request['platform_icon_style'];
+		$show_page_drop           = (bool) $request['show_page_drop'];
+		$display_eventlist        = (bool) $request['display_eventlist'];
+		$preview_mode             = (int) $request['preview_mode'];
+		$update_content           = (int) $request['update_content'];
+		$embed_remote_media       = (bool) $request['embed_remote_media'];
+		$embed_media              = (bool) $request['embed_media'];
+		$widget_timelineorder     = trim($request['widget_timelineorder']);
+		$menu_timelineorder       = trim($request['menu_timelineorder']);
+		$widget_timeline_reset    = (bool) $request['widget_timeline_reset'];
+		$menu_timeline_reset      = (bool) $request['menu_timeline_reset'];
 
 		$enabled_timelines = [];
 		foreach ($enable as $code => $enabled) {
@@ -187,6 +189,8 @@ class Display extends BaseSettings
 		$this->pConfig->set($uid, 'system', 'network_timelines', $network_timelines);
 		$this->pConfig->set($uid, 'system', 'enabled_timelines', $enabled_timelines);
 		$this->pConfig->set($uid, 'channel', 'languages', $channel_languages);
+		$this->pConfig->set($uid, 'system', 'filter_timeline_language', $filter_timeline_language);
+		$this->pConfig->set($uid, 'system', 'timeline_languages', $timeline_languages);
 
 		if (!is_null($timeline_channels)) {
 			$this->pConfig->set($uid, 'channel', 'timeline_channels', $timeline_channels);
@@ -308,12 +312,14 @@ class Display extends BaseSettings
 			BBCode::PREVIEW_AUTO     => $this->t('Automatic image size'),
 		];
 
-		$bookmarked_timelines = $this->pConfig->get($uid, 'system', 'network_timelines', $this->getAvailableTimelines($uid, true)->column('code'));
-		$enabled_timelines    = $this->pConfig->get($uid, 'system', 'enabled_timelines', $this->getAvailableTimelines($uid, false)->column('code'));
-		$channel_languages    = User::getWantedLanguages($uid);
-		$languages            = $this->l10n->getLanguageCodes(true, true);
-		$timeline_channels    = $this->pConfig->get($uid, 'channel', 'timeline_channels') ?? [];
-		$filter_channels      = $this->pConfig->get($uid, 'channel', 'filter_channels')   ?? [];
+		$bookmarked_timelines     = $this->pConfig->get($uid, 'system', 'network_timelines', $this->getAvailableTimelines($uid, true)->column('code'));
+		$enabled_timelines        = $this->pConfig->get($uid, 'system', 'enabled_timelines', $this->getAvailableTimelines($uid, false)->column('code'));
+		$channel_languages        = User::getWantedLanguages($uid);
+		$languages                = $this->l10n->getLanguageCodes(true, true);
+		$filter_timeline_language = $this->pConfig->get($uid, 'system', 'filter_timeline_language', false);
+		$timeline_languages       = $this->pConfig->get($uid, 'system', 'timeline_languages') ?? [User::getLanguageCode($uid)];
+		$timeline_channels        = $this->pConfig->get($uid, 'channel', 'timeline_channels') ?? [];
+		$filter_channels          = $this->pConfig->get($uid, 'channel', 'filter_channels')   ?? [];
 
 		$channels = [];
 		if ($this->config->get('system', 'system_channel_cache')) {
@@ -482,6 +488,8 @@ class Display extends BaseSettings
 			'$platform_icon_style'      => ['platform_icon_style', $this->t('Platform icons style'), $platform_icon_style, $this->t('Style of the platform icons'), $platform_icon_styles, false],
 			'$embed_remote_media'       => ['embed_remote_media', $this->t('Embed remote media'), $embed_remote_media, $this->t('When enabled, remote media will be embedded in the post, like for example YouTube videos.')],
 			'$embed_media'              => ['embed_media', $this->t('Embed supported media'), $embed_media, $this->t('When enabled, remote media will be embedded in the post instead of using the local player if this is supported by the remote system. This is useful for media where the remote player is better than the local one, like for example Peertube videos.')],
+			'$filter_timeline_language' => ['filter_timeline_language', $this->t('Filter timeline by language'), $filter_timeline_language, $this->t('When enabled, only posts in the selected languages are shown in the network and community timelines.')],
+			'$timeline_languages'       => ['timeline_languages[]', $this->t('Timeline languages:'), $timeline_languages, $this->t('Select all the languages you want to see in your timelines. "Unspecified" describes all posts for which no language information was detected (e.g. posts with just an image or too little text to be sure of the language).'), $languages, 'multiple'],
 
 			'$timeline_label'       => $this->t('Label'),
 			'$timeline_descriptiom' => $this->t('Description'),
