@@ -164,7 +164,7 @@ final class StatusEditor
 			'$setloc'              => $this->l10n->t('Set your location'),
 			'$noloc'               => $this->l10n->t('Clear browser location'),
 			'$language_label'      => $this->l10n->t('Language'),
-			'$language'            => L10n::UNDETERMINED_LANGUAGE,
+			'$language'            => $this->l10n->getCurrentLangIso6391(),
 			'$languages'           => $languages,
 			'$weblink'             => $this->l10n->t('Link'),
 			'$video'               => $this->l10n->t('Video'),

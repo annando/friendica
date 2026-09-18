@@ -966,7 +966,7 @@ final class PostTemplateBuilder
 			'$preview'        => $this->l10n->t('Preview'),
 			'$rand_num'       => \Friendica\Util\Crypto::randomDigits(12),
 			'$language_label' => $this->l10n->t('Language'),
-			'$language'       => L10n::UNDETERMINED_LANGUAGE,
+			'$language'       => $this->l10n->getCurrentLangIso6391(),
 			'$languages'      => $languages,
 		]);
 	}

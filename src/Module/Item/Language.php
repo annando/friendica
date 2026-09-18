@@ -38,7 +38,11 @@ class Language extends BaseModule
 
 		if (empty($this->parameters['id'])) {
 			$languages = $this->item->getLanguageArray((string) ($request['body'] ?? ''), 1);
-			$this->earlyJsonExit(['lang' => array_key_first($languages)]);
+			$lang      = array_key_first($languages);
+			if ($lang === L10n::UNDETERMINED_LANGUAGE) {
+				$lang = $this->l10n->getCurrentLangIso6391();
+			}
+			$this->earlyJsonExit(['lang' => $lang]);
 		}
 
 		$item = Post::selectFirstForUser($this->session->getLocalUserId(), ['language'], ['uid' => [0, $this->session->getLocalUserId()], 'uri-id' => $this->parameters['id']]);
