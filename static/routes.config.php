@@ -424,6 +424,7 @@ return [
 	'/blocklist/domain/download' => [Module\Blocklist\Domain\Download::class, [R::GET]],
 
 	'/bookmarklet' => [Module\Bookmarklet::class,  [R::GET]],
+	'/share'       => [Module\Bookmarklet::class,  [R::GET]],
 
 	'/calendar' => [
 		'[/]'                                           => [Module\Calendar\Show::class,       [R::GET         ]],
