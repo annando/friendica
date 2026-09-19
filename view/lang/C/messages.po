@@ -4665,12 +4665,12 @@ msgstr ""
 msgid "All active users already have moderation rights."
 msgstr ""
 
-#: src/Module/Admin/Site.php:230
+#: src/Module/Admin/Site.php:231
 #, php-format
 msgid "%s is no valid input for maximum media size"
 msgstr ""
 
-#: src/Module/Admin/Site.php:235
+#: src/Module/Admin/Site.php:236
 #, php-format
 msgid "%s is no valid input for maximum image size"
 msgstr ""
