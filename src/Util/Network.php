@@ -374,6 +374,37 @@ class Network
 		return $found;
 	}
 
+	/**
+	 * Check if the local part of an email address (the part before the "@") is allowed to register here.
+	 *
+	 * This catches plus-addressing abuse, since "user+anything@example.com" still contains "user".
+	 *
+	 * @param  string $email email address
+	 * @return boolean False if the local part contains a forbidden string, true otherwise
+	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
+	 */
+	public static function isEmailLocalpartAllowed(string $email): bool
+	{
+		$localpart = strtolower(substr($email, 0, strpos($email, '@') ?: 0));
+		if (!$localpart) {
+			return false;
+		}
+
+		$forbidden = DI::config()->get('system', 'forbidden_email_localpart');
+		if (empty($forbidden)) {
+			return true;
+		}
+
+		foreach (explode(',', (string) $forbidden) as $item) {
+			$pat = strtolower(trim($item));
+			if ($pat !== '' && str_contains($localpart, $pat)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public static function lookupAvatarByEmail(string $email): string
 	{
 		$avatar['size']    = 300;

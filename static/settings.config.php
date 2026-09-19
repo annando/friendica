@@ -125,6 +125,11 @@ return [
 		// Set this to announce that your node is used mostly for explicit content that might not be suited for minors.
 		'explicit_content' => false,
 
+		// forbidden_email_localpart (Comma-separated list)
+		// Prevents registrations with an email address whose part before the @ sign contains one of these strings.
+		// This also catches "+" address tagging, e.g. forbidding "spamuser" will reject spamuser+1234@example.com as well.
+		'forbidden_email_localpart' => '',
+
 		// forbidden_nicknames (Comma-separated list)
 		// Prevents users from registering the specified usernames on this node.
 		// Default value comprises classic role names from RFC 2142.
