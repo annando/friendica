@@ -11,6 +11,7 @@ use Friendica\App\Arguments;
 use Friendica\App\BaseURL;
 use Friendica\App\Page;
 use Friendica\AppHelper;
+use Friendica\Content\AttachType;
 use Friendica\Content\ContactSelector;
 use Friendica\Content\Conversation\Collection\Timelines;
 use Friendica\Content\Conversation\Entity\Channel;
@@ -116,6 +117,7 @@ class Display extends BaseSettings
 		$hide_empty_descriptions = (bool) $request['hide_empty_descriptions'];
 		$hide_custom_emojis      = (bool) $request['hide_custom_emojis'];
 		$platform_icon_style     = (int) $request['platform_icon_style'];
+		$attachment_icon_style   = (int) $request['attachment_icon_style'];
 		$show_page_drop          = (bool) $request['show_page_drop'];
 		$display_eventlist       = (bool) $request['display_eventlist'];
 		$preview_mode            = (int) $request['preview_mode'];
@@ -198,6 +200,7 @@ class Display extends BaseSettings
 		$this->pConfig->set($uid, 'accessibility', 'hide_empty_descriptions', $hide_empty_descriptions);
 		$this->pConfig->set($uid, 'accessibility', 'hide_custom_emojis', $hide_custom_emojis);
 		$this->pConfig->set($uid, 'accessibility', 'platform_icon_style', $platform_icon_style);
+		$this->pConfig->set($uid, 'accessibility', 'attachment_icon_style', $attachment_icon_style);
 
 		$this->pConfig->set($uid, 'calendar', 'first_day_of_week', $first_day_of_week);
 		$this->pConfig->set($uid, 'calendar', 'default_view', $calendar_default_view);
@@ -297,6 +300,14 @@ class Display extends BaseSettings
 			ContactSelector::SVG_BLACK       => $this->t('Black'),
 			ContactSelector::SVG_COLOR_WHITE => $this->t('Color/White'),
 			ContactSelector::SVG_WHITE       => $this->t('White'),
+		];
+
+		$attachment_icon_style  = $this->pConfig->get($uid, 'accessibility', 'attachment_icon_style', AttachType::ICON_COLOR);
+		$attachment_icon_styles = [
+			AttachType::ICON_DISABLED => $this->t('Disabled'),
+			AttachType::ICON_COLOR    => $this->t('Color'),
+			AttachType::ICON_BLACK    => $this->t('Black'),
+			AttachType::ICON_WHITE    => $this->t('White'),
 		];
 
 		$preview_mode  = $this->pConfig->get($uid, 'system', 'preview_mode', BBCode::PREVIEW_AUTO);
@@ -480,6 +491,7 @@ class Display extends BaseSettings
 			'$hide_empty_descriptions'  => ['hide_empty_descriptions', $this->t('Hide pictures with empty alternative text'), $hide_empty_descriptions, $this->t("Don't display pictures that are missing the alternative text.")],
 			'$hide_custom_emojis'       => ['hide_custom_emojis', $this->t('Hide custom emojis'), $hide_custom_emojis, $this->t("Don't display custom emojis.")],
 			'$platform_icon_style'      => ['platform_icon_style', $this->t('Platform icons style'), $platform_icon_style, $this->t('Style of the platform icons'), $platform_icon_styles, false],
+			'$attachment_icon_style'    => ['attachment_icon_style', $this->t('Attachment icons style'), $attachment_icon_style, $this->t('Style of the file attachment icons'), $attachment_icon_styles, false],
 			'$embed_remote_media'       => ['embed_remote_media', $this->t('Embed remote media'), $embed_remote_media, $this->t('When enabled, remote media will be embedded in the post, like for example YouTube videos.')],
 			'$embed_media'              => ['embed_media', $this->t('Embed supported media'), $embed_media, $this->t('When enabled, remote media will be embedded in the post instead of using the local player if this is supported by the remote system. This is useful for media where the remote player is better than the local one, like for example Peertube videos.')],
 

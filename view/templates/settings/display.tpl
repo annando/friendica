@@ -48,6 +48,7 @@
 		{{include file="field_checkbox.tpl" field=$hide_empty_descriptions}}
 		{{include file="field_checkbox.tpl" field=$hide_custom_emojis}}
 		{{include file="field_select.tpl" field=$platform_icon_style}}
+		{{include file="field_select.tpl" field=$attachment_icon_style}}
 		{{include file="field_checkbox.tpl" field=$embed_remote_media}}
 		{{include file="field_checkbox.tpl" field=$embed_media}}
 		<div class="settings-submit-wrapper">
