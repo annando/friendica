@@ -4,8 +4,15 @@
 
 $(function(){
 
+	// re-visiting this page via SPA re-runs this script (see
+	// syncOutOfBandScripts), which would otherwise stack duplicate handlers
+	if (window.__friendica_admin_logs_view_bound) {
+		return;
+	}
+	window.__friendica_admin_logs_view_bound = true;
+
 	/* column filter */
-	$("a[data-filter]").on("click", function(ev) {
+	$(document).on("click", "a[data-filter]", function(ev) {
 		var filter = this.dataset.filter;
 		var value = this.dataset.filterValue;
 		var re = RegExp(filter+"=[a-z]*");
@@ -22,24 +29,26 @@ $(function(){
 	});
 
 	/* log details dialog */
-	$(".log-event").on("click", function(ev) {
+	// delegated on document, since SPA mode replaces the table (and the
+	// modal) on every search without re-running this script
+	$(document).on("click", ".log-event", function(ev) {
 		show_details_for_element(ev.currentTarget);
 	});
-	$(".log-event").on("keydown", function(ev) {
+	$(document).on("keydown", ".log-event", function(ev) {
 		if (ev.keyCode == 13 || ev.keyCode == 32) {
 			show_details_for_element(ev.currentTarget);
 		}
 	});
 
 
-	$("[data-previous").on("click", function(ev){ 
+	$(document).on("click", "[data-previous", function(ev){
 		var currentid = document.getElementById("logdetail").dataset.rowId;
 		var $elm = $("#" + currentid).prev();
 		if ($elm.length == 0) return;
 		show_details_for_element($elm[0]);
 	});
 
-	$("[data-next").on("click", function(ev){ 
+	$(document).on("click", "[data-next", function(ev){
 		var currentid = document.getElementById("logdetail").dataset.rowId;
 		var $elm = $("#" + currentid).next();
 		if ($elm.length == 0) return;
@@ -47,15 +56,14 @@ $(function(){
 	});
 
 
-	const $modal = $("#logdetail");
-
-	$modal.on("hidden.bs.modal", function(ev){
+	$(document).on("hidden.bs.modal", "#logdetail", function(ev){
 		document
 			.querySelectorAll('[aria-expanded="true"]')
 			.forEach(elm => elm.setAttribute("aria-expanded", false))
 	});
 
 	function show_details_for_element(element) {
+		var $modal = $("#logdetail");
 		$modal[0].dataset.rowId = element.id;
 
 		var tr = $modal.find(".main-data tbody tr")[0];
