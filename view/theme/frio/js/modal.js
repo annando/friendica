@@ -70,8 +70,12 @@
 			toggleJotNav(this);
 		});
 
-		// Bookmarklet page needs a jot modal which appears automatically
-		if (window.location.pathname.indexOf("/bookmarklet") >= 0 && $("#jot-modal").length) {
+		// Bookmarklet and share intent pages need a jot modal which appears automatically
+		if (
+			(window.location.pathname.indexOf("/bookmarklet") >= 0 ||
+				window.location.pathname.indexOf("/share") >= 0) &&
+			$("#jot-modal").length
+		) {
 			// jotShow is defined in jot-header.tpl
 			if (typeof window.jotShow === "function") {
 				window.jotShow();
