@@ -1610,6 +1610,14 @@ aside #circle-sidebar li .circle-edit-tool {
 aside #circle-sidebar li .circle-edit-tool:first-child {
 	padding-right: 0px;
 }
+aside #file-sidebar li .folder-tool {
+	position: relative;
+	z-index: 1;
+	padding-right: 10px;
+}
+aside #file-sidebar li .folder-tool:first-child {
+	padding-right: 0px;
+}
 
 .x-network {
 	font-size: 15px;
