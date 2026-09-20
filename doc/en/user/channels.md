@@ -49,6 +49,24 @@ Each channel is defined by these values:
 * Full Text Search: This can be used to include or exclude content, based on the content and some additional keywords. It uses the "boolean mode" operators from MariaDB: https://mariadb.com/kb/en/full-text-index-overview/#in-boolean-mode
 * Images, Videos, Audio: When selected, you will see content with the selected media type. This can be combined. If none of these fields are checked, you will see any content, with or without attached media.
 
+## Filter Channels
+
+In the display settings, in the section "Timelines", you can additionally select channels as **Filter Channels**. When a channel is selected as a Filter Channel, all posts that are part of that channel are hidden from your network timeline. A typical use case is to define a channel with the content you do *not* want to see and then select it as a filter.
+
+Filter Channels are only available when the administration has activated the `channel_cache` configuration option in the `local.config.php` file. This option is disabled by default and cannot be toggled in the admin panel. If the option is not set, the Filter Channels selection is not shown at all.
+
+Only your own **user defined channels** can be selected as Filter Channels, not the predefined channels (For you, Discover, What's Hot, Language, Followers, Sharers of sharers, Quiet sharers, Images, Audio, Videos). The reason is technical: filtering relies on an internal cache of channel posts that is maintained only for user defined channels.
+
+Filtering only affects posts that are still within the channel's time window. By default this is 24 hours (this value can be changed by the administrator). Posts that are older than this limit are no longer kept in the channel cache and will therefore not be filtered; they will continue to appear in your network timeline as usual.
+
+## Timeline Channels
+
+In the display settings, in the section "Timelines", you can select channels as **Timeline Channels**. Posts from channels selected as Timeline Channels are mixed into your normal network timeline. Which channels additionally appear in the "Channels" widget or the menu bar is configured by the other timeline settings; it is independent of the selection as a Timeline Channel.
+
+The predefined channels are only available as Timeline Channels when the administration has activated the `system_channel_cache` configuration option in the `local.config.php` file. This option is disabled by default and cannot be toggled in the admin panel. The "For you" and "Quiet sharers" channels are excluded and cannot be selected as Timeline Channels.
+
+User defined channels can only be selected as Timeline Channels when the administration has activated `channel_cache` (the same option that also enables the Filter Channels) and their source is set to "Global Community" or "Followers". Channels that are based on "Latest Activity", "Latest Posts", "Creation", "Following" or on one of your own circles cannot be selected as Timeline Channels, because their posts are already part of your network timeline. An "Everyone" channel (circle "Global Community"), by contrast, brings posts into your network timeline that would not appear there otherwise. It is therefore selectable both as a Filter Channel and as a Timeline Channel, whereas channels based on other sources only appear as Filter Channels.
+
 ## Additional keywords for the full text search
 
 Additionally to the search for content, there are keywords that can be used in the full text search.

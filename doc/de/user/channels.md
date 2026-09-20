@@ -49,6 +49,24 @@ Jeder Kanal wird durch diese Werte definiert:
 * Volltextsuche: Dies kann genutzt werden um Inhalte, basierend auf dem Inhalt und ein paar zusätzlichen Schlüsselwörtern, ein- oder auszuschließen. Es nutzt die "boolean mode"-Operatoren von MariaDB: https://mariadb.com/kb/en/full-text-index-overview/#in-boolean-mode
 * Bilder, Videos, Audio: Wenn ausgewählt, wirst du Inhalte mit dem gewählten Medientyp sehen. Diese Optionen können kombiniert werden. Wenn keines dieser Felder ausgewählt wurde, wirst du alle Inhalte, mit oder ohne angefügten Medien, sehen.
 
+## Filter-Kanäle
+
+In den Anzeige-Einstellungen, im Bereich "Timelines", kannst du zusätzlich Kanäle als **Filter-Kanäle** auswählen. Wenn ein Kanal als Filter-Kanal ausgewählt ist, werden alle Beiträge, die Teil dieses Kanals sind, aus deiner Network-Timeline ausgeblendet. Ein typischer Anwendungsfall ist es, einen Kanal mit Inhalten zu definieren, die du *nicht* sehen möchtest, und ihn dann als Filter auszuwählen.
+
+Filter-Kanäle sind nur verfügbar, wenn die Administration die Konfigurationsoption `channel_cache` in der `local.config.php` aktiviert hat. Diese Option ist standardmäßig deaktiviert und kann nicht im Admin-Panel umgeschaltet werden. Ist die Option nicht gesetzt, wird die Auswahl der Filter-Kanäle gar nicht erst angezeigt.
+
+Es können nur deine eigenen **vom Benutzer eingestellten Kanäle** als Filter-Kanäle ausgewählt werden, nicht die vordefinierten Kanäle (Für Dich, Entdecken, Angesagt, Sprache, Folgende, Geteilt von teilenden, Ruhige teilende, Bilder, Audio, Videos). Der Grund ist technischer Natur: das Filtern nutzt einen internen Zwischenspeicher von Kanal-Beiträgen, der nur für vom Benutzer eingestellte Kanäle gepflegt wird.
+
+Das Filtern betrifft nur Beiträge, die noch innerhalb des Zeitfensters des Kanals liegen. Standardmäßig sind das 24 Stunden (dieser Wert kann vom Administrator geändert werden). Beiträge, die älter als dieses Limit sind, werden nicht mehr im Kanal-Zwischenspeicher gehalten und daher nicht gefiltert; sie erscheinen weiterhin wie gewohnt in deiner Network-Timeline.
+
+## Timeline-Kanäle
+
+In den Anzeige-Einstellungen, im Bereich "Timelines", kannst du Kanäle als **Timeline-Kanäle** auswählen. Beiträge aus als Timeline-Kanal ausgewählten Kanälen werden in deine normale Network-Timeline eingemischt. Welche Kanäle zusätzlich im "Kanäle"-Widget oder der Menüleiste erscheinen, legst du mit den übrigen Timelines-Einstellungen fest; das ist von der Auswahl als Timeline-Kanal unabhängig.
+
+Die vordefinierten Kanäle stehen nur dann als Timeline-Kanäle zur Verfügung, wenn die Administration die Konfigurationsoption `system_channel_cache` in der `local.config.php` aktiviert hat. Diese Option ist standardmäßig deaktiviert und kann nicht im Admin-Panel umgeschaltet werden. Die Kanäle "Für Dich" und "Ruhige teilende" sind davon ausgenommen und können nicht als Timeline-Kanal ausgewählt werden.
+
+Vom Benutzer eingestellte Kanäle können nur dann als Timeline-Kanal ausgewählt werden, wenn die Administration `channel_cache` aktiviert hat (dieselbe Option, die auch die Filter-Kanäle freischaltet) und als Datenquelle "Globale Gemeinschaft" oder "Folgende" gewählt ist. Kanäle, die auf "Letzte Aktivität", "Letzte Beiträge", "Erstellung", "Folge ich" oder auf einem deiner eigenen Circles basieren, können nicht als Timeline-Kanal ausgewählt werden, da deren Beiträge bereits in deiner Network-Timeline enthalten sind. Ein "Jeder"-Kanal (Circle "Globale Gemeinschaft") bringt hingegen Beiträge in deine Network-Timeline, die dort sonst nicht auftauchen würden. Er ist daher sowohl als Filter-Kanal als auch als Timeline-Kanal auswählbar, während Kanäle auf anderen Quellen nur als Filter-Kanal erscheinen.
+
 ## Zusätzliche Schlüsselwörter für die Volltextsuche
 
 Zusätzlich zu der Suche nach Inhalten, gibt es Schlüsselwörter, die in der Volltextsuche genutzt werden können.
