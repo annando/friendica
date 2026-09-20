@@ -190,7 +190,7 @@ function item_insert(int $uid, array $request, bool $preview, string $return_pat
 
 	$post['pubmail'] = $post['pubmail'] && !$post['private'];
 
-	$post = item_process($post, $request, $preview, $return_path);
+	$post = item_process($post, $request, $preview, $return_path, $parent_item);
 
 	$post_id = Item::insert($post);
 	if (!$post_id) {
@@ -226,14 +226,14 @@ function item_insert(int $uid, array $request, bool $preview, string $return_pat
 	// NOTREACHED
 }
 
-function item_process(array $post, array $request, bool $preview, string $return_path): array
+function item_process(array $post, array $request, bool $preview, string $return_path, array $parent_item = []): array
 {
 	$post['self']            = true;
 	$post['api_source']      = false;
 	$post['attach']          = '';
 	$post['title']           = trim($request['title'] ?? '');
 	$post['content-warning'] = trim($request['summary'] ?? '');
-	$post['sensitive']       = !empty($request['sensitive'] ?? false);
+	$post['sensitive']       = !empty($request['sensitive'] ?? false) || !empty($parent_item['sensitive']);
 	$post['body']            = $request['body'] ?? '';
 	$post['location']        = trim($request['location'] ?? '');
 	$post['coord']           = trim($request['coord'] ?? '');
