@@ -70,7 +70,7 @@ class Trust extends BaseModule
 		$action = $request['action'] ?? '';
 
 		if (!empty($action)) {
-			self::checkFormSecurityTokenRedirectOnError('2fa', 'twofactor_trust');
+			self::checkFormSecurityTokenRedirectOnError('2fa/trust', 'twofactor_trust');
 
 			switch ($action) {
 				case 'trust':
