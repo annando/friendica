@@ -494,6 +494,8 @@ return [
 	],
 	'/filed'                     => [Module\Search\Filed::class,          [R::GET]],
 	'/filer[/{id:\d+}]'          => [Module\Filer\SaveTag::class,         [R::GET]],
+	'/filer/remove'              => [Module\Filer\RemoveFolder::class,    [R::POST]],
+	'/filer/rename'              => [Module\Filer\RenameFolder::class,    [R::POST]],
 	'/filerm/{id:\d+}'           => [Module\Filer\RemoveTag::class,       [R::GET, R::POST]],
 	'/follow_confirm'            => [Module\FollowConfirm::class,         [R::POST]],
 	'/followers/{nickname}'      => [Module\ActivityPub\Followers::class, [R::GET]],
