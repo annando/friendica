@@ -57,19 +57,7 @@ class Login extends BaseModule
 
 	protected function post(array $request = [])
 	{
-		// Save sysmessages before clearing session
-		$notices = $this->session->get('sysmsg', []);
-		$infos   = $this->session->get('sysmsg_info', []);
-
 		$this->session->clear();
-
-		// Restore sysmessages after clearing
-		if (!empty($notices)) {
-			$this->session->set('sysmsg', $notices);
-		}
-		if (!empty($infos)) {
-			$this->session->set('sysmsg_info', $infos);
-		}
 
 		// OpenId Login
 		if (
