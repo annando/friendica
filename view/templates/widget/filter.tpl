@@ -35,7 +35,12 @@
 					</li>
 				{{/if}}
 				{{foreach $options as $option}}
-					<li {{if $selected == $option.ref}}class="selected" {{/if}}><a href="{{$base}}{{$type}}={{$option.ref}}" class="{{$type}}-link{{if $selected == $option.ref}} {{$type}}-selected{{/if}}">{{$option.name}}</a>
+					<li class="clearfix{{if $selected == $option.ref}} selected{{/if}}">
+						{{if $type == "file"}}
+							<button type="button" class="folder-rename folder-tool pull-right faded-icon fakelink" data-folder="{{$option.name}}" title="{{$renametext}}"><i class="ri ri-pencil-line" aria-hidden="true"></i></button>
+							<button type="button" class="folder-remove folder-tool pull-right faded-icon fakelink" data-folder="{{$option.name}}" title="{{$removetext}}"><i class="ri ri-delete-bin-line" aria-hidden="true"></i></button>
+						{{/if}}
+						<a href="{{$base}}{{$type}}={{$option.ref}}" class="{{$type}}-link{{if $selected == $option.ref}} {{$type}}-selected{{/if}}">{{$option.name}}</a>
 					</li>
 				{{/foreach}}
 			</ul>
@@ -45,3 +50,40 @@
 <script>
 	initWidget('{{$type}}-sidebar');
 </script>
+{{if $type == "file"}}
+<script>
+	$('#file-sidebar').on('click', '.folder-rename', function () {
+		var $link = $(this);
+		var oldname = $link.data('folder');
+		var newname = prompt('{{$renameprompt}}', oldname);
+		if (!newname || newname === oldname) {
+			return;
+		}
+		$.post('filer/rename', { oldname: oldname, newname: newname, t: '{{$rename_token}}' })
+			.done(function () {
+				$link.closest('li').find('a.{{$type}}-link')
+					.text(newname)
+					.attr('href', '{{$base}}{{$type}}=' + encodeURIComponent(newname));
+				$link.data('folder', newname);
+			})
+			.fail(function () {
+				alert('{{$renamefailed}}');
+			});
+	});
+
+	$('#file-sidebar').on('click', '.folder-remove', function () {
+		if (!confirmDelete()) {
+			return;
+		}
+		var $link = $(this);
+		var term = $link.data('folder');
+		$.post('filer/remove', { term: term, t: '{{$remove_token}}' })
+			.done(function () {
+				$link.closest('li').fadeOut(300, function () { $(this).remove(); });
+			})
+			.fail(function () {
+				alert('{{$removefailed}}');
+			});
+	});
+</script>
+{{/if}}
