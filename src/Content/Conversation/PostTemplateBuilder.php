@@ -876,7 +876,7 @@ final class PostTemplateBuilder
 		$owner = User::getOwnerDataById($this->uid);
 		$text  = '';
 
-		if (!empty($item['content-warning']) && Feature::isEnabled($this->uid, Feature::ADD_ABSTRACT)) {
+		if (!empty($item['content-warning']) && $item['sensitive'] && Feature::isEnabled($this->uid, Feature::ADD_ABSTRACT)) {
 			$text = '[abstract=' . Protocol::ACTIVITYPUB . ']' . $item['content-warning'] . "[/abstract]\n";
 		}
 
