@@ -97,6 +97,10 @@ class Installer
 			$returnVal = false;
 		}
 
+		if (!$this->checkZip()) {
+			$returnVal = false;
+		}
+
 		if (!$this->checkLocalIni()) {
 			$returnVal = false;
 		}
@@ -668,6 +672,25 @@ class Installer
 		}
 
 		// Imagick is not required
+		return true;
+	}
+
+	/**
+	 * Zip Check
+	 *
+	 * Checks, if the zip module is available
+	 *
+	 * @return bool false if something required failed
+	 */
+	public function checkZip()
+	{
+		if (!class_exists('ZipArchive')) {
+			$this->addCheck(DI::l10n()->t('Zip PHP extension is not installed'), false, false, "");
+		} else {
+			$this->addCheck(DI::l10n()->t('Zip PHP extension is installed'), true, false, "");
+		}
+
+		// Zip is not required
 		return true;
 	}
 
