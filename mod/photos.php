@@ -367,6 +367,7 @@ function photos_content()
 	$contact_id     = 0;
 	$edit           = '';
 	$drop           = '';
+	$download       = '';
 
 	$owner_uid = $user['uid'];
 
@@ -582,6 +583,10 @@ function photos_content()
 			$drop = [DI::l10n()->t('Delete album'), 'photos/' . $user['nickname'] . '/album/' . bin2hex($album) . '/drop'];
 		}
 
+		if ($is_owner && class_exists('ZipArchive')) {
+			$download = [DI::l10n()->t('Download album'), 'photos/' . $user['nickname'] . '/album/' . bin2hex($album) . '/download'];
+		}
+
 		if ($order_field === 'created') {
 			$order = [DI::l10n()->t('Show Newest First'), 'photos/' . $user['nickname'] . '/album/' . bin2hex($album), 'oldest'];
 		} else {
@@ -625,6 +630,7 @@ function photos_content()
 			'$order'    => $order,
 			'$edit'     => $edit,
 			'$drop'     => $drop,
+			'$download' => $download,
 			'$paginate' => $pager->renderFull($total),
 		]);
 
