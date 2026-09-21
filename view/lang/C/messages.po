@@ -45,7 +45,7 @@ msgid "Item not found."
 msgstr ""
 
 #: mod/item.php:489 mod/message.php:56 mod/message.php:102 mod/photos.php:117
-#: mod/photos.php:418 src/Model/Event.php:512 src/Module/Attach.php:40
+#: mod/photos.php:419 src/Model/Event.php:512 src/Module/Attach.php:40
 #: src/Module/BaseApi.php:96 src/Module/BaseNotifications.php:83
 #: src/Module/BaseSettings.php:38 src/Module/Calendar/Event/API.php:75
 #: src/Module/Calendar/Event/Form.php:73 src/Module/Calendar/Export.php:79
@@ -58,7 +58,8 @@ msgstr ""
 #: src/Module/FollowConfirm.php:24 src/Module/FriendSuggest.php:44
 #: src/Module/Invite.php:28 src/Module/Invite.php:117
 #: src/Module/Notifications/Notification.php:58
-#: src/Module/Notifications/Notification.php:89 src/Module/Post/Edit.php:85
+#: src/Module/Notifications/Notification.php:89
+#: src/Module/Photo/AlbumDownload.php:53 src/Module/Post/Edit.php:85
 #: src/Module/Profile/Common.php:52 src/Module/Profile/Contacts.php:52
 #: src/Module/Profile/Photos.php:73 src/Module/Profile/Schedule.php:27
 #: src/Module/Profile/Schedule.php:44 src/Module/Register.php:77
@@ -147,7 +148,7 @@ msgstr ""
 msgid "Your message"
 msgstr ""
 
-#: mod/message.php:190 mod/message.php:345 mod/photos.php:76 mod/photos.php:624
+#: mod/message.php:190 mod/message.php:345 mod/photos.php:76 mod/photos.php:629
 #: src/Content/Conversation/StatusEditor.php:150 src/Module/Post/Edit.php:142
 #: src/Module/Profile/Photos.php:336 src/Module/Profile/Photos.php:356
 #: src/Module/Profile/Photos.php:359
@@ -233,11 +234,11 @@ msgstr[1] ""
 #: src/Model/Event.php:504 src/Model/Profile.php:213
 #: src/Module/Calendar/Export.php:71 src/Module/Calendar/Show.php:63
 #: src/Module/Feed.php:52 src/Module/HCard.php:37
-#: src/Module/Profile/Common.php:39 src/Module/Profile/Common.php:48
-#: src/Module/Profile/Contacts.php:38 src/Module/Profile/Contacts.php:46
-#: src/Module/Profile/Conversations.php:56 src/Module/Profile/Media.php:45
-#: src/Module/Profile/Photos.php:64 src/Module/Profile/RemoteFollow.php:47
-#: src/Module/Register.php:336
+#: src/Module/Photo/AlbumDownload.php:49 src/Module/Profile/Common.php:39
+#: src/Module/Profile/Common.php:48 src/Module/Profile/Contacts.php:38
+#: src/Module/Profile/Contacts.php:46 src/Module/Profile/Conversations.php:56
+#: src/Module/Profile/Media.php:45 src/Module/Profile/Photos.php:64
+#: src/Module/Profile/RemoteFollow.php:47 src/Module/Register.php:336
 msgid "User not found."
 msgstr ""
 
@@ -260,7 +261,7 @@ msgstr ""
 msgid "Contact information unavailable"
 msgstr ""
 
-#: mod/photos.php:153
+#: mod/photos.php:153 src/Module/Photo/AlbumDownload.php:67
 msgid "Album not found."
 msgstr ""
 
@@ -286,51 +287,51 @@ msgstr ""
 msgid "No photos selected"
 msgstr ""
 
-#: mod/photos.php:456
+#: mod/photos.php:457
 msgid "Upload photo to this album"
 msgstr ""
 
-#: mod/photos.php:456
+#: mod/photos.php:457
 msgid "Upload selected photo"
 msgstr ""
 
-#: mod/photos.php:472
+#: mod/photos.php:473
 #, php-format
 msgid "The maximum accepted image size is %s"
 msgstr ""
 
-#: mod/photos.php:479
+#: mod/photos.php:480
 #, php-format
 msgid "Upload Photos to %s"
 msgstr ""
 
-#: mod/photos.php:479
+#: mod/photos.php:480
 msgid "Upload Photos"
 msgstr ""
 
-#: mod/photos.php:483
+#: mod/photos.php:484
 msgid "Album name: "
 msgstr ""
 
-#: mod/photos.php:484
+#: mod/photos.php:485
 msgid "If you want to add this photo to an album, begin typing its name, and existing albums will be suggested, which you can select. If you choose something new, it will be created."
 msgstr ""
 
-#: mod/photos.php:487 mod/photos.php:808
+#: mod/photos.php:488 mod/photos.php:814
 #: src/Content/Conversation/StatusEditor.php:184
 #: src/Module/Calendar/Event/Form.php:266 src/Module/Post/Edit.php:196
 msgid "Permissions"
 msgstr ""
 
-#: mod/photos.php:554
+#: mod/photos.php:555
 msgid "Do you really want to delete this photo album and all its photos?"
 msgstr ""
 
-#: mod/photos.php:555
+#: mod/photos.php:556
 msgid "Delete Album"
 msgstr ""
 
-#: mod/photos.php:556 mod/photos.php:655 src/Module/Contact/Follow.php:158
+#: mod/photos.php:557 mod/photos.php:661 src/Module/Contact/Follow.php:158
 #: src/Module/Contact/Revoke.php:92 src/Module/Contact/Unfollow.php:107
 #: src/Module/Media/BaseBrowser.php:86 src/Module/Post/Edit.php:180
 #: src/Module/Post/Tag/Remove.php:101 src/Module/Profile/RemoteFollow.php:110
@@ -338,101 +339,105 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: mod/photos.php:573
+#: mod/photos.php:574
 msgid "New album name: "
 msgstr ""
 
-#: mod/photos.php:577 mod/photos.php:811 src/Module/Calendar/Event/Form.php:124
+#: mod/photos.php:578 mod/photos.php:817 src/Module/Calendar/Event/Form.php:124
 #: src/Module/Settings/Server/Index.php:104
 msgid "Save changes"
 msgstr ""
 
-#: mod/photos.php:581
+#: mod/photos.php:582
 msgid "Edit Album"
 msgstr ""
 
-#: mod/photos.php:582
+#: mod/photos.php:583
 msgid "Delete album"
 msgstr ""
 
-#: mod/photos.php:586
+#: mod/photos.php:587
+msgid "Download album"
+msgstr ""
+
+#: mod/photos.php:591
 msgid "Show Newest First"
 msgstr ""
 
-#: mod/photos.php:588
+#: mod/photos.php:593
 msgid "Show Oldest First"
 msgstr ""
 
-#: mod/photos.php:609 src/Module/Profile/Photos.php:304
+#: mod/photos.php:614 src/Module/Profile/Photos.php:304
 msgid "View Photo"
 msgstr ""
 
-#: mod/photos.php:641
+#: mod/photos.php:647
 msgid "Permission denied. Access to this item may be restricted."
 msgstr ""
 
-#: mod/photos.php:643
+#: mod/photos.php:649
 msgid "Photo not available"
 msgstr ""
 
-#: mod/photos.php:653
+#: mod/photos.php:659
 msgid "Do you really want to delete this photo?"
 msgstr ""
 
-#: mod/photos.php:654 mod/photos.php:812
+#: mod/photos.php:660 mod/photos.php:818
 msgid "Delete Photo"
 msgstr ""
 
-#: mod/photos.php:752
+#: mod/photos.php:758
 msgid "View photo"
 msgstr ""
 
-#: mod/photos.php:754
+#: mod/photos.php:760
 msgid "Edit photo"
 msgstr ""
 
-#: mod/photos.php:755
+#: mod/photos.php:761
 msgid "Delete photo"
 msgstr ""
 
-#: mod/photos.php:756 mod/photos.php:831
+#: mod/photos.php:762 mod/photos.php:837
 msgid "Use as profile picture"
 msgstr ""
 
-#: mod/photos.php:763
+#: mod/photos.php:769
 msgid "Private Photo"
 msgstr ""
 
-#: mod/photos.php:769
+#: mod/photos.php:775
 msgid "View Full Size"
 msgstr ""
 
-#: mod/photos.php:800
+#: mod/photos.php:806
 msgid "New album name"
 msgstr ""
 
-#: mod/photos.php:801
+#: mod/photos.php:807
 msgid "Caption"
 msgstr ""
 
-#: mod/photos.php:802
+#: mod/photos.php:808
 msgid "Do not rotate"
 msgstr ""
 
-#: mod/photos.php:803
+#: mod/photos.php:809
 msgid "Rotate CW (right)"
 msgstr ""
 
-#: mod/photos.php:804
+#: mod/photos.php:810
 msgid "Rotate CCW (left)"
 msgstr ""
 
-#: mod/photos.php:829 src/Model/Event.php:654
+#: mod/photos.php:835 src/Model/Event.php:654
 #: src/Module/Calendar/Event/Show.php:77
 msgid "Edit"
 msgstr ""
 
-#: mod/photos.php:830 src/Content/Conversation/ConversationRenderer.php:575
+#: mod/photos.php:836 src/Content/Conversation/ConversationRenderer.php:575
 #: src/Model/Event.php:656 src/Module/Calendar/Event/Show.php:79
 #: src/Module/Moderation/Users/Active.php:92
 #: src/Module/Moderation/Users/Blocked.php:92
@@ -443,7 +448,7 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: mod/photos.php:832
+#: mod/photos.php:838
 msgid "Back to viewing"
 msgstr ""
 
@@ -2846,296 +2851,304 @@ msgstr ""
 msgid "Connectors"
 msgstr ""
 
-#: src/Core/Installer.php:156
+#: src/Core/Installer.php:160
 msgid "The database configuration file \"config/local.config.php\" could not be written. Please use the enclosed text to create a configuration file in your web server root."
 msgstr ""
 
-#: src/Core/Installer.php:173
+#: src/Core/Installer.php:177
 msgid "You may need to import the file \"database.sql\" manually using phpmyadmin or mysql."
 msgstr ""
 
-#: src/Core/Installer.php:174 src/Module/Install.php:189
+#: src/Core/Installer.php:178 src/Module/Install.php:189
 #: src/Module/Install.php:334
 msgid "Please see the file \"doc/INSTALL.md\"."
 msgstr ""
 
-#: src/Core/Installer.php:261
+#: src/Core/Installer.php:265
 msgid "Could not find a command line version of PHP in the web server PATH."
 msgstr ""
 
-#: src/Core/Installer.php:262
+#: src/Core/Installer.php:266
 msgid "If you don't have a command line version of PHP installed on your server, you will not be able to run the background processing. See <a href='https://github.com/friendica/friendica/blob/stable/doc/Install.md#set-up-the-worker'>'Setup the worker'</a>"
 msgstr ""
 
-#: src/Core/Installer.php:267
+#: src/Core/Installer.php:271
 msgid "PHP executable path"
 msgstr ""
 
-#: src/Core/Installer.php:267
+#: src/Core/Installer.php:271
 msgid "Enter full path to php executable. You can leave this blank to continue the installation."
 msgstr ""
 
-#: src/Core/Installer.php:272
+#: src/Core/Installer.php:276
 msgid "Command line PHP"
 msgstr ""
 
-#: src/Core/Installer.php:281
+#: src/Core/Installer.php:285
 msgid "PHP executable is not the php cli binary (could be cgi-fgci version)"
 msgstr ""
 
-#: src/Core/Installer.php:282
+#: src/Core/Installer.php:286
 msgid "Found PHP version: "
 msgstr ""
 
-#: src/Core/Installer.php:284
+#: src/Core/Installer.php:288
 msgid "PHP cli binary"
 msgstr ""
 
-#: src/Core/Installer.php:297
+#: src/Core/Installer.php:301
 msgid "The command line version of PHP on your system does not have \"register_argc_argv\" enabled."
 msgstr ""
 
-#: src/Core/Installer.php:298
+#: src/Core/Installer.php:302
 msgid "This is required for message delivery to work."
 msgstr ""
 
-#: src/Core/Installer.php:303
+#: src/Core/Installer.php:307
 msgid "PHP register_argc_argv"
 msgstr ""
 
-#: src/Core/Installer.php:335
+#: src/Core/Installer.php:339
 msgid "Error: the \"openssl_pkey_new\" function on this system is not able to generate encryption keys"
 msgstr ""
 
-#: src/Core/Installer.php:336
+#: src/Core/Installer.php:340
 msgid "If running under Windows, please see \"http://www.php.net/manual/en/openssl.installation.php\"."
 msgstr ""
 
-#: src/Core/Installer.php:339
+#: src/Core/Installer.php:343
 msgid "Generate encryption keys"
 msgstr ""
 
-#: src/Core/Installer.php:391
+#: src/Core/Installer.php:395
 msgid "Error: Apache webserver mod-rewrite module is required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:395
+#: src/Core/Installer.php:399
 msgid "Apache mod_rewrite module"
 msgstr ""
 
-#: src/Core/Installer.php:401
+#: src/Core/Installer.php:405
 msgid "Error: PDO or MySQLi PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:405
+#: src/Core/Installer.php:409
 msgid "Error: The MySQL driver for PDO is not installed."
 msgstr ""
 
-#: src/Core/Installer.php:408
+#: src/Core/Installer.php:412
 msgid "PDO or MySQLi PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:414
+#: src/Core/Installer.php:418
 msgid "Error: The IntlChar module is not installed."
 msgstr ""
 
-#: src/Core/Installer.php:417
+#: src/Core/Installer.php:421
 msgid "IntlChar PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:425
+#: src/Core/Installer.php:429
 msgid "Error, XML PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:429
+#: src/Core/Installer.php:433
 msgid "XML PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:433
+#: src/Core/Installer.php:437
 msgid "libCurl PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:434
+#: src/Core/Installer.php:438
 msgid "Error: libCURL PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:441
+#: src/Core/Installer.php:445
 msgid "GD graphics PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:442
+#: src/Core/Installer.php:446
 msgid "Error: GD graphics PHP module with JPEG support required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:449
+#: src/Core/Installer.php:453
 msgid "OpenSSL PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:450
+#: src/Core/Installer.php:454
 msgid "Error: openssl PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:457
+#: src/Core/Installer.php:461
 msgid "Sodium PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:458
+#: src/Core/Installer.php:462
 msgid "Error: Sodium PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:465
+#: src/Core/Installer.php:469
 msgid "mb_string PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:466
+#: src/Core/Installer.php:470
 msgid "Error: mb_string PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:473
+#: src/Core/Installer.php:477
 msgid "iconv PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:474
+#: src/Core/Installer.php:478
 msgid "Error: iconv PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:481
+#: src/Core/Installer.php:485
 msgid "POSIX PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:482
+#: src/Core/Installer.php:486
 msgid "Error: POSIX PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:489
+#: src/Core/Installer.php:493
 msgid "Program execution functions"
 msgstr ""
 
-#: src/Core/Installer.php:490
+#: src/Core/Installer.php:494
 msgid "Error: Program execution functions (proc_open) required but not enabled."
 msgstr ""
 
-#: src/Core/Installer.php:497
+#: src/Core/Installer.php:501
 msgid "JSON PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:498
+#: src/Core/Installer.php:502
 msgid "Error: JSON PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:505
+#: src/Core/Installer.php:509
 msgid "File Information PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:506
+#: src/Core/Installer.php:510
 msgid "Error: File Information PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:513
+#: src/Core/Installer.php:517
 msgid "GNU Multiple Precision PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:514
+#: src/Core/Installer.php:518
 msgid "Error: GNU Multiple Precision PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:521
+#: src/Core/Installer.php:525
 msgid "IDN Functions PHP module"
 msgstr ""
 
-#: src/Core/Installer.php:522
+#: src/Core/Installer.php:526
 msgid "Error: IDN Functions PHP module required but not installed."
 msgstr ""
 
-#: src/Core/Installer.php:545
+#: src/Core/Installer.php:549
 msgid "The web installer needs to be able to create a file called \"local.config.php\" in the \"config\" folder of your web server and it is unable to do so."
 msgstr ""
 
-#: src/Core/Installer.php:546
+#: src/Core/Installer.php:550
 msgid "This is most often a permission setting, as the web server may not be able to write files in your folder - even if you can."
 msgstr ""
 
-#: src/Core/Installer.php:547
+#: src/Core/Installer.php:551
 msgid "At the end of this procedure, we will give you a text to save in a file named local.config.php in your Friendica \"config\" folder."
 msgstr ""
 
-#: src/Core/Installer.php:548
+#: src/Core/Installer.php:552
 msgid "You can alternatively skip this procedure and perform a manual installation. Please see the file \"doc/INSTALL.md\" for instructions."
 msgstr ""
 
-#: src/Core/Installer.php:551
+#: src/Core/Installer.php:555
 msgid "config/local.config.php is writable"
 msgstr ""
 
-#: src/Core/Installer.php:571
+#: src/Core/Installer.php:575
 msgid "Friendica uses the Smarty3 template engine to render its web views. Smarty3 compiles templates to PHP to speed up rendering."
 msgstr ""
 
-#: src/Core/Installer.php:572
+#: src/Core/Installer.php:576
 msgid "In order to store these compiled templates, the web server needs to have write access to the directory view/smarty3/ under the Friendica top level folder."
 msgstr ""
 
-#: src/Core/Installer.php:573
+#: src/Core/Installer.php:577
 msgid "Please ensure that the user that your web server runs as (e.g. www-data) has write access to this folder."
 msgstr ""
 
-#: src/Core/Installer.php:574
+#: src/Core/Installer.php:578
 msgid "Note: as a security measure, you should give the web server write access to view/smarty3/ only--not the template files (.tpl) that it contains."
 msgstr ""
 
-#: src/Core/Installer.php:577
+#: src/Core/Installer.php:581
 msgid "view/smarty3 is writable"
 msgstr ""
 
-#: src/Core/Installer.php:605
+#: src/Core/Installer.php:609
 msgid "Url rewrite in .htaccess seems not working. Make sure you copied .htaccess-dist to .htaccess."
 msgstr ""
 
-#: src/Core/Installer.php:606
+#: src/Core/Installer.php:610
 msgid "In some circumstances (like running inside containers), you can skip this error."
 msgstr ""
 
-#: src/Core/Installer.php:608
+#: src/Core/Installer.php:612
 msgid "Error message from Curl when fetching"
 msgstr ""
 
-#: src/Core/Installer.php:614
+#: src/Core/Installer.php:618
 msgid "Url rewrite is working"
 msgstr ""
 
-#: src/Core/Installer.php:643
+#: src/Core/Installer.php:647
 msgid "The detection of TLS to secure the communication between the browser and the new Friendica server failed."
 msgstr ""
 
-#: src/Core/Installer.php:644
+#: src/Core/Installer.php:648
 msgid "It is highly encouraged to use Friendica only over a secure connection as sensitive information like passwords will be transmitted."
 msgstr ""
 
-#: src/Core/Installer.php:645
+#: src/Core/Installer.php:649
 msgid "Please ensure that the connection to the server is secure."
 msgstr ""
 
-#: src/Core/Installer.php:646
+#: src/Core/Installer.php:650
 msgid "No TLS detected"
 msgstr ""
 
-#: src/Core/Installer.php:648
+#: src/Core/Installer.php:652
 msgid "TLS detected"
 msgstr ""
 
-#: src/Core/Installer.php:665
+#: src/Core/Installer.php:669
 msgid "ImageMagick PHP extension is not installed"
 msgstr ""
 
-#: src/Core/Installer.php:667
+#: src/Core/Installer.php:671
 msgid "ImageMagick PHP extension is installed"
 msgstr ""
 
 #: src/Core/Installer.php:688
+msgid "Zip PHP extension is not installed"
+msgstr ""
+
+#: src/Core/Installer.php:690
+msgid "Zip PHP extension is installed"
+msgstr ""
+
+#: src/Core/Installer.php:711
 msgid "Database already in use."
 msgstr ""
 
-#: src/Core/Installer.php:693
+#: src/Core/Installer.php:716
 msgid "Could not connect to database."
 msgstr ""
 
@@ -9520,6 +9533,10 @@ msgstr ""
 #: src/Module/Photo.php:183
 #, php-format
 msgid "Invalid photo with id %s."
+msgstr ""
+
+#: src/Module/Photo/AlbumDownload.php:62
+msgid "This server is missing PHP's Zip extension, which is needed to download a photo album."
 msgstr ""
 
 #: src/Module/Post/Edit.php:91 src/Module/Post/Edit.php:105

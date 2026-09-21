@@ -273,6 +273,9 @@ HELP;
 		if (!$installer->checkImagick()) {
 			$checked = false;
 		}
+		if (!$installer->checkZip()) {
+			$checked = false;
+		}
 		if (!$installer->checkLocalIni()) {
 			$checked = false;
 		}
