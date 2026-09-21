@@ -98,7 +98,9 @@ class Installer
 			$returnVal = false;
 		}
 
-		$this->checkAPCu();
+		if (!$this->checkZip()) {
+			$returnVal = false;
+		}
 
 		if (!$this->checkLocalIni()) {
 			$returnVal = false;
@@ -675,15 +677,22 @@ class Installer
 	}
 
 	/**
-	 * Checks, if the optional APCu module is available
+	 * Zip Check
+	 *
+	 * Checks, if the zip module is available
+	 *
+	 * @return bool false if something required failed
 	 */
-	public function checkAPCu(): void
+	public function checkZip()
 	{
-		if (!APCuCache::isAvailable()) {
-			$this->addCheck(DI::l10n()->t('APCu PHP extension is not available (optional, only needed for the "apcu" cache driver)'), false, false, '');
+		if (!class_exists('ZipArchive')) {
+			$this->addCheck(DI::l10n()->t('Zip PHP extension is not installed'), false, false, "");
 		} else {
-			$this->addCheck(DI::l10n()->t('APCu PHP extension is available'), true, false, '');
+			$this->addCheck(DI::l10n()->t('Zip PHP extension is installed'), true, false, "");
 		}
+
+		// Zip is not required
+		return true;
 	}
 
 	/**
