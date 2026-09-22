@@ -5,6 +5,9 @@
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
 {{if !$update}}<script type="text/javascript" src="view/theme/frio/frameworks/jquery-color/jquery.color.js?v={{$VERSION}}"></script>{{/if}}
+{{if $mode == display && $click_to_display}}
+<p><button type="button" onclick="window.history.back()" class="btn btn-primary">{{$back_link}}</button></p>
+{{/if}}
 {{if $mode == display}}
 <script type="text/javascript">
 // Display module: Scroll to item by GUID
