@@ -92,7 +92,7 @@
 							<div class="wall-item-network-end"></div>
 						</div>
 
-						<div itemprop="description" class="wall-item-content">
+						<div itemprop="description" class="wall-item-content{{if $click_to_display && $mode != display}} click-to-display{{/if}}"{{if $click_to_display && $mode != display}} onclick="clickToDisplay(event, '{{$item.plink.orig}}');"{{/if}}>
                             {{if $item.title}}<h2 dir="auto"><a href="{{$item.plink.href}}" class="{{$item.sparkle}} p-name" dir="auto">{{$item.title}}</a></h2>{{/if}}
 							{{if $item.summary}}<summary class="wall-item-summary" id="wall-item-summary-{{$item.id}}">{{$item.summary}}</summary>{{/if}}
 							<div class="wall-item-body e-content {{if !$item.title}}p-name{{/if}}" dir="auto">{{$item.body_html nofilter}}</div>
@@ -135,6 +135,8 @@
 
                                 {{if $item.comment_html}}
 									<a role="button" id="comment-{{$item.id}}" class="fakelink togglecomment" onclick="openClose('item-comments-{{$item.id}}'); commentExpand({{$item.id}});" title="{{$item.switchcomment}}"><i class="icon-commenting"><span class="sr-only">{{$item.switchcomment}}</span></i></a>
+                                {{elseif $item.flat && !$item.previewing}}
+									<a role="button" id="comment-{{$item.id}}" href="{{$item.plink.orig}}" title="{{$item.switchcomment}}"><i class="icon-commenting"><span class="sr-only">{{$item.switchcomment}}</span></i></a>
                                 {{/if}}
 
                                 {{if $item.isevent}}
