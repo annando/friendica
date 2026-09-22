@@ -4,6 +4,9 @@
   *
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
+{{if $mode == display && $click_to_display}}
+<p><button type="button" onclick="window.history.back()" class="btn btn-primary">{{$back_link}}</button></p>
+{{/if}}
 {{$live_update nofilter}}
 {{foreach $threads as $thread}}
 <hr class="sr-only" />
