@@ -756,6 +756,22 @@ class Contact
 	}
 
 	/**
+	 * Checks if a given contact id (public or user's own) represents the given user's own identity
+	 *
+	 * @param integer $cid Either public contact id or user's contact id
+	 * @param integer $uid User ID
+	 * @return boolean
+	 */
+	public static function isSelf(int $cid, int $uid): bool
+	{
+		if (empty($cid) || empty($uid)) {
+			return false;
+		}
+
+		return self::getPublicContactId($cid, $uid) === self::getPublicIdByUserId($uid);
+	}
+
+	/**
 	 * Helper function for "getPublicAndUserContactID"
 	 *
 	 * @param int $cid Either public contact id or user's contact id
