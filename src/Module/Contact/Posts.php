@@ -8,8 +8,8 @@
 namespace Friendica\Module\Contact;
 
 use Friendica\App;
+use Friendica\AppHelper;
 use Friendica\BaseModule;
-use Friendica\Contact\LocalRelationship\Repository\LocalRelationship;
 use Friendica\Content\Nav;
 use Friendica\Content\Widget;
 use Friendica\Core\L10n;
@@ -17,6 +17,8 @@ use Friendica\Core\Protocol;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
 use Friendica\Database\DBA;
 use Friendica\Model;
+use Friendica\Model\Profile as ProfileModel;
+use Friendica\Module\BaseProfile;
 use Friendica\Module\Contact;
 use Friendica\Module\Response;
 use Friendica\Module\Security\Login;
@@ -29,7 +31,7 @@ use Psr\Log\LoggerInterface;
  */
 class Posts extends BaseModule
 {
-	public function __construct(L10n $l10n, private readonly LocalRelationship $localRelationship, App\BaseURL $baseUrl, App\Arguments $args, LoggerInterface $logger, Profiler $profiler, Response $response, private App\Page $page, private readonly IHandleUserSessions $userSession, $server, array $parameters = [])
+	public function __construct(L10n $l10n, App\BaseURL $baseUrl, App\Arguments $args, private readonly AppHelper $appHelper, LoggerInterface $logger, Profiler $profiler, Response $response, private App\Page $page, private readonly IHandleUserSessions $userSession, $server, array $parameters = [])
 	{
 		parent::__construct($l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 	}
@@ -57,18 +59,16 @@ class Posts extends BaseModule
 			throw new NotFoundException($this->t('Contact not found.'));
 		}
 
-		$localRelationship = $this->localRelationship->getForUserContact($this->userSession->getLocalUserId(), $contact['id']);
-		if ($localRelationship->rel === Model\Contact::SELF) {
-			$this->baseUrl->redirect('profile/' . $contact['nick']);
+		if (Model\Contact::isSelf($contact['id'], $this->userSession->getLocalUserId())) {
+			$profile = ProfileModel::load($this->appHelper, $contact['nick']);
+			Nav::setSelected('home');
+			$o = BaseProfile::getTabsHTML('posts', true, $profile['nickname'], $profile['hide-friends']);
+		} else {
+			$this->page['aside'] .= Widget\VCard::getHTML($contact);
+			Nav::setSelected('contacts');
+			Contact::setPageTitle($contact);
+			$o = Contact::getTabsHTML($contact, Contact::TAB_POSTS);
 		}
-
-		$this->page['aside'] .= Widget\VCard::getHTML($contact);
-
-		Nav::setSelected('contacts');
-
-		Contact::setPageTitle($contact);
-
-		$o = Contact::getTabsHTML($contact, Contact::TAB_POSTS);
 
 		$o .= Model\Contact::getPostsFromId($contact['id'], $this->userSession->getLocalUserId(), false, $request);
 
