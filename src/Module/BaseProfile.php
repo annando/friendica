@@ -12,6 +12,7 @@ use Friendica\Content\Feature;
 use Friendica\Core\Renderer;
 use Friendica\DI;
 use Friendica\Event\ArrayFilterEvent;
+use Friendica\Model\Contact;
 use Friendica\Model\User;
 
 class BaseProfile extends BaseModule
@@ -28,6 +29,14 @@ class BaseProfile extends BaseModule
 	public static function getTabsHTML(string $current, bool $is_owner, string $nickname, bool $hide_friends)
 	{
 		$baseProfileUrl = DI::baseUrl() . '/profile/' . $nickname;
+
+		if ($is_owner) {
+			$owner = null;
+			$pcid  = DI::userSession()->getPublicContactId();
+		} else {
+			$owner = User::getByNickname($nickname, ['uid']);
+			$pcid  = $owner ? Contact::getPublicIdByUserId($owner['uid']) : 0;
+		}
 
 		$tabs = [
 			[
@@ -47,21 +56,41 @@ class BaseProfile extends BaseModule
 				'accesskey' => 'm',
 			],
 			[
-				'label'     => DI::l10n()->t('Photos'),
-				'url'       => $baseProfileUrl . '/photos',
-				'sel'       => $current == 'photos' ? 'active' : '',
-				'title'     => DI::l10n()->t('Photo Albums'),
-				'id'        => 'photo-tab',
-				'accesskey' => 'h',
+				'label'     => DI::l10n()->t('Posts and Comments'),
+				'url'       => DI::baseUrl() . '/contact/' . $pcid . '/posts',
+				'sel'       => $current == 'posts' ? 'active' : '',
+				'title'     => DI::l10n()->t('Individual Posts and Replies'),
+				'id'        => 'posts-tab',
+				'accesskey' => 'p',
 			],
 			[
 				'label'     => DI::l10n()->t('Media posts'),
-				'url'       => $baseProfileUrl . '/media',
+				'url'       => DI::baseUrl() . '/contact/' . $pcid . '/media',
 				'sel'       => $current == 'media' ? 'active' : '',
 				'title'     => DI::l10n()->t('Posts containing media'),
 				'id'        => 'media-tab',
 				'accesskey' => 'd',
 			],
+		];
+
+		if (!$hide_friends) {
+			$tabs[] = [
+				'label'     => DI::l10n()->t('Contacts'),
+				'url'       => $baseProfileUrl . '/contacts',
+				'sel'       => $current == 'contacts' ? 'active' : '',
+				'title'     => DI::l10n()->t('View all known contacts'),
+				'id'        => 'viewcontacts-tab',
+				'accesskey' => 'k',
+			];
+		}
+
+		$tabs[] = [
+			'label'     => DI::l10n()->t('Photos'),
+			'url'       => $baseProfileUrl . '/photos',
+			'sel'       => $current == 'photos' ? 'active' : '',
+			'title'     => DI::l10n()->t('Photo Albums'),
+			'id'        => 'photo-tab',
+			'accesskey' => 'h',
 		];
 
 		// the calendar link for the full-featured events calendar
@@ -74,18 +103,15 @@ class BaseProfile extends BaseModule
 				'id'        => 'calendar-tab',
 				'accesskey' => 'c',
 			];
-		} else {
-			$owner = User::getByNickname($nickname, ['uid']);
-			if (DI::userSession()->isAuthenticated() || $owner && Feature::isEnabled($owner['uid'], Feature::PUBLIC_CALENDAR)) {
-				$tabs[] = [
-					'label'     => DI::l10n()->t('Calendar'),
-					'url'       => DI::baseUrl() . '/calendar/show/' . $nickname,
-					'sel'       => $current == 'calendar' ? 'active' : '',
-					'title'     => DI::l10n()->t('Calendar'),
-					'id'        => 'calendar-tab',
-					'accesskey' => 'c',
-				];
-			}
+		} elseif (DI::userSession()->isAuthenticated() || $owner && Feature::isEnabled($owner['uid'], Feature::PUBLIC_CALENDAR)) {
+			$tabs[] = [
+				'label'     => DI::l10n()->t('Calendar'),
+				'url'       => DI::baseUrl() . '/calendar/show/' . $nickname,
+				'sel'       => $current == 'calendar' ? 'active' : '',
+				'title'     => DI::l10n()->t('Calendar'),
+				'id'        => 'calendar-tab',
+				'accesskey' => 'c',
+			];
 		}
 
 		if ($is_owner) {
@@ -104,17 +130,6 @@ class BaseProfile extends BaseModule
 				'title'     => DI::l10n()->t('Posts that are scheduled for publishing'),
 				'id'        => 'schedule-tab',
 				'accesskey' => 'o',
-			];
-		}
-
-		if (!$hide_friends) {
-			$tabs[] = [
-				'label'     => DI::l10n()->t('Contacts'),
-				'url'       => $baseProfileUrl . '/contacts',
-				'sel'       => $current == 'contacts' ? 'active' : '',
-				'title'     => DI::l10n()->t('Contacts'),
-				'id'        => 'viewcontacts-tab',
-				'accesskey' => 'k',
 			];
 		}
 
