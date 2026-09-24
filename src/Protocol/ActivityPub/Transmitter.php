@@ -390,7 +390,13 @@ class Transmitter
 			}
 		}
 
-		$data['url']                       = $owner['url'];
+		// Groups are presented by their thread overview
+		if ($owner['account-type'] == User::ACCOUNT_TYPE_COMMUNITY) {
+			$data['url'] = DI::baseUrl() . '/group/' . $owner['nick'];
+		} else {
+			$data['url'] = $owner['url'];
+		}
+
 		$data['manuallyApprovesFollowers'] = in_array($owner['page-flags'], [User::PAGE_FLAGS_NORMAL, User::PAGE_FLAGS_PRVGROUP]);
 		$data['discoverable']              = (bool) $owner['net-publish'] && $full;
 		$data['indexable']                 = (bool) $owner['net-publish'] && $full;
@@ -665,6 +671,12 @@ class Transmitter
 				if (!empty($profile)) {
 					if (($term['type'] == Tag::AUDIENCE) && ($profile['type'] == 'Group')) {
 						$data['audience'][] = $profile['url'];
+						// A starting post that is addressed to a group via the audience is handled like an exclusive mention
+						if (!$is_group && ($item['gravity'] == Item::GRAVITY_PARENT) && !empty($profile['followers'])) {
+							$exclusive    = true;
+							$data['cc'][] = $profile['followers'];
+							DI::logger()->debug('Group post via audience', ['uri-id' => $item['uri-id'], 'group' => $profile['url']]);
+						}
 					}
 					if ($term['type'] == Tag::EXCLUSIVE_MENTION) {
 						$exclusive = true;
@@ -696,6 +708,12 @@ class Transmitter
 					if (!empty($profile)) {
 						if (($term['type'] == Tag::AUDIENCE) && ($profile['type'] == 'Group')) {
 							$data['audience'][] = $profile['url'];
+							// A starting post that is addressed to a group via the audience is handled like an exclusive mention
+							if (!$is_group && ($item['gravity'] == Item::GRAVITY_PARENT) && !empty($profile['followers'])) {
+								$exclusive    = true;
+								$data['cc'][] = $profile['followers'];
+								DI::logger()->debug('Group post via audience', ['uri-id' => $item['uri-id'], 'group' => $profile['url']]);
+							}
 						}
 						if ($term['type'] == Tag::EXCLUSIVE_MENTION) {
 							$exclusive = true;
