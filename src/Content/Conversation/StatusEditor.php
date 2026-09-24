@@ -194,6 +194,7 @@ final class StatusEditor
 			'$preview'      => $this->l10n->t('Preview'),
 			'$jotplugins'   => $jotplugins,
 			'$notes_cid'    => $notesContactId,
+			'$group_cid'    => $formData['group_cid'] ?? 0,
 			'$rand_num'     => Crypto::randomDigits(12),
 
 			// ACL permissions box
