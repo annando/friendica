@@ -1045,3 +1045,86 @@ summary.wall-item-summary {
 .edit-profile-link-wrapper {
 	text-align: center;
 }
+
+/* Group overview */
+#group-overview .group-overview-avatar,
+#group-threads .group-overview-avatar {
+	width: 64px;
+}
+
+#group-overview .group-overview-avatar img,
+#group-threads .group-overview-avatar img {
+	width: 48px;
+	height: 48px;
+	max-width: none;
+	object-fit: cover;
+	border-radius: 4px;
+}
+
+#group-overview .group-overview-count,
+#group-threads .group-overview-count {
+	text-align: center;
+}
+
+@media screen and (max-width: 767px) {
+	#group-overview thead,
+	#group-threads thead {
+		display: none;
+	}
+
+	#group-overview tr,
+	#group-threads tr {
+		display: grid;
+		grid-template-columns: 48px auto 1fr;
+		grid-template-areas:
+			"avatar title title"
+			"avatar count unread"
+			"avatar latest latest";
+		column-gap: 10px;
+		padding: 8px 0;
+		border-top: 1px solid rgba(127, 127, 127, 0.3);
+	}
+
+	#group-overview td,
+	#group-threads td {
+		display: block;
+		min-width: 0;
+		padding: 0;
+		border: none;
+		overflow-wrap: anywhere;
+	}
+
+	#group-overview .group-overview-avatar,
+	#group-threads .group-overview-avatar {
+		grid-area: avatar;
+		width: auto;
+	}
+
+	#group-overview .group-overview-title,
+	#group-threads .group-overview-title {
+		grid-area: title;
+	}
+
+	#group-overview .group-overview-count,
+	#group-threads .group-overview-count {
+		grid-area: count;
+		text-align: left;
+		font-size: smaller;
+	}
+
+	#group-overview .group-overview-unread,
+	#group-threads .group-overview-unread {
+		grid-area: unread;
+	}
+
+	#group-overview .group-overview-count::before,
+	#group-threads .group-overview-count::before {
+		content: attr(data-label) ": ";
+	}
+
+	#group-overview .group-overview-latest,
+	#group-threads .group-overview-latest {
+		grid-area: latest;
+		font-size: smaller;
+	}
+}

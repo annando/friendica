@@ -665,6 +665,12 @@ class Transmitter
 				if (!empty($profile)) {
 					if (($term['type'] == Tag::AUDIENCE) && ($profile['type'] == 'Group')) {
 						$data['audience'][] = $profile['url'];
+						// A starting post that is addressed to a group via the audience is handled like an exclusive mention
+						if (!$is_group && ($item['gravity'] == Item::GRAVITY_PARENT) && !empty($profile['followers'])) {
+							$exclusive    = true;
+							$data['cc'][] = $profile['followers'];
+							DI::logger()->debug('Group post via audience', ['uri-id' => $item['uri-id'], 'group' => $profile['url']]);
+						}
 					}
 					if ($term['type'] == Tag::EXCLUSIVE_MENTION) {
 						$exclusive = true;
@@ -696,6 +702,12 @@ class Transmitter
 					if (!empty($profile)) {
 						if (($term['type'] == Tag::AUDIENCE) && ($profile['type'] == 'Group')) {
 							$data['audience'][] = $profile['url'];
+							// A starting post that is addressed to a group via the audience is handled like an exclusive mention
+							if (!$is_group && ($item['gravity'] == Item::GRAVITY_PARENT) && !empty($profile['followers'])) {
+								$exclusive    = true;
+								$data['cc'][] = $profile['followers'];
+								DI::logger()->debug('Group post via audience', ['uri-id' => $item['uri-id'], 'group' => $profile['url']]);
+							}
 						}
 						if ($term['type'] == Tag::EXCLUSIVE_MENTION) {
 							$exclusive = true;

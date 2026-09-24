@@ -14,7 +14,10 @@ use Friendica\Core\Addon\AddonHelper;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
+use Friendica\Database\Database;
 use Friendica\Model\Contact;
+use Friendica\Model\Item;
+use Friendica\Model\Post;
 
 /**
  * This class handles methods related to the group functionality
@@ -29,6 +32,7 @@ class GroupManager
 		private readonly BaseURL $baseUrl,
 		private readonly L10n $l10n,
 		private readonly IHandleUserSessions $session,
+		private readonly Database $database,
 	) {}
 
 	/**
@@ -165,5 +169,96 @@ class GroupManager
 		}
 
 		return $this->contacts->countUnseenItems($uid, self::CONTACT_TYPES);
+	}
+
+	/**
+	 * Marks all posts in the threads of a group as seen
+	 *
+	 * @param int $uid  User id
+	 * @param int $pcid Public contact id of the group
+	 * @throws \Exception
+	 */
+	public function markSeen(int $uid, int $pcid): void
+	{
+		Item::update(['unseen' => false], ["`uid` = ? AND `unseen` AND `parent-uri-id` IN (SELECT `uri-id` FROM `post-thread-user` WHERE `uid` = ? AND `owner-id` = ?)", $uid, $uid, $pcid]);
+	}
+
+	/**
+	 * Fetches the number of posts, the number of unread posts and the date of the latest post per thread in one go
+	 *
+	 * @param int   $uid          User id
+	 * @param int[] $parentUriIds Uri-ids of the threads
+	 * @param int[] $gravity      Gravities of the posts that are counted
+	 *
+	 * @return array Statistics keyed by the uri-id of the thread
+	 * @throws \Exception
+	 */
+	public function getThreadStats(int $uid, array $parentUriIds, array $gravity): array
+	{
+		if (empty($parentUriIds)) {
+			return [];
+		}
+
+		$stats = [];
+
+		$posts = $this->database->p(
+			"SELECT `parent-uri-id`, COUNT(*) AS `posts`, SUM(`unseen`) AS `unread`, MAX(`received`) AS `received` FROM `post-user`
+				WHERE `uid` = ? AND `visible` AND NOT `deleted` AND `gravity` IN (" . implode(', ', array_fill(0, count($gravity), '?')) . ")
+				AND `parent-uri-id` IN (" . implode(', ', array_fill(0, count($parentUriIds), '?')) . ")
+				GROUP BY `parent-uri-id`",
+			$uid,
+			...$gravity,
+			...$parentUriIds,
+		);
+		while ($row = $this->database->fetch($posts)) {
+			$stats[$row['parent-uri-id']] = [
+				'posts'    => (int) $row['posts'],
+				'unread'   => (int) $row['unread'],
+				'received' => $row['received'],
+			];
+		}
+		$this->database->close($posts);
+
+		return $stats;
+	}
+
+	/**
+	 * Fetches the latest post of each thread
+	 *
+	 * @param int   $uid     User id
+	 * @param array $stats   Thread statistics from getThreadStats()
+	 * @param int[] $gravity Gravities of the posts
+	 * @param array $fields  Fields of the posts
+	 *
+	 * @return array Posts keyed by the uri-id of the thread
+	 * @throws \Exception
+	 */
+	public function getLatestPosts(int $uid, array $stats, array $gravity, array $fields): array
+	{
+		if (empty($stats)) {
+			return [];
+		}
+
+		$latest = [];
+
+		$condition = [
+			'uid'           => $uid,
+			'parent-uri-id' => array_keys($stats),
+			'received'      => array_unique(array_column($stats, 'received')),
+			'gravity'       => $gravity,
+			'visible'       => true,
+			'deleted'       => false,
+		];
+
+		$posts = Post::selectForUser($uid, array_merge($fields, ['parent-uri-id', 'received']), $condition);
+		while ($post = Post::fetch($posts)) {
+			// Different threads can share the same date, so we have to check the thread as well
+			if (!isset($latest[$post['parent-uri-id']]) && ($post['received'] === $stats[$post['parent-uri-id']]['received'])) {
+				$latest[$post['parent-uri-id']] = $post;
+			}
+		}
+		$this->database->close($posts);
+
+		return $latest;
 	}
 }
