@@ -1066,6 +1066,16 @@ summary.wall-item-summary {
 	text-align: center;
 }
 
+#group-overview .group-overview-host th {
+	padding-top: 20px;
+	font-size: larger;
+}
+
+#group-overview .group-overview-host-info {
+	font-size: small;
+	font-weight: normal;
+}
+
 @media screen and (max-width: 767px) {
 	#group-overview thead,
 	#group-threads thead {
@@ -1083,6 +1093,16 @@ summary.wall-item-summary {
 		column-gap: 10px;
 		padding: 8px 0;
 		border-top: 1px solid rgba(127, 127, 127, 0.3);
+	}
+
+	#group-overview tr.group-overview-host {
+		display: block;
+	}
+
+	#group-overview .group-overview-host th {
+		display: block;
+		padding: 12px 0 4px;
+		border: none;
 	}
 
 	#group-overview td,

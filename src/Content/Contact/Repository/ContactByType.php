@@ -18,7 +18,7 @@ use Friendica\Database\DBA;
  */
 class ContactByType
 {
-	private const FIELDS = ['id', 'pid', 'url', 'addr', 'alias', 'name', 'micro', 'thumb', 'avatar', 'network', 'uid', 'about'];
+	private const FIELDS = ['id', 'pid', 'url', 'addr', 'alias', 'name', 'micro', 'thumb', 'avatar', 'network', 'uid', 'about', 'gsid'];
 
 	public function __construct(private readonly Database $database) {}
 
@@ -68,6 +68,7 @@ class ContactByType
 				'thumb'   => $contact['thumb'],
 				'network' => $contact['network'],
 				'about'   => $contact['about'] ?? '',
+				'gsid'    => $contact['gsid'],
 			];
 		}
 
