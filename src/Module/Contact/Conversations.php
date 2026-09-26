@@ -79,13 +79,25 @@ class Conversations extends BaseModule
 		$output = '';
 
 		if (!$contact['ap-posting-restricted'] && !$raw) {
-			$options = [
-				'lockstate'            => ACL::getLockstateForUserId($this->userSession->getLocalUserId()) ? 'lock' : 'unlock',
-				'acl'                  => ACL::getFullSelectorHTML($this->page, $this->userSession->getLocalUserId(), true, []),
-				'bang'                 => '',
-				'content'              => ($contact['contact-type'] == ModelContact::TYPE_COMMUNITY ? '!' : '@') . ($contact['addr'] ?: $contact['url']),
-				'contact_account_type' => $contact['contact-type'],
-			];
+			$ucid = 0;
+			if ($contact['contact-type'] == ModelContact::TYPE_COMMUNITY) {
+				$ucid = ModelContact::getUserContactId($contact['id'], $this->userSession->getLocalUserId());
+			}
+
+			if ($ucid) {
+				$options = [
+					'group_cid'            => $ucid,
+					'contact_account_type' => $contact['contact-type'],
+				];
+			} else {
+				$options = [
+					'lockstate'            => ACL::getLockstateForUserId($this->userSession->getLocalUserId()) ? 'lock' : 'unlock',
+					'acl'                  => ACL::getFullSelectorHTML($this->page, $this->userSession->getLocalUserId(), true, []),
+					'bang'                 => '',
+					'content'              => ($contact['contact-type'] == ModelContact::TYPE_COMMUNITY ? '!' : '@') . ($contact['addr'] ?: $contact['url']),
+					'contact_account_type' => $contact['contact-type'],
+				];
+			}
 			$output = $this->statusEditor->renderEditor($options);
 		}
 
