@@ -92,9 +92,6 @@ class Group extends BaseModule
 		if ($ucid && !$contact['ap-posting-restricted']) {
 			$this->statusEditor->registerAssets();
 			$editor = $this->statusEditor->renderEditor([
-				// The permissions are set by the group, so there is nothing to choose
-				'lockstate'            => 'unlock',
-				'acl'                  => '',
 				'group_cid'            => $ucid,
 				'contact_account_type' => $contact['contact-type'],
 			]);
