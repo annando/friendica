@@ -67,11 +67,11 @@ class Groups extends BaseModule
 		$servers = $this->getServers(array_column($contacts, 'gsid'));
 		foreach ($contacts as $contact) {
 			$pid  = $contact['pid'];
-			$host = parse_url($contact['url'], PHP_URL_HOST) ?: '';
+			$host = parse_url((string) $contact['url'], PHP_URL_HOST) ?: '';
 
 			$group = [
 				'id'       => $contact['id'],
-				'link'     => 'group/' . rawurlencode($contact['addr'] ?: (string) $contact['id']),
+				'link'     => 'group/' . rawurlencode((string) $contact['addr'] ?: (string) $contact['id']),
 				'name'     => $contact['name'],
 				'thumb'    => Contact::getThumb($contact),
 				'about'    => Plaintext::shorten(BBCode::toPlaintext($contact['about'], false), 200),
