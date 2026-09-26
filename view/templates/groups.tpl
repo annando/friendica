@@ -19,8 +19,15 @@
 					<th>{{$latest}}</th>
 				</tr>
 			</thead>
+			{{foreach $groups as $server}}
 			<tbody>
-				{{foreach $groups as $group}}
+				<tr class="group-overview-host">
+					<th colspan="5">
+						<span title="{{$server.host}}">{{$server.name}}</span>
+						{{if $server.info}}<div class="group-overview-host-info">{{$server.info}}</div>{{/if}}
+					</th>
+				</tr>
+				{{foreach $server.groups as $group}}
 				<tr>
 					<td class="group-overview-avatar">
 						<a href="contact/{{$group.id}}/conversations"><img src="{{$group.thumb}}" alt="{{$group.name}}"></a>
@@ -37,6 +44,7 @@
 				</tr>
 				{{/foreach}}
 			</tbody>
+			{{/foreach}}
 		</table>
 	{{/if}}
 </div>

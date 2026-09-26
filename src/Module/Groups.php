@@ -63,9 +63,11 @@ class Groups extends BaseModule
 		$gravity = [Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT];
 		$latest  = $this->groupManager->getLatestPosts($uid, $this->groupManager->getThreadStats($uid, array_values($threads), $gravity), $gravity, ['guid', 'author-name', 'author-link', 'unseen']);
 
-		$groups = [];
+		$groups  = [];
+		$servers = $this->getServers(array_column($contacts, 'gsid'));
 		foreach ($contacts as $contact) {
-			$pid = $contact['pid'];
+			$pid  = $contact['pid'];
+			$host = parse_url($contact['url'], PHP_URL_HOST) ?: '';
 
 			$group = [
 				'id'       => $contact['id'],
@@ -96,10 +98,24 @@ class Groups extends BaseModule
 				}
 			}
 
-			$groups[] = $group;
+			if (!isset($groups[$host])) {
+				$server = $servers[$contact['gsid']] ?? [];
+				$info   = trim(html_entity_decode(strip_tags($server['info'] ?? '')));
+
+				$groups[$host] = [
+					'name'   => $this->getSiteName($server['site_name'] ?? '', $info) ?: $host,
+					'host'   => $host,
+					'info'   => Plaintext::shorten($info, 200),
+					'groups' => [],
+				];
+			}
+			$groups[$host]['groups'][] = $group;
 		}
 
-		usort($groups, fn ($a, $b): int => strcmp((string) $b['received'], (string) $a['received']));
+		foreach ($groups as $host => $server) {
+			usort($groups[$host]['groups'], fn ($a, $b): int => strcmp((string) $b['received'], (string) $a['received']));
+		}
+		usort($groups, fn ($a, $b): int => strcmp((string) $b['groups'][0]['received'], (string) $a['groups'][0]['received']));
 
 		$tpl = Renderer::getMarkupTemplate('groups.tpl');
 		return Renderer::replaceMacros($tpl, [
@@ -194,6 +210,50 @@ class Groups extends BaseModule
 		$this->database->close($threads);
 
 		return $latest;
+	}
+
+	/**
+	 * Fetches name and description of the given servers
+	 *
+	 * @param array $gsids Server ids
+	 *
+	 * @return array Servers keyed by their id
+	 * @throws \Exception
+	 */
+	private function getServers(array $gsids): array
+	{
+		$gsids = array_filter(array_unique($gsids));
+		if (empty($gsids)) {
+			return [];
+		}
+
+		return array_column($this->database->selectToArray('gserver', ['id', 'site_name', 'info'], ['id' => array_values($gsids)]), null, 'id');
+	}
+
+	/**
+	 * Removes the server description from the site name, since some systems (like Lemmy) append it
+	 *
+	 * @param string $name Site name
+	 * @param string $info Server description
+	 *
+	 * @return string Site name
+	 */
+	private function getSiteName(string $name, string $info): string
+	{
+		if ($info === '') {
+			return $name;
+		}
+
+		$offset = 0;
+		while (($pos = strpos($name, ' - ', $offset)) !== false) {
+			similar_text(trim(substr($name, $pos + 3)), $info, $percent);
+			if ($percent >= 80) {
+				return trim(substr($name, 0, $pos));
+			}
+			$offset = $pos + 1;
+		}
+
+		return $name;
 	}
 
 	/**
