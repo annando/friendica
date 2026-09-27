@@ -469,13 +469,20 @@ class Post
 			$selected = Item::DISPLAY_FIELDLIST;
 		}
 
+		// Threads the user already participated in stay reachable, so that they can still edit or delete their own posts
+		if (in_array($view, ['post-user-view', 'post-thread-user-view'])) {
+			$is_blocked = '(`is-blocked` AND NOT ' . DBA::quoteIdentifier($view) . '.`mention`)';
+		} else {
+			$is_blocked = '`is-blocked`';
+		}
+
 		$condition = DBA::mergeConditions(
 			$condition,
 			["`visible` AND NOT `deleted`
 			AND NOT `author-blocked` AND NOT `owner-blocked`
 			AND (NOT `causer-blocked` OR `causer-id` = ? OR `causer-id` IS NULL) AND NOT `contact-blocked`
 			AND NOT EXISTS(SELECT `uri-id` FROM `post-user`    WHERE `uid` = ? AND `uri-id` = " . DBA::quoteIdentifier($view) . ".`uri-id` AND `hidden`)
-			AND NOT EXISTS(SELECT `cid`    FROM `user-contact` WHERE `uid` = ? AND `cid` IN (`author-id`, `owner-id`) AND (`blocked` OR `ignored` OR `is-blocked`))
+			AND NOT EXISTS(SELECT `cid`    FROM `user-contact` WHERE `uid` = ? AND `cid` IN (`author-id`, `owner-id`) AND (`blocked` OR `ignored` OR " . $is_blocked . "))
 			AND NOT EXISTS(SELECT `gsid`   FROM `user-gserver` WHERE `uid` = ? AND `gsid` IN (`author-gsid`, `owner-gsid`, `causer-gsid`) AND `ignored`)",
 				0, $uid, $uid, $uid],
 		);

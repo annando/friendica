@@ -725,6 +725,10 @@ class Item
 				return 0;
 			}
 
+			if ($itemHelper->isBlockedByThreadStarter($item, $toplevel_parent)) {
+				return 0;
+			}
+
 			$parent_id     = (int) $toplevel_parent['id'];
 			$item          = $itemHelper->handleToplevelParent($item, $toplevel_parent, $defined_permissions);
 			$parent_origin = $toplevel_parent['origin'];
