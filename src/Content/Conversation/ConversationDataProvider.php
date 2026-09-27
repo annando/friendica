@@ -209,7 +209,10 @@ final readonly class ConversationDataProvider
 
 		$threads = [];
 		foreach ($parentItems as $item) {
-			$templateData = $this->postTemplateBuilder->renderThreadRoot($item, $preview, $writable, $uid, $convResponses, $formSecurityToken, $this->session->get('remote_comment', null));
+			// When the thread starter blocked the user, the thread is read only. Own posts can still be edited or deleted.
+			$threadWritable = $writable && !Contact\User::isIsBlocked($item['author-id'], $uid) && !Contact\User::isIsBlocked($item['owner-id'], $uid);
+
+			$templateData = $this->postTemplateBuilder->renderThreadRoot($item, $preview, $threadWritable, $uid, $convResponses, $formSecurityToken, $this->session->get('remote_comment', null));
 			if ($templateData !== null) {
 				$threads[] = $templateData;
 			}
