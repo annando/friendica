@@ -254,7 +254,7 @@ final readonly class ItemHelper
 			'uid', 'uri', 'parent-uri', 'id', 'deleted',
 			'uri-id', 'parent-uri-id', 'restrictions', 'verb',
 			'allow_cid', 'allow_gid', 'deny_cid', 'deny_gid',
-			'wall', 'private', 'origin', 'author-id', 'network',
+			'wall', 'private', 'origin', 'author-id', 'owner-id', 'network',
 		];
 
 		$uids = $item['verb'] === Activity::VIEW ? [0, $item['uid']] : $item['uid'];
@@ -308,6 +308,30 @@ final readonly class ItemHelper
 		}
 
 		return $toplevel_parent;
+	}
+
+	/**
+	 * Check if a local user tries to interact with a thread whose starter blocked them.
+	 * Editing and deleting their existing posts is still possible, since this is only checked for new items.
+	 *
+	 * @param array $item
+	 * @param array $toplevel_parent
+	 * @return bool
+	 */
+	public function isBlockedByThreadStarter(array $item, array $toplevel_parent): bool
+	{
+		if (!$item['origin'] || !$item['uid'] || in_array($item['verb'], [Activity::VIEW, Activity::READ, Activity::FOLLOW])) {
+			return false;
+		}
+
+		foreach (array_unique([$toplevel_parent['author-id'], $toplevel_parent['owner-id']]) as $cid) {
+			if (Contact\User::isIsBlocked($cid, $item['uid'])) {
+				$this->logger->notice('User is blocked by the thread starter, item is ignored.', ['cid' => $cid, 'uid' => $item['uid'], 'parent-uri-id' => $toplevel_parent['uri-id'], 'verb' => $item['verb']]);
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public function handleToplevelParent(array $item, array $toplevel_parent, bool $defined_permissions): array
