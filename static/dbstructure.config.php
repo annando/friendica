@@ -1732,7 +1732,7 @@ return [
 			"external-id"           => ["external-id"],
 			"replies-id"            => ["replies-id"],
 			"owner-id"              => ["owner-id"],
-			"author-id"             => ["author-id"],
+			"author-id_uri-id"      => ["author-id", "uri-id"],
 			"causer-id"             => ["causer-id"],
 			"vid"                   => ["vid"],
 			"contact-id"            => ["contact-id"],
