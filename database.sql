@@ -1745,7 +1745,7 @@ CREATE TABLE IF NOT EXISTS `post-user` (
 	 INDEX `external-id` (`external-id`),
 	 INDEX `replies-id` (`replies-id`),
 	 INDEX `owner-id` (`owner-id`),
-	 INDEX `author-id` (`author-id`),
+	 INDEX `author-id_uri-id` (`author-id`,`uri-id`),
 	 INDEX `causer-id` (`causer-id`),
 	 INDEX `vid` (`vid`),
 	 INDEX `contact-id` (`contact-id`),
