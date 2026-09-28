@@ -24,6 +24,7 @@ use Friendica\Core\Protocol;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
 use Friendica\Database\Database;
+use Friendica\Database\DBA;
 use Friendica\Model\Contact;
 use Friendica\Model\Item;
 use Friendica\Model\Post;
@@ -86,13 +87,14 @@ class Group extends BaseModule
 
 		Nav::setSelected('groups');
 
-		// Posting to the group requires a relationship to it
-		$ucid   = Contact::getUserContactId($pcid, $uid);
+		// Without a subscription the public posts of the group are shown read-only
+		$readonly = !Contact::isSharing($pcid, $uid, true);
+
 		$editor = '';
-		if ($ucid && !$contact['ap-posting-restricted']) {
+		if (!$readonly && !$contact['ap-posting-restricted']) {
 			$this->statusEditor->registerAssets();
 			$editor = $this->statusEditor->renderEditor([
-				'group_cid'            => $ucid,
+				'group_cid'            => Contact::getUserContactId($pcid, $uid),
 				'contact_account_type' => $contact['contact-type'],
 			]);
 		}
@@ -105,23 +107,22 @@ class Group extends BaseModule
 
 		$pager = new Pager($this->l10n, $this->args->getQueryString(), $itemsPerPage);
 
-		$condition = ['uid' => $uid, 'owner-id' => $pcid];
-
-		$total  = $this->database->count('post-thread-user', $condition);
-		$uriIds = array_column($this->database->selectToArray('post-thread-user', ['uri-id'], $condition, ['order' => ['commented' => true], 'limit' => [$pager->getStart(), $pager->getItemsPerPage()]]), 'uri-id');
+		$total  = $this->groupManager->countThreads($uid, $pcid);
+		$uriIds = $this->groupManager->getThreadIds($uid, $pcid, $pager->getStart(), $pager->getItemsPerPage());
 
 		$parents = [];
 
 		$posts = Post::selectForUser(
 			$uid,
-			['uri-id', 'guid', 'title', 'body', 'author-id', 'author-name', 'author-link', 'author-updated', 'created', 'unseen'],
-			['uri-id' => $uriIds, 'uid' => $uid],
+			['uri-id', 'guid', 'title', 'body', 'author-id', 'author-name', 'author-link', 'author-updated', 'created'],
+			DBA::mergeConditions(["(`uid` = 0 OR (`uid` = ? AND NOT `global`))", $uid], ['uri-id' => $uriIds]),
 		);
 		while ($post = Post::fetch($posts)) {
 			$parents[$post['uri-id']] = $post;
 		}
 		$this->database->close($posts);
 
+		$unseen = $this->groupManager->getUnseen($uid, $uriIds);
 		$stats  = $this->groupManager->getThreadStats($uid, $uriIds, [Item::GRAVITY_COMMENT]);
 		$latest = $this->groupManager->getLatestPosts($uid, $stats, [Item::GRAVITY_COMMENT], ['guid', 'body', 'author-name', 'author-link', 'unseen']);
 
@@ -140,7 +141,7 @@ class Group extends BaseModule
 				'link'     => Contact::magicLink($parent['author-link']),
 				'created'  => $this->l10n->relativeDateTime($parent['created']),
 				'title'    => $parent['title'] ?: Plaintext::shorten(BBCode::toPlaintext($parent['body'], false), 200),
-				'unseen'   => $parent['unseen'],
+				'unseen'   => in_array($uriId, $unseen),
 				'comments' => $stats[$uriId]['posts']  ?? 0,
 				'unread'   => $stats[$uriId]['unread'] ?? 0,
 				'latest'   => '',
@@ -165,7 +166,11 @@ class Group extends BaseModule
 
 		$tpl = Renderer::getMarkupTemplate('group.tpl');
 		return Renderer::replaceMacros($tpl, [
-			'$back'       => $this->t('Back to groups'),
+			'$back'       => $this->t('Back'),
+			'$back_link'  => $readonly ? 'groups/discover' : 'groups',
+			'$readonly'   => $readonly,
+			'$join'       => $this->t('Join'),
+			'$follow'     => 'contact/follow?binurl=' . bin2hex((string) $contact['url']),
 			'$mark_seen'  => $this->t('Mark all as read'),
 			'$editor'     => $editor,
 			'$form_token' => self::getFormSecurityToken('group_mark_seen'),

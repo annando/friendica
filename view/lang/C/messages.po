@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 2026.08-rc\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 00:27+0000\n"
+"POT-Creation-Date: 2026-09-28 12:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,9 +56,9 @@ msgstr ""
 #: src/Module/Contact/Suggestions.php:32 src/Module/Contact/Unfollow.php:47
 #: src/Module/Contact/Unfollow.php:61 src/Module/Contact/Unfollow.php:93
 #: src/Module/FollowConfirm.php:24 src/Module/FriendSuggest.php:44
-#: src/Module/Group.php:65 src/Module/Group.php:81 src/Module/Groups.php:53
-#: src/Module/Invite.php:28 src/Module/Invite.php:117
-#: src/Module/Notifications/Notification.php:58
+#: src/Module/Group.php:66 src/Module/Group.php:82 src/Module/Groups.php:54
+#: src/Module/Groups/Discover.php:56 src/Module/Invite.php:28
+#: src/Module/Invite.php:117 src/Module/Notifications/Notification.php:58
 #: src/Module/Notifications/Notification.php:89 src/Module/Post/Edit.php:85
 #: src/Module/Profile/Common.php:52 src/Module/Profile/Contacts.php:52
 #: src/Module/Profile/Photos.php:73 src/Module/Profile/Schedule.php:27
@@ -1211,7 +1211,7 @@ msgstr ""
 msgid "Posts from contacts you interact with and who interact with you"
 msgstr ""
 
-#: src/Content/Conversation/Factory/Channel.php:30
+#: src/Content/Conversation/Factory/Channel.php:30 src/Module/Groups.php:124
 msgid "Discover"
 msgstr ""
 
@@ -1976,10 +1976,10 @@ msgstr ""
 msgid "Display posts that have been created by accounts of the selected circle."
 msgstr ""
 
-#: src/Content/Feature.php:129 src/Content/GroupManager.php:99
+#: src/Content/Feature.php:129 src/Content/GroupManager.php:105
 #: src/Content/Nav.php:247 src/Content/Nav.php:276
 #: src/Content/Text/HTML.php:902 src/Content/Widget.php:572
-#: src/Model/User.php:1418 src/Module/Groups.php:122
+#: src/Model/User.php:1418 src/Module/Groups.php:118
 msgid "Groups"
 msgstr ""
 
@@ -2094,25 +2094,25 @@ msgstr ""
 msgid "Allows anonymous visitors to consult your calendar and your public events. Contact birthday events are private to you."
 msgstr ""
 
-#: src/Content/GroupManager.php:101
+#: src/Content/GroupManager.php:107
 msgid "External link to group"
 msgstr ""
 
-#: src/Content/GroupManager.php:105 src/Content/PagesManager.php:101
+#: src/Content/GroupManager.php:111 src/Content/PagesManager.php:101
 #: src/Content/Widget.php:547
 msgid "show less"
 msgstr ""
 
-#: src/Content/GroupManager.php:106 src/Content/PagesManager.php:102
+#: src/Content/GroupManager.php:112 src/Content/PagesManager.php:102
 #: src/Content/Widget.php:442 src/Content/Widget.php:548
 msgid "show more"
 msgstr ""
 
-#: src/Content/GroupManager.php:107
+#: src/Content/GroupManager.php:113
 msgid "Create new group"
 msgstr ""
 
-#: src/Content/GroupManager.php:109
+#: src/Content/GroupManager.php:115
 msgid "Find groups to join"
 msgstr ""
 
@@ -2159,7 +2159,7 @@ msgstr ""
 
 #: src/Content/Item.php:430 src/Model/Contact.php:1274
 #: src/Model/Profile.php:450 src/Module/BaseProfile.php:42
-#: src/Module/Contact.php:495 src/Module/Groups.php:124
+#: src/Module/Contact.php:495 src/Module/Groups.php:120
 msgid "Posts"
 msgstr ""
 
@@ -2600,7 +2600,8 @@ msgid "Examples: Robert Morgenstein, Fishing"
 msgstr ""
 
 #: src/Content/Widget.php:73 src/Module/Contact.php:443
-#: src/Module/Directory.php:81 view/theme/vier/theme.php:184
+#: src/Module/Directory.php:81 src/Module/Groups/Discover.php:117
+#: view/theme/vier/theme.php:184
 msgid "Find"
 msgstr ""
 
@@ -3361,7 +3362,8 @@ msgstr ""
 msgid "Organisation"
 msgstr ""
 
-#: src/Model/Contact.php:1798 src/Module/Groups.php:123
+#: src/Model/Contact.php:1798 src/Module/Groups.php:119
+#: src/Module/Groups/Discover.php:120
 msgid "Group"
 msgstr ""
 
@@ -6422,8 +6424,8 @@ msgstr ""
 #: src/Module/Contact/Profile.php:153 src/Module/Contact/Profile.php:172
 #: src/Module/Contact/Redir.php:68 src/Module/Contact/Redir.php:122
 #: src/Module/FriendSuggest.php:58 src/Module/FriendSuggest.php:96
-#: src/Module/FriendSuggest.php:102 src/Module/Group.php:203
-#: src/Module/Group.php:208
+#: src/Module/FriendSuggest.php:102 src/Module/Group.php:208
+#: src/Module/Group.php:213
 msgid "Contact not found."
 msgstr ""
 
@@ -6488,7 +6490,7 @@ msgstr ""
 msgid "Edit Circle Name"
 msgstr ""
 
-#: src/Module/Circle.php:291 src/Module/Group.php:169
+#: src/Module/Circle.php:291 src/Module/Group.php:174
 msgid "Mark all as read"
 msgstr ""
 
@@ -7443,46 +7445,88 @@ msgstr ""
 msgid "Suggestions, praise, etc. - please email \"info\" at \"friendi - dot - ca"
 msgstr ""
 
-#: src/Module/Group.php:153
+#: src/Module/Group.php:154
 #, php-format
 msgid "%1$s by %2$s: %3$s"
 msgstr ""
 
-#: src/Module/Group.php:168
-msgid "Back to groups"
+#: src/Module/Group.php:169 src/Module/Groups/Discover.php:113
+#: src/Module/Item/Display.php:169
+msgid "Back"
 msgstr ""
 
-#: src/Module/Group.php:175
+#: src/Module/Group.php:172 src/Module/Groups/Discover.php:122
+msgid "Join"
+msgstr ""
+
+#: src/Module/Group.php:180
 msgid "Thread"
 msgstr ""
 
-#: src/Module/Group.php:176
+#: src/Module/Group.php:181
 msgid "Comments"
 msgstr ""
 
-#: src/Module/Group.php:177 src/Module/Groups.php:125
+#: src/Module/Group.php:182 src/Module/Groups.php:121
 msgid "Unread"
 msgstr ""
 
-#: src/Module/Group.php:178
+#: src/Module/Group.php:183
 msgid "Latest comment"
 msgstr ""
 
-#: src/Module/Group.php:179
+#: src/Module/Group.php:184
 msgid "There are no threads in this group."
 msgstr ""
 
-#: src/Module/Groups.php:91
+#: src/Module/Groups.php:92
 #, php-format
 msgid "%1$s by %2$s in %3$s"
 msgstr ""
 
-#: src/Module/Groups.php:126
+#: src/Module/Groups.php:122
 msgid "Latest post"
 msgstr ""
 
-#: src/Module/Groups.php:127
+#: src/Module/Groups.php:123 src/Module/Groups/Discover.php:108
+msgid "Discover groups"
+msgstr ""
+
+#: src/Module/Groups.php:125
+msgid "Discover more groups on this server"
+msgstr ""
+
+#: src/Module/Groups.php:126
 msgid "You are not subscribed to any groups."
+msgstr ""
+
+#: src/Module/Groups/Discover.php:66
+msgid "Server not found."
+msgstr ""
+
+#: src/Module/Groups/Discover.php:105
+#, php-format
+msgid "Discover groups on %s"
+msgstr ""
+
+#: src/Module/Groups/Discover.php:118
+msgid "Search in name and description"
+msgstr ""
+
+#: src/Module/Groups/Discover.php:121
+msgid "Latest activity"
+msgstr ""
+
+#: src/Module/Groups/Discover.php:123
+msgid "Membership requires approval"
+msgstr ""
+
+#: src/Module/Groups/Discover.php:124
+msgid "No groups found."
+msgstr ""
+
+#: src/Module/Groups/Discover.php:124
+msgid "No further groups are known."
 msgstr ""
 
 #: src/Module/HCard.php:31
@@ -8030,7 +8074,7 @@ msgstr ""
 msgid "Image description"
 msgstr ""
 
-#: src/Module/Item/Display.php:172
+#: src/Module/Item/Display.php:176
 #, php-format
 msgid "Post by %s"
 msgstr ""

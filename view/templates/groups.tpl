@@ -5,6 +5,9 @@
   * SPDX-License-Identifier: AGPL-3.0-or-later
   *}}
 <div class="generic-page-wrapper">
+	<p>
+		<a href="groups/discover" class="btn btn-default"><i class="ri ri-compass-3-line" aria-hidden="true"></i> {{$discover}}</a>
+	</p>
 	<h1>{{$title}}</h1>
 
 	{{if !$groups}}
@@ -24,6 +27,7 @@
 				<tr class="group-overview-host">
 					<th colspan="5">
 						<span title="{{$server.host}}">{{$server.name}}</span>
+						{{if $server.gsid}}<a href="groups/discover/{{$server.gsid}}" class="group-overview-discover" title="{{$discover_server}}"><i class="ri ri-compass-3-line" aria-hidden="true"></i> {{$discover_short}}</a>{{/if}}
 						{{if $server.info}}<div class="group-overview-host-info">{{$server.info}}</div>{{/if}}
 					</th>
 				</tr>

@@ -8,8 +8,12 @@
 	<form method="post" action="group/{{$id}}" up-submit>
 		<input type="hidden" name="form_security_token" value="{{$form_token}}">
 		<p>
-			<a href="groups" class="btn btn-default"><i class="ri ri-arrow-left-line" aria-hidden="true"></i> {{$back}}</a>
-			<button type="submit" class="btn btn-default"><i class="ri ri-check-double-line" aria-hidden="true"></i> {{$mark_seen}}</button>
+			<a href="{{$back_link}}" class="btn btn-default" data-spa-back><i class="ri ri-arrow-left-line" aria-hidden="true"></i> {{$back}}</a>
+			{{if $readonly}}
+				<a href="{{$follow}}" class="btn btn-default"><i class="ri ri-user-add-line" aria-hidden="true"></i> {{$join}}</a>
+			{{else}}
+				<button type="submit" class="btn btn-default"><i class="ri ri-check-double-line" aria-hidden="true"></i> {{$mark_seen}}</button>
+			{{/if}}
 		</p>
 	</form>
 	{{$editor nofilter}}
@@ -24,7 +28,7 @@
 					<tr>
 						<th colspan="2">{{$thread}}</th>
 						<th class="group-overview-count">{{$comments}}</th>
-						<th class="group-overview-count">{{$unread}}</th>
+						{{if !$readonly}}<th class="group-overview-count">{{$unread}}</th>{{/if}}
 						<th>{{$latest}}</th>
 					</tr>
 				</thead>
@@ -39,7 +43,7 @@
 							<div><a href="{{$thread.link}}">{{$thread.author}}</a>, {{$thread.created}}</div>
 						</td>
 						<td class="group-overview-count" data-label="{{$comments}}">{{$thread.comments}}</td>
-						<td class="group-overview-count group-overview-unread" data-label="{{$unread}}">{{$thread.unread}}</td>
+						{{if !$readonly}}<td class="group-overview-count group-overview-unread" data-label="{{$unread}}">{{$thread.unread}}</td>{{/if}}
 						<td class="group-overview-latest">
 							{{$thread.latest nofilter}}
 						</td>

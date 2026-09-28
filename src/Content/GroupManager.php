@@ -10,11 +10,13 @@ namespace Friendica\Content;
 use Friendica\App\BaseURL;
 use Friendica\Content\Contact\Repository\ContactByType;
 use Friendica\Content\Text\HTML;
+use Friendica\Content\Text\Plaintext;
 use Friendica\Core\Addon\AddonHelper;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
 use Friendica\Database\Database;
+use Friendica\Database\DBA;
 use Friendica\Model\Contact;
 use Friendica\Model\Item;
 use Friendica\Model\Post;
@@ -25,6 +27,10 @@ use Friendica\Model\Post;
 class GroupManager
 {
 	private const CONTACT_TYPES = [Contact::TYPE_COMMUNITY];
+
+	// Like on the contact page: public threads come from the global copy, private ones from the copy of the user
+	private const THREADS = "FROM `post-thread-user` INNER JOIN `post-user` ON `post-user`.`id` = `post-thread-user`.`post-user-id`
+		WHERE (`post-thread-user`.`uid` = 0 OR (`post-thread-user`.`uid` = ? AND NOT `post-user`.`global`))";
 
 	public function __construct(
 		private readonly ContactByType $contacts,
@@ -201,10 +207,13 @@ class GroupManager
 
 		$stats = [];
 
+		$gravityPlaceholders = implode(', ', array_fill(0, count($gravity), '?'));
+		$parentPlaceholders  = implode(', ', array_fill(0, count($parentUriIds), '?'));
+
 		$posts = $this->database->p(
-			"SELECT `parent-uri-id`, COUNT(*) AS `posts`, SUM(`unseen`) AS `unread`, MAX(`received`) AS `received` FROM `post-user`
-				WHERE `uid` = ? AND `visible` AND NOT `deleted` AND `gravity` IN (" . implode(', ', array_fill(0, count($gravity), '?')) . ")
-				AND `parent-uri-id` IN (" . implode(', ', array_fill(0, count($parentUriIds), '?')) . ")
+			"SELECT `parent-uri-id`, COUNT(*) AS `posts`, MAX(`received`) AS `received` FROM `post-user`
+				WHERE (`uid` = 0 OR (`uid` = ? AND NOT `global`)) AND `visible` AND NOT `deleted` AND `gravity` IN (" . $gravityPlaceholders . ")
+				AND `parent-uri-id` IN (" . $parentPlaceholders . ")
 				GROUP BY `parent-uri-id`",
 			$uid,
 			...$gravity,
@@ -213,11 +222,28 @@ class GroupManager
 		while ($row = $this->database->fetch($posts)) {
 			$stats[$row['parent-uri-id']] = [
 				'posts'    => (int) $row['posts'],
-				'unread'   => (int) $row['unread'],
+				'unread'   => 0,
 				'received' => $row['received'],
 			];
 		}
 		$this->database->close($posts);
+
+		// The global copy has no seen state, so the unread posts are counted on the copy of the user
+		$unread = $this->database->p(
+			"SELECT `parent-uri-id`, COUNT(*) AS `unread` FROM `post-user`
+				WHERE `uid` = ? AND `unseen` AND `visible` AND NOT `deleted` AND `gravity` IN (" . $gravityPlaceholders . ")
+				AND `parent-uri-id` IN (" . $parentPlaceholders . ")
+				GROUP BY `parent-uri-id`",
+			$uid,
+			...$gravity,
+			...$parentUriIds,
+		);
+		while ($row = $this->database->fetch($unread)) {
+			if (isset($stats[$row['parent-uri-id']])) {
+				$stats[$row['parent-uri-id']]['unread'] = (int) $row['unread'];
+			}
+		}
+		$this->database->close($unread);
 
 		return $stats;
 	}
@@ -241,16 +267,15 @@ class GroupManager
 
 		$latest = [];
 
-		$condition = [
-			'uid'           => $uid,
+		$condition = DBA::mergeConditions(["(`uid` = 0 OR (`uid` = ? AND NOT `global`))", $uid], [
 			'parent-uri-id' => array_keys($stats),
 			'received'      => array_unique(array_column($stats, 'received')),
 			'gravity'       => $gravity,
 			'visible'       => true,
 			'deleted'       => false,
-		];
+		]);
 
-		$posts = Post::selectForUser($uid, array_merge($fields, ['parent-uri-id', 'received']), $condition);
+		$posts = Post::selectForUser($uid, array_merge($fields, ['uri-id', 'parent-uri-id', 'received']), $condition);
 		while ($post = Post::fetch($posts)) {
 			// Different threads can share the same date, so we have to check the thread as well
 			if (!isset($latest[$post['parent-uri-id']]) && ($post['received'] === $stats[$post['parent-uri-id']]['received'])) {
@@ -259,6 +284,227 @@ class GroupManager
 		}
 		$this->database->close($posts);
 
+		if (in_array('unseen', $fields)) {
+			$unseen = $this->getUnseen($uid, array_column($latest, 'uri-id'));
+			foreach ($latest as $parentUriId => $post) {
+				$latest[$parentUriId]['unseen'] = in_array($post['uri-id'], $unseen);
+			}
+		}
+
 		return $latest;
+	}
+
+	/**
+	 * Fetches the posts that the user hasn't seen yet
+	 *
+	 * @param int   $uid    User id
+	 * @param int[] $uriIds Uri-ids of the posts
+	 *
+	 * @return int[] Uri-ids of the unseen posts
+	 * @throws \Exception
+	 */
+	public function getUnseen(int $uid, array $uriIds): array
+	{
+		if (empty($uriIds)) {
+			return [];
+		}
+
+		return array_column($this->database->selectToArray('post-user', ['uri-id'], ['uid' => $uid, 'uri-id' => $uriIds, 'unseen' => true]), 'uri-id');
+	}
+
+	/**
+	 * Counts the threads of a group
+	 *
+	 * @param int $uid  User id
+	 * @param int $pcid Public contact id of the group
+	 *
+	 * @return int
+	 * @throws \Exception
+	 */
+	public function countThreads(int $uid, int $pcid): int
+	{
+		$row = $this->database->fetchFirst("SELECT COUNT(*) AS `total` " . self::THREADS . " AND `post-thread-user`.`owner-id` = ?", $uid, $pcid);
+
+		return (int) ($row['total'] ?? 0);
+	}
+
+	/**
+	 * Fetches the threads of a group, ordered by their latest comment
+	 *
+	 * @param int $uid   User id
+	 * @param int $pcid  Public contact id of the group
+	 * @param int $start Offset
+	 * @param int $limit Number of threads
+	 *
+	 * @return int[] Uri-ids of the threads
+	 * @throws \Exception
+	 */
+	public function getThreadIds(int $uid, int $pcid, int $start, int $limit): array
+	{
+		$threads = $this->database->p(
+			"SELECT `post-thread-user`.`uri-id` " . self::THREADS . " AND `post-thread-user`.`owner-id` = ?
+				ORDER BY `post-thread-user`.`commented` DESC LIMIT ?, ?",
+			$uid,
+			$pcid,
+			$start,
+			$limit,
+		);
+
+		return array_column($this->database->toArray($threads), 'uri-id');
+	}
+
+	/**
+	 * Fetches the number of threads, the number of threads with unread posts and the latest activity per group in one go
+	 *
+	 * @param int   $uid   User id
+	 * @param int[] $pcids Public contact ids of the groups
+	 *
+	 * @return array Statistics keyed by the public contact id
+	 * @throws \Exception
+	 */
+	public function getGroupStats(int $uid, array $pcids): array
+	{
+		if (empty($pcids)) {
+			return [];
+		}
+
+		$stats        = [];
+		$placeholders = implode(', ', array_fill(0, count($pcids), '?'));
+
+		$threads = $this->database->p(
+			"SELECT `post-thread-user`.`owner-id`, COUNT(*) AS `threads`, MAX(`post-thread-user`.`commented`) AS `commented` " . self::THREADS . "
+				AND `post-thread-user`.`owner-id` IN (" . $placeholders . ")
+				GROUP BY `post-thread-user`.`owner-id`",
+			$uid,
+			...$pcids,
+		);
+		while ($row = $this->database->fetch($threads)) {
+			$stats[$row['owner-id']] = [
+				'threads'   => (int) $row['threads'],
+				'unread'    => 0,
+				'commented' => $row['commented'],
+			];
+		}
+		$this->database->close($threads);
+
+		$unread = $this->database->p(
+			"SELECT `post-thread-user`.`owner-id`, COUNT(DISTINCT `post-user`.`parent-uri-id`) AS `unread` FROM `post-user`
+				INNER JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
+				WHERE `post-user`.`uid` = ? AND `post-user`.`unseen` AND NOT `post-user`.`hidden` AND NOT `post-user`.`deleted`
+				AND `post-user`.`gravity` IN (?, ?) AND `post-thread-user`.`owner-id` IN (" . $placeholders . ")
+				GROUP BY `post-thread-user`.`owner-id`",
+			$uid,
+			Item::GRAVITY_PARENT,
+			Item::GRAVITY_COMMENT,
+			...$pcids,
+		);
+		while ($row = $this->database->fetch($unread)) {
+			if (isset($stats[$row['owner-id']])) {
+				$stats[$row['owner-id']]['unread'] = (int) $row['unread'];
+			}
+		}
+		$this->database->close($unread);
+
+		return $stats;
+	}
+
+	/**
+	 * Fetches the most recently commented thread of each group
+	 *
+	 * @param int   $uid   User id
+	 * @param array $stats Group statistics from getGroupStats()
+	 *
+	 * @return array Uri-id of the thread keyed by the public contact id
+	 * @throws \Exception
+	 */
+	public function getLatestThreads(int $uid, array $stats): array
+	{
+		if (empty($stats)) {
+			return [];
+		}
+
+		$latest    = [];
+		$pcids     = array_keys($stats);
+		$commented = array_values(array_unique(array_column($stats, 'commented')));
+
+		$threads = $this->database->p(
+			"SELECT `post-thread-user`.`owner-id`, `post-thread-user`.`uri-id`, `post-thread-user`.`commented` " . self::THREADS . "
+				AND `post-thread-user`.`owner-id` IN (" . implode(', ', array_fill(0, count($pcids), '?')) . ")
+				AND `post-thread-user`.`commented` IN (" . implode(', ', array_fill(0, count($commented), '?')) . ")",
+			$uid,
+			...$pcids,
+			...$commented,
+		);
+		while ($thread = $this->database->fetch($threads)) {
+			if (!isset($latest[$thread['owner-id']]) && ($thread['commented'] === $stats[$thread['owner-id']]['commented'])) {
+				$latest[$thread['owner-id']] = $thread['uri-id'];
+			}
+		}
+		$this->database->close($threads);
+
+		return $latest;
+	}
+
+	/**
+	 * Fetches address, name and description of the given servers
+	 *
+	 * @param array $gsids Server ids
+	 *
+	 * @return array Servers keyed by their id
+	 * @throws \Exception
+	 */
+	public function getServers(array $gsids): array
+	{
+		$gsids = array_filter(array_unique($gsids));
+		if (empty($gsids)) {
+			return [];
+		}
+
+		return array_column($this->database->selectToArray('gserver', ['id', 'url', 'site_name', 'info'], ['id' => array_values($gsids)]), null, 'id');
+	}
+
+	/**
+	 * Prepares name and description of a server for the display
+	 *
+	 * @param array  $server Server from getServers()
+	 * @param string $host   Host name of the server
+	 *
+	 * @return array
+	 */
+	public function getServerDescription(array $server, string $host): array
+	{
+		$info = trim(html_entity_decode(strip_tags($server['info'] ?? '')));
+
+		return [
+			'name' => $this->getSiteName($server['site_name'] ?? '', $info) ?: $host,
+			'host' => $host,
+			'info' => Plaintext::shorten($info, 200),
+		];
+	}
+
+	/**
+	 * Removes the server description from the site name, since some systems (like Lemmy) append it
+	 *
+	 * @param string $name Site name
+	 * @param string $info Server description
+	 *
+	 * @return string Site name
+	 */
+	private function getSiteName(string $name, string $info): string
+	{
+		if ($info === '') {
+			return $name;
+		}
+
+		$offset = 0;
+		while (($pos = strpos($name, ' - ', $offset)) !== false) {
+			similar_text(trim(substr($name, $pos + 3)), $info, $percent);
+			if ($percent >= 80) {
+				return trim(substr($name, 0, $pos));
+			}
+			$offset = $pos + 1;
+		}
+
+		return $name;
 	}
 }

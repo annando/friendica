@@ -1048,12 +1048,14 @@ summary.wall-item-summary {
 
 /* Group overview */
 #group-overview .group-overview-avatar,
-#group-threads .group-overview-avatar {
+#group-threads .group-overview-avatar,
+#group-discover .group-overview-avatar {
 	width: 64px;
 }
 
 #group-overview .group-overview-avatar img,
-#group-threads .group-overview-avatar img {
+#group-threads .group-overview-avatar img,
+#group-discover .group-overview-avatar img {
 	width: 48px;
 	height: 48px;
 	max-width: none;
@@ -1076,9 +1078,29 @@ summary.wall-item-summary {
 	font-weight: normal;
 }
 
+#group-overview .group-overview-discover {
+	margin-left: 10px;
+	font-size: small;
+	font-weight: normal;
+}
+
+#group-discover-search {
+	margin-bottom: 15px;
+}
+
+#group-discover .group-discover-server {
+	font-size: small;
+}
+
+#group-discover .group-discover-join {
+	text-align: right;
+	white-space: nowrap;
+}
+
 @media screen and (max-width: 767px) {
 	#group-overview thead,
-	#group-threads thead {
+	#group-threads thead,
+	#group-discover thead {
 		display: none;
 	}
 
@@ -1146,5 +1168,43 @@ summary.wall-item-summary {
 	#group-threads .group-overview-latest {
 		grid-area: latest;
 		font-size: smaller;
+	}
+
+	#group-discover tr {
+		display: grid;
+		grid-template-columns: 48px 1fr auto;
+		grid-template-areas:
+			"avatar title join"
+			"avatar latest join";
+		column-gap: 10px;
+		padding: 8px 0;
+		border-top: 1px solid rgba(127, 127, 127, 0.3);
+	}
+
+	#group-discover td {
+		display: block;
+		min-width: 0;
+		padding: 0;
+		border: none;
+		overflow-wrap: anywhere;
+	}
+
+	#group-discover .group-overview-avatar {
+		grid-area: avatar;
+		width: auto;
+	}
+
+	#group-discover .group-overview-title {
+		grid-area: title;
+	}
+
+	#group-discover .group-overview-latest {
+		grid-area: latest;
+		font-size: smaller;
+	}
+
+	#group-discover .group-discover-join {
+		grid-area: join;
+		align-self: center;
 	}
 }
