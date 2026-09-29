@@ -1,6 +1,6 @@
 -- ------------------------------------------
 -- Friendica 2026.08-rc (Blutwurz)
--- DB_UPDATE_VERSION 1600
+-- DB_UPDATE_VERSION 1601
 -- ------------------------------------------
 
 
@@ -1270,7 +1270,7 @@ CREATE TABLE IF NOT EXISTS `post-category` (
 CREATE TABLE IF NOT EXISTS `post-counts` (
 	`uri-id` int unsigned NOT NULL COMMENT 'Id of the item-uri table entry that contains the item uri',
 	`vid` smallint unsigned NOT NULL COMMENT 'Id of the verb table entry that contains the activity verbs',
-	`reaction` varchar(4) NOT NULL COMMENT 'Emoji Reaction',
+	`reaction` varchar(16) NOT NULL COMMENT 'Emoji Reaction',
 	`parent-uri-id` int unsigned COMMENT 'Id of the item-uri table that contains the parent uri',
 	`count` int unsigned DEFAULT 0 COMMENT 'Number of activities',
 	 PRIMARY KEY(`uri-id`,`vid`,`reaction`),

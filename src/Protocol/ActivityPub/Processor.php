@@ -7,6 +7,7 @@
 
 namespace Friendica\Protocol\ActivityPub;
 
+use Friendica\Content\Smilies;
 use Friendica\Content\Text\BBCode;
 use Friendica\Content\Text\HTML;
 use Friendica\Content\Text\Markdown;
@@ -794,6 +795,23 @@ class Processor
 	 */
 	public static function createActivity(array $activity, string $verb)
 	{
+		$reaction = '';
+		if (in_array($verb, [Activity::LIKE, Activity::DISLIKE, Activity::EMOJIREACT]) && !empty($activity['content'])) {
+			$reaction = trim(HTML::toBBCode($activity['content']));
+			if (!Smilies::isReaction($reaction)) {
+				// Custom emojis aren't supported, since they aren't accessible
+				if ($verb === Activity::EMOJIREACT) {
+					DI::logger()->info('Unsupported emoji reaction is ignored', ['id' => $activity['id'], 'content' => $activity['content']]);
+					Queue::remove($activity);
+					return;
+				}
+				DI::logger()->info('Unsupported reaction content, processing it as a plain activity', ['id' => $activity['id'], 'verb' => $verb, 'content' => $activity['content']]);
+				$reaction = '';
+			} else {
+				DI::logger()->info('Emoji reaction received', ['id' => $activity['id'], 'verb' => $verb, 'reaction' => $reaction]);
+			}
+		}
+
 		$activity['reply-to-id'] = $activity['object_id'];
 		$item                    = self::createItem($activity, false);
 		if (empty($item)) {
@@ -807,7 +825,9 @@ class Processor
 		unset($item['post-type']);
 		$item['object-type'] = Activity\ObjectType::NOTE;
 
-		if (!empty($activity['content'])) {
+		if (in_array($verb, [Activity::LIKE, Activity::DISLIKE, Activity::EMOJIREACT])) {
+			$item['body'] = $reaction;
+		} elseif (!empty($activity['content'])) {
 			$item['body'] = HTML::toBBCode($activity['content']);
 		}
 
