@@ -2384,10 +2384,10 @@ body.show-action-labels .action-label {
 }
 .wall-item-actions-row {
 	display: grid;
-	grid-template-columns: 1fr 1fr 1fr 1fr 1fr min-content;	/* collapse column if checkbox is hidden */
+	grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr min-content;	/* collapse column if checkbox is hidden */
 	 grid-template-areas:
-		"comments shares likes dislikes more delete"
-		"attend . decline . maybe .";
+		"comments shares likes dislikes react more delete"
+		"attend . decline . maybe . .";
 	/* grid bug fix */
 	width: 100%;
 	min-width: 0;
@@ -2410,6 +2410,9 @@ body.show-action-labels .action-label {
 	}
 	.wall-item-actions-row [id^="dislike-"] {
 		grid-area: dislikes;
+	}
+	.wall-item-actions-row [id^="react-"] {
+		grid-area: react;
 	}
 	.wall-item-actions-row [id^="attendyes"] {
 		grid-area: attend;
