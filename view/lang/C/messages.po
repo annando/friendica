@@ -1631,45 +1631,50 @@ msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:902
 #, php-format
-msgid "Viewed by: %s"
+msgid "Reshared by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:907
 #, php-format
-msgid "Read by: %s"
+msgid "Viewed by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:912
 #, php-format
-msgid "Liked by: %s"
+msgid "Read by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:917
 #, php-format
-msgid "Disliked by: %s"
+msgid "Liked by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:922
 #, php-format
-msgid "Attended by: %s"
+msgid "Disliked by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:927
 #, php-format
-msgid "Maybe attended by: %s"
+msgid "Attended by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:932
 #, php-format
-msgid "Not attended by: %s"
+msgid "Maybe attended by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:937
 #, php-format
-msgid "Commented by: %s"
+msgid "Not attended by: %s"
 msgstr ""
 
 #: src/Content/Conversation/PostTemplateBuilder.php:942
+#, php-format
+msgid "Commented by: %s"
+msgstr ""
+
+#: src/Content/Conversation/PostTemplateBuilder.php:843
 #, php-format
 msgid "Reacted with %s by: %s"
 msgstr ""
@@ -3657,7 +3662,7 @@ msgstr ""
 msgid "%s is blocked"
 msgstr ""
 
-#: src/Model/Item.php:3070
+#: src/Model/Item.php:3088
 #, php-format
 msgid "%s is ignored"
 msgstr ""
@@ -12787,7 +12792,7 @@ msgstr ""
 msgid "Chat"
 msgstr ""
 
-#: src/Protocol/Delivery.php:522
+#: src/Protocol/Delivery.php:527
 msgid "(no subject)"
 msgstr ""
 
