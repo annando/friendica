@@ -417,6 +417,12 @@ as the value of $top_child_total (this is done at the end of this file)
 						<span class="action-label">{{$item.dislike_label}}</span>
 					</button>
 					{{/if}}
+					{{if $item.vote.react}}
+					<button type="button" class="btn button-likes emoji-react" id="react-{{$item.id}}" data-item-id="{{$item.id}}" title="{{$item.vote.react.0}}">
+						<i class="ri ri-emotion-line" aria-hidden="true"></i>
+						<span class="action-label">{{$item.vote.react.1}}</span>
+					</button>
+					{{/if}}
 				{{/if}}
 
 				{{* Event attendance buttons *}}
@@ -606,6 +612,17 @@ as the value of $top_child_total (this is done at the end of this file)
 		</div><!--./wall-item-actions-->
 
 		<div class="wall-item-links"></div>
+		<div class="wall-emoji-responses">
+				{{foreach $item.reactions as $emoji}}
+					{{if $emoji.icon.fa}}
+						<span class="wall-item-emoji" title="{{$emoji.title}}"><i class="ri {{$emoji.icon.fa}}" aria-hidden="true"></i> {{$emoji.total}}</span>
+					{{elseif $item.vote.react}}
+						<button type="button" class="wall-item-emoji{{if $emoji.self}} active{{/if}}" aria-pressed="{{if $emoji.self}}true{{else}}false{{/if}}" title="{{$emoji.title}}" data-emoji="{{$emoji.emoji}}" onclick="doEmojiReaction({{$item.id}}, this.dataset.emoji{{if $emoji.self}}, true{{/if}});">{{$emoji.emoji}} {{$emoji.total}}</button>
+					{{else}}
+						<span class="wall-item-emoji" title="{{$emoji.title}}">{{$emoji.emoji}} {{$emoji.total}}</span>
+					{{/if}}
+				{{/foreach}}
+		</div>
 		{{* Display likes, dislike and attendance stats *}}
 		{{if $item.legacy_activities}}
 			<div class="wall-item-responses">

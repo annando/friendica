@@ -12,6 +12,7 @@ use Friendica\Content\ContactSelector;
 use Friendica\Content\Image;
 use Friendica\Content\Post\Collection\PostMedias;
 use Friendica\Content\Post\Entity\PostMedia;
+use Friendica\Content\Smilies;
 use Friendica\Content\Text\BBCode;
 use Friendica\Content\Text\HTML;
 use Friendica\Core\Protocol;
@@ -944,7 +945,7 @@ class Item
 		}
 
 		// The content of activities normally doesn't matter - except for emoji activities
-		if (in_array($item['gravity'], [self::GRAVITY_PARENT, self::GRAVITY_COMMENT]) || in_array($item['verb'], [Activity::LIKE, Activity::DISLIKE, Activity::EMOJIREACT]) && !empty($item['body']) && (mb_strlen((string) $item['body']) == 1)) {
+		if (in_array($item['gravity'], [self::GRAVITY_PARENT, self::GRAVITY_COMMENT]) || in_array($item['verb'], [Activity::LIKE, Activity::DISLIKE, Activity::EMOJIREACT]) && Smilies::isReaction((string) $item['body'])) {
 			if (!Post\Content::exists($item['uri-id']) && !Post\Content::insert($item['uri-id'], $item)) {
 				DI::logger()->error('Post-Content entry was not inserted', ['uri-id' => $item['uri-id']]);
 			}
@@ -2565,23 +2566,29 @@ class Item
 	 *            Activity verb. One of
 	 *            like, unlike, dislike, undislike, attendyes, unattendyes,
 	 *            attendno, unattendno, attendmaybe, unattendmaybe,
-	 *            announce, unannounce
+	 *            announce, unannounce, react, unreact
 	 * @param int    $uid
 	 * @param string $allow_cid
 	 * @param string $allow_gid
 	 * @param string $deny_cid
 	 * @param string $deny_gid
+	 * @param string $reaction  Emoji for the "react" and "unreact" verbs
 	 * @return bool
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 * @throws \ImagickException
 	 */
-	public static function performActivity(int $item_id, string $verb, int $uid, ?string $allow_cid = null, ?string $allow_gid = null, ?string $deny_cid = null, ?string $deny_gid = null): bool
+	public static function performActivity(int $item_id, string $verb, int $uid, ?string $allow_cid = null, ?string $allow_gid = null, ?string $deny_cid = null, ?string $deny_gid = null, string $reaction = ''): bool
 	{
 		if (empty($uid)) {
 			return false;
 		}
 
-		DI::logger()->notice('Start create activity', ['verb' => $verb, 'item' => $item_id, 'user' => $uid]);
+		DI::logger()->notice('Start create activity', ['verb' => $verb, 'item' => $item_id, 'user' => $uid, 'reaction' => $reaction]);
+
+		if (in_array($verb, ['react', 'unreact']) && !Smilies::isReaction($reaction)) {
+			DI::logger()->notice('Invalid reaction', ['reaction' => $reaction, 'item' => $item_id]);
+			return false;
+		}
 
 		$item = Post::selectFirst(self::ITEM_FIELDLIST, ['id' => $item_id]);
 		if (!DBA::isResult($item)) {
@@ -2654,6 +2661,11 @@ class Item
 			case 'unview':
 				$activity = Activity::VIEW;
 				break;
+			case 'react':
+			case 'unreact':
+				// Positive reactions are sent as likes, so that systems without emoji reactions show them as well
+				$activity = Smilies::isPositiveReaction($reaction) ? Activity::LIKE : Activity::EMOJIREACT;
+				break;
 			default:
 				DI::logger()->warning('unknown verb', ['verb' => $verb, 'item' => $item_id]);
 				return false;
@@ -2682,6 +2694,12 @@ class Item
 			'vid'       => $vids, 'deleted' => false, 'gravity' => self::GRAVITY_ACTIVITY,
 			'author-id' => $author_id, 'uid' => $uid, 'thr-parent-id' => $uri_id,
 		];
+		if ($reaction !== '') {
+			$condition['body'] = $reaction;
+		} elseif (in_array($activity, [Activity::LIKE, Activity::DISLIKE])) {
+			// Likes with an emoji are reactions, plain likes have no body or the verb as body
+			$condition = DBA::mergeConditions($condition, ["(`body` IS NULL OR `body` IN ('', ?))", $activity]);
+		}
 		$like_item = Post::selectFirst(['id', 'guid', 'verb'], $condition);
 
 		if (DBA::isResult($like_item)) {
@@ -2739,7 +2757,7 @@ class Item
 			'thr-parent'  => $item['uri'],
 			'owner-id'    => $author_id,
 			'author-id'   => $author_id,
-			'body'        => $activity,
+			'body'        => $reaction ?: $activity,
 			'verb'        => $activity,
 			'object-type' => $objtype,
 			'allow_cid'   => $allow_cid ?? $item['allow_cid'],

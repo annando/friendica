@@ -1276,6 +1276,8 @@ class Transmitter
 			$type = 'Like';
 		} elseif ($item['verb'] == Activity::DISLIKE) {
 			$type = 'Dislike';
+		} elseif ($item['verb'] == Activity::EMOJIREACT) {
+			$type = 'EmojiReact';
 		} elseif ($item['verb'] == Activity::ATTEND) {
 			$type = 'Accept';
 		} elseif ($item['verb'] == Activity::ATTENDNO) {
@@ -1473,6 +1475,9 @@ class Transmitter
 			$data['diaspora:guid'] = $item['guid'];
 			if (!empty($item['signed_text'])) {
 				$data['diaspora:like'] = $item['signed_text'];
+			}
+			if (in_array($data['type'], ['Like', 'EmojiReact']) && Smilies::isReaction((string) $item['body'])) {
+				$data['content'] = $item['body'];
 			}
 			$data['object'] = $item['thr-parent'];
 		}
@@ -1936,6 +1941,8 @@ class Transmitter
 			'type'       => 'Collection',
 			'totalItems' => Post::countPosts(['thr-parent-id' => $item['uri-id'], 'gravity' => Item::GRAVITY_COMMENT, 'deleted' => false, 'private' => [Item::PUBLIC, Item::UNLISTED]]),
 		];
+
+		$data['emojiReactions'] = $item['uri'] . '/reactions';
 
 		if (empty($data['location']) && (!empty($item['coord']) || !empty($item['location']))) {
 			$data['location'] = self::createLocation($item);
