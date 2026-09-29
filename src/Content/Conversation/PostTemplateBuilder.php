@@ -194,6 +194,7 @@ final class PostTemplateBuilder
 		$buttons = [
 			'like'     => null,
 			'dislike'  => null,
+			'react'    => null,
 			'share'    => null,
 			'announce' => null,
 		];
@@ -718,6 +719,7 @@ final class PostTemplateBuilder
 		$buttons = [
 			'like'     => null,
 			'dislike'  => null,
+			'react'    => null,
 			'share'    => null,
 			'announce' => null,
 		];
@@ -726,6 +728,9 @@ final class PostTemplateBuilder
 			if ($likeable) {
 				$buttons['like']    = [$this->l10n->t("I like this (toggle)"), $this->l10n->t('Like')];
 				$buttons['dislike'] = [$this->l10n->t("I don't like this (toggle)"), $this->l10n->t('Dislike')];
+				if (in_array($item['network'] ?? '', [Protocol::ACTIVITYPUB, Protocol::DFRN])) {
+					$buttons['react'] = [$this->l10n->t('React with an emoji'), $this->l10n->t('React')];
+				}
 			}
 			if ($shareable) {
 				$buttons['share'] = [$this->l10n->t('Quote share this'), $this->l10n->t('Quote Share')];
@@ -840,7 +845,7 @@ final class PostTemplateBuilder
 					$key   = $element['emoji'];
 					break;
 			}
-			$emojis[$key] = ['emoji' => $element['emoji'], 'total' => $element['total'], 'title' => $title, 'icon' => $icon];
+			$emojis[$key] = ['emoji' => $element['emoji'], 'total' => $element['total'], 'title' => $title, 'icon' => $icon, 'self' => $element['self'] ?? false];
 		}
 
 		return $emojis;

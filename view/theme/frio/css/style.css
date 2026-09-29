@@ -2490,6 +2490,15 @@ button[disabled] {
 	display: flex;
 	flex-basis: auto;
 }
+button.wall-item-emoji {
+	background: none;
+	border: 0;
+	padding: 0;
+	color: inherit;
+}
+button.wall-item-emoji.active {
+	font-weight: bold;
+}
 .wall-item-responses {
 	margin-top: .3em;
 }
