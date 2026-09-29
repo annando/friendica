@@ -65,6 +65,7 @@ class Discover extends BaseModule
 			if (empty($server)) {
 				throw new NotFoundException($this->t('Server not found.'));
 			}
+			$this->groupManager->discoverServerGroups($server);
 		}
 
 		$search    = trim($request['search'] ?? '');

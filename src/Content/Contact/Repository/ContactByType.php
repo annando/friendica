@@ -18,7 +18,7 @@ use Friendica\Database\DBA;
  */
 class ContactByType
 {
-	private const FIELDS = ['id', 'pid', 'url', 'addr', 'alias', 'name', 'micro', 'thumb', 'avatar', 'network', 'uid', 'about', 'gsid'];
+	private const FIELDS = ['id', 'pid', 'uri-id', 'url', 'addr', 'alias', 'name', 'micro', 'thumb', 'avatar', 'network', 'uid', 'about', 'gsid'];
 
 	public function __construct(private readonly Database $database) {}
 

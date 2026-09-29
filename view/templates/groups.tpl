@@ -13,42 +13,30 @@
 	{{if !$groups}}
 		<p>{{$no_groups}}</p>
 	{{else}}
-		<table id="group-overview" class="table">
-			<thead>
-				<tr>
-					<th colspan="2">{{$group}}</th>
-					<th class="group-overview-count">{{$posts}}</th>
-					<th class="group-overview-count">{{$unread}}</th>
-					<th>{{$latest}}</th>
-				</tr>
-			</thead>
-			{{foreach $groups as $server}}
-			<tbody>
-				<tr class="group-overview-host">
-					<th colspan="5">
-						<span title="{{$server.host}}">{{$server.name}}</span>
-						{{if $server.gsid}}<a href="groups/discover/{{$server.gsid}}" class="group-overview-discover" title="{{$discover_server}}"><i class="ri ri-compass-3-line" aria-hidden="true"></i> {{$discover_short}}</a>{{/if}}
-						{{if $server.info}}<div class="group-overview-host-info">{{$server.info}}</div>{{/if}}
-					</th>
-				</tr>
-				{{foreach $server.groups as $group}}
-				<tr>
-					<td class="group-overview-avatar">
-						<a href="contact/{{$group.id}}/conversations"><img src="{{$group.thumb}}" alt="{{$group.name}}"></a>
-					</td>
-					<td class="group-overview-title">
-						<a href="{{$group.link}}"><strong>{{$group.name}}</strong></a>
-						<div>{{$group.about}}</div>
-					</td>
-					<td class="group-overview-count" data-label="{{$posts}}">{{$group.posts}}</td>
-					<td class="group-overview-count group-overview-unread" data-label="{{$unread}}">{{$group.unread}}</td>
-					<td class="group-overview-latest">
-						{{$group.latest nofilter}}
-					</td>
-				</tr>
-				{{/foreach}}
-			</tbody>
+		{{foreach $groups as $server}}
+		<div class="group-list-server">
+			<h2>
+				<span title="{{$server.host}}">{{$server.name}}</span>
+				{{if $server.gsid}}<a href="groups/discover/{{$server.gsid}}" class="group-list-discover" title="{{$discover_server}}"><i class="ri ri-compass-3-line" aria-hidden="true"></i> {{$discover_short}}</a>{{/if}}
+			</h2>
+			{{if $server.info}}<p>{{$server.info}}</p>{{/if}}
+		</div>
+		<ul class="group-list">
+			{{foreach $server.groups as $group}}
+			<li class="group-list-entry">
+				<a href="{{$group.profile}}" class="group-list-avatar"><img src="{{$group.thumb}}" alt="{{$group.name}}"></a>
+				<div class="group-list-title">
+					<a href="{{$group.link}}" class="group-list-name">{{$group.name}}</a>
+					<div class="group-list-about group-list-description">{{$group.about}}</div>
+				</div>
+				<div class="group-list-stats">
+					<div class="group-list-stat"><span class="group-list-count">{{$group.threads}}</span> {{$threads}}</div>
+					<div class="group-list-stat{{if $group.unread}} group-list-stat-unread{{/if}}"><span class="group-list-count">{{$group.unread}}</span> {{$unread}}</div>
+				</div>
+				{{include file="group/latest.tpl" latest=$group.latest empty=$no_posts}}
+			</li>
 			{{/foreach}}
-		</table>
+		</ul>
+		{{/foreach}}
 	{{/if}}
 </div>

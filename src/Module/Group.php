@@ -107,8 +107,8 @@ class Group extends BaseModule
 
 		$pager = new Pager($this->l10n, $this->args->getQueryString(), $itemsPerPage);
 
-		$total  = $this->groupManager->countThreads($uid, $pcid);
-		$uriIds = $this->groupManager->getThreadIds($uid, $pcid, $pager->getStart(), $pager->getItemsPerPage());
+		$groupStats = $this->groupManager->getGroupStats($uid, [$pcid])[$pcid] ?? ['threads' => 0, 'unread' => 0];
+		$uriIds     = $this->groupManager->getThreadIds($uid, $pcid, $pager->getStart(), $pager->getItemsPerPage());
 
 		$parents = [];
 
@@ -124,7 +124,7 @@ class Group extends BaseModule
 
 		$unseen = $this->groupManager->getUnseen($uid, $uriIds);
 		$stats  = $this->groupManager->getThreadStats($uid, $uriIds, [Item::GRAVITY_COMMENT]);
-		$latest = $this->groupManager->getLatestPosts($uid, $stats, [Item::GRAVITY_COMMENT], ['guid', 'body', 'author-name', 'author-link', 'unseen']);
+		$latest = $this->groupManager->getLatestPosts($uid, $stats, [Item::GRAVITY_COMMENT], ['guid', 'title', 'body', 'author-id', 'author-name', 'author-link', 'author-updated', 'unseen']);
 
 		$threads = [];
 		foreach ($uriIds as $uriId) {
@@ -144,21 +144,11 @@ class Group extends BaseModule
 				'unseen'   => in_array($uriId, $unseen),
 				'comments' => $stats[$uriId]['posts']  ?? 0,
 				'unread'   => $stats[$uriId]['unread'] ?? 0,
-				'latest'   => '',
+				'latest'   => [],
 			];
 
 			if (!empty($latest[$uriId])) {
-				$comment = $latest[$uriId];
-
-				$thread['latest'] = $this->t(
-					'%1$s by %2$s: %3$s',
-					'<a href="display/' . $comment['guid'] . '">' . htmlspecialchars($this->l10n->relativeDateTime($comment['received'])) . '</a>',
-					'<a href="' . htmlspecialchars(Contact::magicLink($comment['author-link'])) . '">' . htmlspecialchars((string) $comment['author-name']) . '</a>',
-					htmlspecialchars(Plaintext::shorten(BBCode::toPlaintext($comment['body'], false), 100)),
-				);
-				if ($comment['unseen']) {
-					$thread['latest'] = '<strong>' . $thread['latest'] . '</strong>';
-				}
+				$thread['latest'] = $this->groupManager->getPostSummary($latest[$uriId]);
 			}
 
 			$threads[] = $thread;
@@ -166,24 +156,28 @@ class Group extends BaseModule
 
 		$tpl = Renderer::getMarkupTemplate('group.tpl');
 		return Renderer::replaceMacros($tpl, [
-			'$back'       => $this->t('Back'),
-			'$back_link'  => $readonly ? 'groups/discover' : 'groups',
-			'$readonly'   => $readonly,
-			'$join'       => $this->t('Join'),
-			'$follow'     => 'contact/follow?binurl=' . bin2hex((string) $contact['url']),
-			'$mark_seen'  => $this->t('Mark all as read'),
-			'$editor'     => $editor,
-			'$form_token' => self::getFormSecurityToken('group_mark_seen'),
-			'$title'      => $contact['name'],
-			'$id'         => rawurlencode((string) $this->parameters['id']),
-			'$cid'        => $pcid,
-			'$thread'     => $this->t('Thread'),
-			'$comments'   => $this->t('Comments'),
-			'$unread'     => $this->t('Unread'),
-			'$latest'     => $this->t('Latest comment'),
-			'$no_threads' => $this->t('There are no threads in this group.'),
-			'$threads'    => $threads,
-			'$paginate'   => $pager->renderFull($total),
+			'$back'          => $this->t('Back'),
+			'$back_link'     => $readonly ? 'groups/discover' : 'groups',
+			'$readonly'      => $readonly,
+			'$join'          => $this->t('Join'),
+			'$follow'        => 'contact/follow?binurl=' . bin2hex((string) $contact['url']),
+			'$mark_seen'     => $this->t('Mark all as read'),
+			'$editor'        => $editor,
+			'$form_token'    => self::getFormSecurityToken('group_mark_seen'),
+			'$title'         => $contact['name'],
+			'$profile'       => Contact::magicLinkByContact($contact),
+			'$thumb'         => Contact::getThumb($contact),
+			'$about'         => BBCode::convertForUriId($contact['uri-id'], $contact['about'], BBCode::EXTERNAL),
+			'$id'            => rawurlencode((string) $this->parameters['id']),
+			'$threads_label' => $this->t('Threads'),
+			'$threads_count' => $groupStats['threads'],
+			'$unread_count'  => $groupStats['unread'],
+			'$comments'      => $this->t('Comments'),
+			'$unread'        => $this->t('Unread'),
+			'$no_comments'   => $this->t('No comments yet'),
+			'$no_threads'    => $this->t('There are no threads in this group.'),
+			'$threads'       => $threads,
+			'$paginate'      => $pager->renderFull($groupStats['threads']),
 		]);
 	}
 

@@ -9,17 +9,23 @@ namespace Friendica\Content;
 
 use Friendica\App\BaseURL;
 use Friendica\Content\Contact\Repository\ContactByType;
+use Friendica\Content\Text\BBCode;
 use Friendica\Content\Text\HTML;
 use Friendica\Content\Text\Plaintext;
 use Friendica\Core\Addon\AddonHelper;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
+use Friendica\Core\Worker;
 use Friendica\Database\Database;
 use Friendica\Database\DBA;
 use Friendica\Model\Contact;
+use Friendica\Model\GServer;
 use Friendica\Model\Item;
 use Friendica\Model\Post;
+use Friendica\Util\DateTimeFormat;
+use Friendica\Util\Proxy;
+use Friendica\Worker\UpdateServerDirectory;
 
 /**
  * This class handles methods related to the group functionality
@@ -295,6 +301,26 @@ class GroupManager
 	}
 
 	/**
+	 * Prepares a post from getLatestPosts() for the display
+	 *
+	 * @param array $post Post with guid, title, body, author and unseen fields
+	 *
+	 * @return array
+	 */
+	public function getPostSummary(array $post): array
+	{
+		return [
+			'link'        => 'display/' . $post['guid'],
+			'author'      => $post['author-name'],
+			'author_link' => Contact::magicLink($post['author-link']),
+			'thumb'       => Contact::getAvatarUrlForId($post['author-id'], Proxy::SIZE_MICRO, $post['author-updated']),
+			'received'    => $this->l10n->relativeDateTime($post['received']),
+			'excerpt'     => Plaintext::shorten($post['title'] ?: BBCode::toPlaintext($post['body'], false), 100),
+			'unseen'      => $post['unseen'],
+		];
+	}
+
+	/**
 	 * Fetches the posts that the user hasn't seen yet
 	 *
 	 * @param int   $uid    User id
@@ -310,22 +336,6 @@ class GroupManager
 		}
 
 		return array_column($this->database->selectToArray('post-user', ['uri-id'], ['uid' => $uid, 'uri-id' => $uriIds, 'unseen' => true]), 'uri-id');
-	}
-
-	/**
-	 * Counts the threads of a group
-	 *
-	 * @param int $uid  User id
-	 * @param int $pcid Public contact id of the group
-	 *
-	 * @return int
-	 * @throws \Exception
-	 */
-	public function countThreads(int $uid, int $pcid): int
-	{
-		$row = $this->database->fetchFirst("SELECT COUNT(*) AS `total` " . self::THREADS . " AND `post-thread-user`.`owner-id` = ?", $uid, $pcid);
-
-		return (int) ($row['total'] ?? 0);
 	}
 
 	/**
@@ -460,7 +470,24 @@ class GroupManager
 			return [];
 		}
 
-		return array_column($this->database->selectToArray('gserver', ['id', 'url', 'site_name', 'info'], ['id' => array_values($gsids)]), null, 'id');
+		return array_column($this->database->selectToArray('gserver', ['id', 'url', 'site_name', 'info', 'platform', 'last_poco_query'], ['id' => array_values($gsids)]), null, 'id');
+	}
+
+	/**
+	 * Queues the discovery of the groups on a server, at most once a day
+	 *
+	 * @param array $server Server from getServers()
+	 *
+	 * @return void
+	 */
+	public function discoverServerGroups(array $server): void
+	{
+		if (!in_array($server['platform'], UpdateServerDirectory::GROUP_PLATFORMS) || ($server['last_poco_query'] > DateTimeFormat::utc('now - 1 day'))) {
+			return;
+		}
+
+		GServer::update(['last_poco_query' => DateTimeFormat::utcNow()], ['id' => $server['id']]);
+		Worker::add(Worker::PRIORITY_LOW, 'UpdateServerDirectory', ['id' => $server['id'], 'url' => $server['url'], 'platform' => $server['platform']]);
 	}
 
 	/**
