@@ -390,7 +390,13 @@ class Transmitter
 			}
 		}
 
-		$data['url']                       = $owner['url'];
+		// Groups are presented by their thread overview
+		if ($owner['account-type'] == User::ACCOUNT_TYPE_COMMUNITY) {
+			$data['url'] = DI::baseUrl() . '/group/' . $owner['nick'];
+		} else {
+			$data['url'] = $owner['url'];
+		}
+
 		$data['manuallyApprovesFollowers'] = in_array($owner['page-flags'], [User::PAGE_FLAGS_NORMAL, User::PAGE_FLAGS_PRVGROUP]);
 		$data['discoverable']              = (bool) $owner['net-publish'] && $full;
 		$data['indexable']                 = (bool) $owner['net-publish'] && $full;

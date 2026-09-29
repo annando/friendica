@@ -17,9 +17,11 @@
 
 	<form method="post" action="group/{{$id}}" class="group-toolbar" up-submit>
 		<input type="hidden" name="form_security_token" value="{{$form_token}}">
-		<a href="{{$back_link}}" class="btn btn-default" data-spa-back><i class="ri ri-arrow-left-line" aria-hidden="true"></i> {{$back}}</a>
+		{{if $back_link}}<a href="{{$back_link}}" class="btn btn-default" data-spa-back><i class="ri ri-arrow-left-line" aria-hidden="true"></i> {{$back}}</a>{{/if}}
 		{{if $readonly}}
 			<a href="{{$follow}}" class="btn btn-primary"><i class="ri ri-user-add-line" aria-hidden="true"></i> {{$join}}</a>
+			{{if $register}}<a href="register" class="btn btn-default"><i class="ri ri-user-line" aria-hidden="true"></i> {{$register}}</a>{{/if}}
+			{{if $fetch}}<button type="submit" name="fetch" value="1" class="btn btn-default"><i class="ri ri-download-line" aria-hidden="true"></i> {{$fetch}}</button>{{/if}}
 		{{else}}
 			<button type="submit" class="btn btn-default"><i class="ri ri-check-double-line" aria-hidden="true"></i> {{$mark_seen}}</button>
 		{{/if}}

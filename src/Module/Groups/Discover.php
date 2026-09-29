@@ -89,7 +89,7 @@ class Discover extends BaseModule
 
 			$groups[] = [
 				'id'      => $contact['id'],
-				'link'    => 'group/' . rawurlencode((string) $contact['addr'] ?: (string) $contact['id']),
+				'link'    => $this->groupManager->getLink($contact),
 				'name'    => $contact['name'],
 				'thumb'   => Contact::getThumb($contact),
 				'about'   => Plaintext::shorten(BBCode::toPlaintext($contact['about'], false), 200),

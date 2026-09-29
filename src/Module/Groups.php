@@ -67,7 +67,7 @@ class Groups extends BaseModule
 
 			$group = [
 				'id'       => $contact['id'],
-				'link'     => 'group/' . rawurlencode((string) $contact['addr'] ?: (string) $contact['id']),
+				'link'     => $this->groupManager->getLink($contact),
 				'profile'  => Contact::magicLinkByContact($contact),
 				'name'     => $contact['name'],
 				'thumb'    => Contact::getThumb($contact),

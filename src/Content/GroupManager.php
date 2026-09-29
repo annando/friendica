@@ -321,6 +321,23 @@ class GroupManager
 	}
 
 	/**
+	 * Local groups are addressed by their nickname, remote ones by their address
+	 *
+	 * @param array $contact Contact with id, url and addr fields
+	 *
+	 * @return string
+	 */
+	public function getLink(array $contact): string
+	{
+		$id = (string) $contact['addr'] ?: (string) $contact['id'];
+		if (Contact::isLocal($contact['url'])) {
+			$id = strstr($id, '@', true) ?: $id;
+		}
+
+		return 'group/' . rawurlencode($id);
+	}
+
+	/**
 	 * Fetches the posts that the user hasn't seen yet
 	 *
 	 * @param int   $uid    User id
@@ -331,7 +348,7 @@ class GroupManager
 	 */
 	public function getUnseen(int $uid, array $uriIds): array
 	{
-		if (empty($uriIds)) {
+		if (empty($uriIds) || !$uid) {
 			return [];
 		}
 
