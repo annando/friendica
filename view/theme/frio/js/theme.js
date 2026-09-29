@@ -744,6 +744,30 @@ function htmlToText(htmlString) {
 }
 
 /**
+ * Adds or removes an emoji reaction and refreshes the reactions of the item
+ *
+ * @param {int}     ident The id of the relevant item
+ * @param {string}  emoji The emoji of the reaction
+ * @param {boolean} un    Whether to remove the reaction instead of adding it
+ */
+function doEmojiReaction(ident, emoji, un) {
+	showPosting();
+	$.post('item/' + ident.toString() + '/activity/' + (un ? 'unreact' : 'react'), {emoji: emoji})
+		.done(function(data) {
+			showProcessing();
+			if (!refreshItemActivity(ident, data)) {
+				updateItem(ident.toString());
+			}
+		})
+		.fail(function() {
+			$.jGrowl(aErrType['netErr'], {sticky: false, theme: 'info', life: 5000});
+		})
+		.always(function() {
+			hideLoading();
+		});
+}
+
+/**
  * Sends a /like API call and updates the display of the relevant action button
  * before the update reloads the item.
  *
