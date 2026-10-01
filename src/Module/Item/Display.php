@@ -164,6 +164,10 @@ class Display extends BaseModule
 		// add the uri-id to the update_display parameter
 		if ($this->session->getLocalUserId()) {
 			$output .= "<script> var netargs = '?uri_id=" . $item['uri-id'] . "'; </script>";
+
+			if ($this->pConfig->get($this->session->getLocalUserId(), 'system', 'enable_spa')) {
+				$output .= Renderer::replaceMacros(Renderer::getMarkupTemplate('spa_back.tpl'), ['$back' => $this->l10n->t('Back')]);
+			}
 		}
 
 		$output .= $this->getDisplayData($item, false, false);

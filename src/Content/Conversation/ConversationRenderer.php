@@ -485,7 +485,6 @@ final readonly class ConversationRenderer
 			'$threads'          => $threads,
 			'$dropping'         => ($pagedrop ? $this->l10n->t('Delete Selected Items') : false),
 			'$click_to_display' => $clickToDisplay,
-			'$back_link'        => $this->l10n->t('Go back'),
 		]);
 	}
 
