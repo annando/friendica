@@ -166,55 +166,73 @@ final readonly class ConversationDataProvider
 	}
 
 	/**
-	 * Collect the reaction data (emojis, quote shares, comment counts and the viewer's own
-	 * reactions) for a flat list of items that is rendered without its threads.
+	 * Get the template data for a list of items that are rendered on their own, without their threads
+	 * (search results, posts of a contact). Comments are not loaded, they can be read on the display page.
 	 *
-	 * @param array<int, array> $items The items to collect the data for
+	 * @param array<int, array> $items The items to render
 	 * @param int $viewerUid The user ID of the viewer
-	 * @return array<int, array> The interaction data per URI ID of the given items
+	 * @param bool $preview Whether the items are a post preview without database records
+	 * @return array<int, array> The template data of the items
+	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
-	public function getInteractionData(array $items, int $viewerUid): array
+	public function getFlatTemplateData(array $items, int $viewerUid, bool $preview): array
 	{
+		$unique = [];
+		foreach ($items as $item) {
+			$unique[$item['uri-id']] ??= $item;
+		}
+		$items = array_values($unique);
+
 		if (empty($items)) {
 			return [];
 		}
 
-		$uriIds       = array_values(array_unique(array_column($items, 'uri-id')));
-		$parentUriIds = array_values(array_unique(array_column($items, 'parent-uri-id')));
+		$uriIds        = array_keys($unique);
+		$convResponses = $this->buildConversationResponses($viewerUid);
+		$emojis        = $quoteshares = $counts = $parents = [];
 
-		$emojis      = $this->getEmojis($parentUriIds, $viewerUid);
-		$quoteshares = $this->getQuoteShares($uriIds);
-		$counts      = $this->getCounts($parentUriIds);
+		if (!$preview) {
+			$parentUriIds = array_values(array_unique(array_column($items, 'parent-uri-id')));
+			$emojis       = $this->getEmojis($parentUriIds, $viewerUid);
+			$quoteshares  = $this->getQuoteShares($uriIds);
+			$counts       = $this->getCounts($parentUriIds);
 
-		$own = [];
-		if ($viewerUid) {
-			$verbs = [Activity::LIKE => 'like', Activity::DISLIKE => 'dislike', Activity::ANNOUNCE => 'announce'];
-			$posts = Post::selectToArray(['thr-parent-id', 'verb'], ['thr-parent-id' => $uriIds, 'gravity' => ItemModel::GRAVITY_ACTIVITY, 'author-id' => Contact::getPublicIdByUserId($viewerUid), 'verb' => array_keys($verbs), 'deleted' => false]);
-			foreach ($posts as $post) {
-				$own[$post['thr-parent-id']][$verbs[$post['verb']]] = 1;
+			if ($viewerUid) {
+				$verbs = [Activity::LIKE => 'like', Activity::DISLIKE => 'dislike', Activity::ANNOUNCE => 'announce'];
+				$own   = Post::selectToArray(['thr-parent-id', 'verb'], ['thr-parent-id' => $uriIds, 'gravity' => ItemModel::GRAVITY_ACTIVITY, 'author-id' => Contact::getPublicIdByUserId($viewerUid), 'verb' => array_keys($verbs), 'deleted' => false]);
+				foreach ($own as $post) {
+					if (isset($convResponses[$verbs[$post['verb']]])) {
+						$convResponses[$verbs[$post['verb']]][$post['thr-parent-id']] = ['links' => [], 'self' => 1];
+					}
+				}
+			}
+
+			$thrIds = array_values(array_unique(array_filter(array_column($items, 'thr-parent-id'))));
+			if ($thrIds) {
+				foreach (Post::selectToArray(['uri-id', 'guid', 'author-name'], ['uri-id' => $thrIds]) as $post) {
+					$parents[$post['uri-id']] = ['guid' => $post['guid'], 'name' => $post['author-name']];
+				}
 			}
 		}
 
-		$parents = [];
-		$thrIds  = array_values(array_unique(array_filter(array_column($items, 'thr-parent-id'))));
-		if ($thrIds) {
-			foreach (Post::selectToArray(['uri-id', 'guid', 'author-name'], ['uri-id' => $thrIds]) as $post) {
-				$parents[$post['uri-id']] = ['guid' => $post['guid'], 'name' => $post['author-name']];
-			}
-		}
+		$formSecurityToken = BaseModule::getFormSecurityToken('contact_action');
+		$remoteComment     = $this->session->get('remote_comment', null);
 
 		$result = [];
 		foreach ($items as $item) {
-			$isComment = $item['gravity'] !== ItemModel::GRAVITY_PARENT;
+			if (!$preview) {
+				$item = $this->addRowInformation($item, [], [], '', $viewerUid, []);
+			}
 
-			$result[$item['uri-id']] = [
-				'direction'   => $this->addRowInformation($item, [], [], '', $viewerUid, [])['direction'] ?? [],
-				'parent'      => $isComment ? ($parents[$item['thr-parent-id']] ?? []) : [],
-				'emojis'      => $emojis[$item['uri-id']]      ?? [],
-				'quoteshares' => $quoteshares[$item['uri-id']] ?? [],
-				'counts'      => $item['gravity'] === ItemModel::GRAVITY_PARENT ? ($counts[$item['uri-id']] ?? 0) : 0,
-				'own'         => $own[$item['uri-id']]         ?? [],
-			];
+			$item['emojis']      = $emojis[$item['uri-id']]      ?? [];
+			$item['quoteshares'] = $quoteshares[$item['uri-id']] ?? [];
+			$item['counts']      = $item['gravity'] === ItemModel::GRAVITY_PARENT ? ($counts[$item['uri-id']] ?? 0) : 0;
+			$item['pagedrop']    = false;
+
+			$templateData = $this->postTemplateBuilder->renderFlatItem($item, $preview, $viewerUid !== 0 && !$preview, $viewerUid, $convResponses, $formSecurityToken, $item['gravity'] === ItemModel::GRAVITY_PARENT ? [] : ($parents[$item['thr-parent-id'] ?? 0] ?? []), $remoteComment);
+			if ($templateData !== null) {
+				$result[] = $templateData;
+			}
 		}
 
 		return $result;

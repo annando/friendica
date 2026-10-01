@@ -76,57 +76,30 @@ final class PostTemplateBuilder
 	}
 
 	/**
-	 * Build the data for the action buttons and reaction counters of an item that is
-	 * rendered on its own, without its thread (search results, posts of a contact).
+	 * Render one item that is displayed on its own in a list (search results, posts of a contact),
+	 * without its thread. Comments are rendered like posts and link to the parent post.
 	 *
 	 * @param array<string, mixed> $item
-	 * @param int $uid The user ID of the viewer
-	 * @param array<string, mixed> $interaction The result of ConversationDataProvider::getInteractionData() for the item
-	 * @return array<string, mixed>
+	 * @param bool $preview
+	 * @param bool $writable
+	 * @param int $uid
+	 * @param array<string, array> $convResponses
+	 * @param string $formSecurityToken
+	 * @param array{guid?: string, name?: string} $parent The post this item is a reply to
+	 * @return array<string, mixed>|null
 	 */
-	public function buildItemInteraction(array $item, int $uid, array $interaction): array
+	public function renderFlatItem(array $item, bool $preview, bool $writable, int $uid, array $convResponses, string $formSecurityToken, array $parent = [], ?string $remote_comment = null): ?array
 	{
-		$this->uid = $uid;
-
-		$item['emojis'] = $interaction['emojis'] ?? [];
-
-		$convResponses = [];
-		foreach ($interaction['own'] ?? [] as $verb => $self) {
-			$convResponses[$verb][$item['uri-id']] = ['self' => $self, 'links' => []];
+		if (!isset($item['uri-id'], $item['guid'], $item['id'])) {
+			return null;
 		}
 
-		$profileOwner  = (int) ($item['uid'] ?? 0);
-		$permissions   = $this->determineActionPermissions($item, $profileOwner);
-		$reactionData  = $this->buildReactionData($item, $convResponses);
-		$actionButtons = $this->buildActionButtons($item, $uid !== 0, $permissions['likeable'], $permissions['shareable'], $permissions['announceable']);
+		$this->uid            = $uid;
+		$this->remote_comment = $remote_comment;
 
-		$menuData = $this->buildMenuData($item, $profileOwner, $item['gravity'] === ItemModel::GRAVITY_PARENT ? 1 : 2);
+		$threadParents = !empty($item['thr-parent-id']) && !empty($parent) ? [$item['thr-parent-id'] => $parent] : [];
 
-		$privacyData = $this->buildPrivacyData($item);
-		$parent      = $interaction['parent'] ?? [];
-
-		return array_merge($menuData, $privacyData, [
-			'vote'          => $actionButtons['buttons'],
-			'responses'     => $reactionData['responses'],
-			'reactions'     => $reactionData['reactions'],
-			'quoteshares'   => $this->getQuoteShares($interaction['quoteshares'] ?? []),
-			'switchcomment' => $this->l10n->t('Comment'),
-			'menu'          => $this->l10n->t('More'),
-			'num_comments'  => $this->l10n->tt('%d comment', '%d comments', $interaction['counts'] ?? 0),
-			'counts'        => $interaction['counts'] ?? 0,
-			'author_gsid'   => $item['author-gsid'] ?? 0,
-			'searchtext'    => $this->l10n->t('Raw content'),
-			'uriid'         => $item['uri-id'],
-			'private'       => $item['private'] ?? ItemModel::PUBLIC,
-			'direction'     => $interaction['direction'] ?? [],
-			'inreplyto'     => !empty($parent['name']) ? $this->l10n->t('in reply to %s', $parent['name']) : '',
-			'inreplyto_url' => !empty($parent['guid']) ? 'display/' . $parent['guid'] : '',
-			'ignore_author' => $menuData['ignore'],
-			'ignore_server' => $menuData['ignoreServer'],
-			'ignore'        => $menuData['ignore_thread'],
-			'lang'          => $menuData['language'],
-			'language'      => $menuData['languages'],
-		]);
+		return $this->buildThreadTemplateData($item, $preview, $writable, $uid, $convResponses, $formSecurityToken, 1, $threadParents, true);
 	}
 
 	/**
@@ -161,9 +134,10 @@ final class PostTemplateBuilder
 	 * @param string $formSecurityToken
 	 * @param int $threadLevel
 	 * @param array<int, array{guid: string, name: string}> $threadParents
+	 * @param bool $flat Whether the item is displayed on its own in a list, so there is no comment box
 	 * @return array<string, mixed>|null
 	 */
-	private function buildThreadTemplateData(array $item, bool $preview, bool $writable, int $profileOwner, array $convResponses, string $formSecurityToken, int $threadLevel, array $threadParents): ?array
+	private function buildThreadTemplateData(array $item, bool $preview, bool $writable, int $profileOwner, array $convResponses, string $formSecurityToken, int $threadLevel, array $threadParents, bool $flat = false): ?array
 	{
 		if (($item['network'] ?? '') === Protocol::MAIL && $this->uid !== ($item['uid'] ?? 0)) {
 			return null;
@@ -286,7 +260,7 @@ final class PostTemplateBuilder
 				str_replace('{uri}', urlencode((string) ($item['uri'] ?? '')), $this->remote_comment),
 			];
 			$buttons = [];
-		} elseif ($commentable) {
+		} elseif ($commentable && !$flat) {
 			$comment_html = $this->getCommentBox($item, $writable, $profileOwner);
 		}
 
@@ -439,6 +413,8 @@ final class PostTemplateBuilder
 			'flatten'            => false,
 			'threaded'           => true,
 			'parentguid'         => $parent_guid,
+			'inreplyto_url'      => ($flat && $parent_guid) ? 'display/' . $parent_guid : '',
+			'flat'               => $flat,
 			'inreplyto'          => $parent_username ? $this->l10n->t('in reply to %s', $parent_username) : '',
 			'isunknown'          => $parent_unknown,
 			'isunknown_label'    => $this->l10n->t('Parent is probably private or not federated.'),
@@ -800,7 +776,7 @@ final class PostTemplateBuilder
 		foreach ($response_verbs as $verb) {
 			$responses[$verb] = [
 				'self'   => $convResponses[$verb][$item['uri-id']]['self'] ?? 0,
-				'output' => !empty($convResponses[$verb][$item['uri-id']]) ? $this->activityFormatter->formatActivity($convResponses[$verb][$item['uri-id']]['links'], $verb, $item['uri-id'], $verbs[$verb], $emojis) : '',
+				'output' => !empty($convResponses[$verb][$item['uri-id']]['links']) ? $this->activityFormatter->formatActivity($convResponses[$verb][$item['uri-id']]['links'], $verb, $item['uri-id'], $verbs[$verb], $emojis) : '',
 				'total'  => $emojis[$verbs[$verb]]['total'] ?? '',
 				'title'  => $emojis[$verbs[$verb]]['title'] ?? '',
 			];
