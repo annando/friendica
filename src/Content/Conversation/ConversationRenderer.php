@@ -13,6 +13,7 @@ use Friendica\App\BaseURL;
 use Friendica\BaseModule;
 use Friendica\Content\ContactSelector;
 use Friendica\Content\Item;
+use Friendica\Core\Config\Capability\IManageConfigValues;
 use Friendica\Core\L10n;
 use Friendica\Core\PConfig\Capability\IManagePersonalConfigValues;
 use Friendica\Core\Protocol;
@@ -69,6 +70,8 @@ final readonly class ConversationRenderer
 		private Profiler $profiler,
 		private \Friendica\App\Arguments $args,
 		private StatusEditor $statusEditor,
+		private PostTemplateBuilder $postTemplateBuilder,
+		private IManageConfigValues $config,
 	) {}
 
 	/**
@@ -490,18 +493,20 @@ final readonly class ConversationRenderer
 	 * Whether clicking a post's body should open its own page instead of the
 	 * usual in-feed behavior. Only takes effect together with the compact or
 	 * hidden comments modes; with all comments shown, it has no purpose.
+	 * Context-less lists (search, contact posts) never show comments.
 	 *
 	 * @param int $uid The user ID of the viewer
+	 * @param bool $commentsAlwaysHidden Whether the list never shows any comments
 	 * @return bool
 	 */
-	private function isClickToDisplayEnabled(int $uid): bool
+	private function isClickToDisplayEnabled(int $uid, bool $commentsAlwaysHidden = false): bool
 	{
 		if (!$uid) {
 			return false;
 		}
 
 		$commentsMode = (int) $this->pConfig->get($uid, 'system', 'compact_timeline', self::COMMENTS_MODE_ALL);
-		if ($commentsMode === self::COMMENTS_MODE_ALL) {
+		if (!$commentsAlwaysHidden && $commentsMode === self::COMMENTS_MODE_ALL) {
 			return false;
 		}
 
@@ -529,10 +534,12 @@ final readonly class ConversationRenderer
 		$threads           = $this->buildContextLessThreadList($items, $mode, $preview, $pagedrop, $formSecurityToken, $uid);
 
 		return Renderer::replaceMacros(Renderer::getMarkupTemplate('conversation.tpl'), [
-			'$live_update' => $liveUpdate,
-			'$update'      => $update,
-			'$threads'     => $threads,
-			'$dropping'    => ($pagedrop ? $this->l10n->t('Delete Selected Items') : false),
+			'$live_update'      => $liveUpdate,
+			'$mode'             => $mode,
+			'$update'           => $update,
+			'$threads'          => $threads,
+			'$dropping'         => ($pagedrop ? $this->l10n->t('Delete Selected Items') : false),
+			'$click_to_display' => !$preview && $this->isClickToDisplayEnabled($uid, true),
 		]);
 	}
 
@@ -551,8 +558,9 @@ final readonly class ConversationRenderer
 	 */
 	private function buildContextLessThreadList(array $items, string $mode, bool $preview, bool $pagedrop, string $formSecurityToken, int $viewerUid): array
 	{
-		$threads = [];
-		$uriids  = [];
+		$threads     = [];
+		$uriids      = [];
+		$interaction = $preview ? [] : $this->dataProvider->getInteractionData($items, $viewerUid);
 
 		foreach ($items as $item) {
 			if (in_array($item['uri-id'], $uriids)) {
@@ -604,15 +612,10 @@ final readonly class ConversationRenderer
 				'delete'   => $this->l10n->t('Delete'),
 			];
 
-			$likebuttons = [
-				'like'     => null,
-				'dislike'  => null,
-				'share'    => null,
-				'announce' => null,
-			];
-
-			if ($this->pConfig->get($viewerUid, 'system', 'hide_dislike')) {
-				unset($likebuttons['dislike']);
+			if ($preview) {
+				$actions = ['vote' => ['like' => null, 'dislike' => null, 'share' => null, 'announce' => null]];
+			} else {
+				$actions = $this->postTemplateBuilder->buildItemInteraction($item, $viewerUid, $interaction[$item['uri-id']] ?? []);
 			}
 
 			$bodyHtml               = ItemModel::prepareBody($item, true, $preview);
@@ -666,7 +669,7 @@ final readonly class ConversationRenderer
 				'pinned'               => $pinned,
 				'star'                 => false,
 				'drop'                 => $drop,
-				'vote'                 => $likebuttons,
+				'suppress_tags'        => $this->config->get('system', 'suppress_tags'),
 				'like_html'            => '',
 				'dislike_html'         => '',
 				'comment_html'         => '',
@@ -676,6 +679,11 @@ final readonly class ConversationRenderer
 				'loading'              => $this->l10n->t('Loading ...'),
 				'thread_level'         => 1,
 			];
+
+			$tmpItem = array_merge($tmpItem, array_filter($actions, static fn(string $key) => $key !== 'drop', ARRAY_FILTER_USE_KEY));
+			if (!empty($actions['drop'])) {
+				$tmpItem['drop'] = $actions['drop'];
+			}
 
 			$arr = ['item' => $item, 'output' => $tmpItem];
 			$arr = $this->eventDispatcher->dispatch(

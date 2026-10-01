@@ -76,6 +76,60 @@ final class PostTemplateBuilder
 	}
 
 	/**
+	 * Build the data for the action buttons and reaction counters of an item that is
+	 * rendered on its own, without its thread (search results, posts of a contact).
+	 *
+	 * @param array<string, mixed> $item
+	 * @param int $uid The user ID of the viewer
+	 * @param array<string, mixed> $interaction The result of ConversationDataProvider::getInteractionData() for the item
+	 * @return array<string, mixed>
+	 */
+	public function buildItemInteraction(array $item, int $uid, array $interaction): array
+	{
+		$this->uid = $uid;
+
+		$item['emojis'] = $interaction['emojis'] ?? [];
+
+		$convResponses = [];
+		foreach ($interaction['own'] ?? [] as $verb => $self) {
+			$convResponses[$verb][$item['uri-id']] = ['self' => $self, 'links' => []];
+		}
+
+		$profileOwner  = (int) ($item['uid'] ?? 0);
+		$permissions   = $this->determineActionPermissions($item, $profileOwner);
+		$reactionData  = $this->buildReactionData($item, $convResponses);
+		$actionButtons = $this->buildActionButtons($item, $uid !== 0, $permissions['likeable'], $permissions['shareable'], $permissions['announceable']);
+
+		$menuData = $this->buildMenuData($item, $profileOwner, $item['gravity'] === ItemModel::GRAVITY_PARENT ? 1 : 2);
+
+		$privacyData = $this->buildPrivacyData($item);
+		$parent      = $interaction['parent'] ?? [];
+
+		return array_merge($menuData, $privacyData, [
+			'vote'          => $actionButtons['buttons'],
+			'responses'     => $reactionData['responses'],
+			'reactions'     => $reactionData['reactions'],
+			'quoteshares'   => $this->getQuoteShares($interaction['quoteshares'] ?? []),
+			'switchcomment' => $this->l10n->t('Comment'),
+			'menu'          => $this->l10n->t('More'),
+			'num_comments'  => $this->l10n->tt('%d comment', '%d comments', $interaction['counts'] ?? 0),
+			'counts'        => $interaction['counts'] ?? 0,
+			'author_gsid'   => $item['author-gsid'] ?? 0,
+			'searchtext'    => $this->l10n->t('Raw content'),
+			'uriid'         => $item['uri-id'],
+			'private'       => $item['private'] ?? ItemModel::PUBLIC,
+			'direction'     => $interaction['direction'] ?? [],
+			'inreplyto'     => !empty($parent['name']) ? $this->l10n->t('in reply to %s', $parent['name']) : '',
+			'inreplyto_url' => !empty($parent['guid']) ? 'display/' . $parent['guid'] : '',
+			'ignore_author' => $menuData['ignore'],
+			'ignore_server' => $menuData['ignoreServer'],
+			'ignore'        => $menuData['ignore_thread'],
+			'lang'          => $menuData['language'],
+			'language'      => $menuData['languages'],
+		]);
+	}
+
+	/**
 	 * Determine the thread level based on the URI ID.
 	 *
 	 * @param int $uriid
@@ -152,21 +206,6 @@ final class PostTemplateBuilder
 		$parent_username = $threadParents[$item['thr-parent-id'] ?? '']['name'] ?? '';
 		$parent_unknown  = $parent_username ? '' : $this->l10n->t('Unknown parent');
 
-		// Set up language detection
-		$languages = '';
-		$language  = '';
-		if (!empty($item['language'])) {
-			$languages = $this->l10n->t('Detected languages');
-			$language  = array_key_first(json_decode((string) $item['language'], true));
-		}
-
-		// Set up browser share
-		$browsershare = null;
-		if (in_array($item['private'] ?? ItemModel::PUBLIC, [ItemModel::PUBLIC, ItemModel::UNLISTED])
-			&& in_array($item['network'] ?? '', Protocol::FEDERATED)) {
-			$browsershare = [$this->l10n->t('Share via ...'), $this->l10n->t('Share via external services')];
-		}
-
 		// Set up owner information
 		$owner_url  = '';
 		$owner_name = '';
@@ -197,23 +236,25 @@ final class PostTemplateBuilder
 			'share'    => null,
 			'announce' => null,
 		];
-		$pinned        = '';
-		$pin           = false;
-		$star          = false;
-		$ignore_thread = false;
-		if ($threadLevel === 1 && $this->uid) {
-			$ignored = Post\ThreadUser::getIgnored($item['uri-id'] ?? 0, $this->uid);
-			if ($ignored || $item['mention']) {
-				$ignore_thread = [
-					'do'        => $this->l10n->t('Turn off related notifications'),
-					'undo'      => $this->l10n->t('Turn on related notifications'),
-					'toggle'    => $this->l10n->t('Toggle notifications for this post'),
-					'classdo'   => $ignored ? 'hidden' : '',
-					'classundo' => $ignored ? '' : 'hidden',
-					'ignored'   => $this->l10n->t('Notifications turned off for this post'),
-				];
-			}
-		}
+		$pinned = '';
+		$pin    = false;
+
+		$menuData      = $this->buildMenuData($item, $profileOwner, $threadLevel);
+		$languages     = $menuData['languages'];
+		$language      = $menuData['language'];
+		$browsershare  = $menuData['browsershare'];
+		$ignore_thread = $menuData['ignore_thread'];
+		$edpost        = $menuData['edpost'];
+		$drop          = $menuData['drop'];
+		$block         = $menuData['block'];
+		$ignore        = $menuData['ignore'];
+		$collapse      = $menuData['collapse'];
+		$report        = $menuData['report'];
+		$ignoreServer  = $menuData['ignoreServer'];
+		$filer         = $menuData['filer'];
+		$isstarred     = $menuData['isstarred'];
+		$star          = $menuData['star'];
+		$tagger        = $menuData['tagger'];
 
 		$ispinned  = 'unpinned';
 		$isstarred = 'unstarred';
@@ -221,11 +262,10 @@ final class PostTemplateBuilder
 		$shiny     = '';
 		$osparkle  = '';
 
-		$privacy   = $this->fetchPrivacy($item);
-		$lock      = (($item['private'] ?? ItemModel::PUBLIC) === ItemModel::PRIVATE) ? $privacy : false;
-		$connector = !in_array($item['network'] ?? '', Protocol::NATIVE_SUPPORT) && (($item['protocol'] ?? '') !== \Friendica\Model\Conversation::PARCEL_JETSTREAM)
-			? $this->l10n->t('Connector Message')
-			: false;
+		$privacyData = $this->buildPrivacyData($item);
+		$privacy     = $privacyData['privacy'];
+		$lock        = $privacyData['lock'];
+		$connector   = $privacyData['connector'];
 
 		$permissions  = $this->determineActionPermissions($item, $profileOwner);
 		$shareable    = $permissions['shareable'];
@@ -233,51 +273,8 @@ final class PostTemplateBuilder
 		$commentable  = $permissions['commentable'];
 		$likeable     = $permissions['likeable'];
 
-		$edpost = false;
-		if ($this->uid && $item['origin']) {
-			if (!empty($item['event-id'])) {
-				$edpost = ['calendar/event/edit/' . $item['event-id'], $this->l10n->t('Edit event')];
-			} else {
-				$edpost = [sprintf('post/%s/edit', $item['id'] ?? 0), $this->l10n->t('Edit post')];
-			}
-		}
-		if (($item['uid'] ?? 0) === 0) {
-			$edpost = false;
-		}
-
 		if (!empty($item['featured'])) {
 			$pinned = $this->l10n->t('Pinned to your wall');
-		}
-
-		$moderationButtons = $this->buildModerationButtons($item);
-		$drop              = $moderationButtons['drop'];
-		$block             = $moderationButtons['block'];
-		$ignore            = $moderationButtons['ignore'];
-		$collapse          = $moderationButtons['collapse'];
-		$report            = $moderationButtons['report'];
-		$ignoreServer      = $moderationButtons['ignoreServer'];
-
-		$filer = $this->uid ? $this->l10n->t('Save to folder') : false;
-
-		$isstarred = (($item['starred'] ?? false) ? 'starred' : 'unstarred');
-		$star      = [
-			'do'        => $this->l10n->t('Bookmark'),
-			'undo'      => $this->l10n->t('Remove bookmark'),
-			'classdo'   => !empty($item['starred']) ? 'hidden' : '',
-			'classundo' => !empty($item['starred']) ? '' : 'hidden',
-			'starred'   => $this->l10n->t('Starred'),
-		];
-
-		$tagger = '';
-		if ($this->uid && $profileOwner === $this->uid && !empty($item['uid'])) {
-			$tagger = [
-				'add'   => $this->l10n->t('Add tag to post'),
-				'class' => '',
-			];
-		}
-
-		if (!in_array($item['network'] ?? '', [Protocol::ACTIVITYPUB, Protocol::DFRN, Protocol::DIASPORA])) {
-			$tagger = '';
 		}
 
 		$comment_html          = '';
@@ -483,6 +480,118 @@ final class PostTemplateBuilder
 		$result['children']           = $children;
 		$result['total_comments_num'] = $threadLevel === 1 ? $this->countDescendants($children) : 0;
 		return $result;
+	}
+
+	/**
+	 * Builds the data of the item menu: the actions that are available besides like, share and comment.
+	 *
+	 * @param array<string, mixed> $item
+	 * @param int $profileOwner
+	 * @param int $threadLevel
+	 * @return array<string, mixed>
+	 */
+	private function buildMenuData(array $item, int $profileOwner, int $threadLevel): array
+	{
+		// Set up language detection
+		$languages = '';
+		$language  = '';
+		if (!empty($item['language'])) {
+			$languages = $this->l10n->t('Detected languages');
+			$language  = array_key_first(json_decode((string) $item['language'], true));
+		}
+
+		// Set up browser share
+		$browsershare = null;
+		if (in_array($item['private'] ?? ItemModel::PUBLIC, [ItemModel::PUBLIC, ItemModel::UNLISTED])
+			&& in_array($item['network'] ?? '', Protocol::FEDERATED)) {
+			$browsershare = [$this->l10n->t('Share via ...'), $this->l10n->t('Share via external services')];
+		}
+
+		$ignore_thread = false;
+		if ($threadLevel === 1 && $this->uid) {
+			$ignored = Post\ThreadUser::getIgnored($item['uri-id'] ?? 0, $this->uid);
+			if ($ignored || $item['mention']) {
+				$ignore_thread = [
+					'do'        => $this->l10n->t('Turn off related notifications'),
+					'undo'      => $this->l10n->t('Turn on related notifications'),
+					'toggle'    => $this->l10n->t('Toggle notifications for this post'),
+					'classdo'   => $ignored ? 'hidden' : '',
+					'classundo' => $ignored ? '' : 'hidden',
+					'ignored'   => $this->l10n->t('Notifications turned off for this post'),
+				];
+			}
+		}
+
+		$edpost = false;
+		if ($this->uid && $item['origin']) {
+			if (!empty($item['event-id'])) {
+				$edpost = ['calendar/event/edit/' . $item['event-id'], $this->l10n->t('Edit event')];
+			} else {
+				$edpost = [sprintf('post/%s/edit', $item['id'] ?? 0), $this->l10n->t('Edit post')];
+			}
+		}
+		if (($item['uid'] ?? 0) === 0) {
+			$edpost = false;
+		}
+
+		$moderationButtons = $this->buildModerationButtons($item);
+
+		$star = [
+			'do'        => $this->l10n->t('Bookmark'),
+			'undo'      => $this->l10n->t('Remove bookmark'),
+			'classdo'   => !empty($item['starred']) ? 'hidden' : '',
+			'classundo' => !empty($item['starred']) ? '' : 'hidden',
+			'starred'   => $this->l10n->t('Starred'),
+		];
+
+		$tagger = '';
+		if ($this->uid && $profileOwner === $this->uid && !empty($item['uid'])) {
+			$tagger = [
+				'add'   => $this->l10n->t('Add tag to post'),
+				'class' => '',
+			];
+		}
+
+		if (!in_array($item['network'] ?? '', [Protocol::ACTIVITYPUB, Protocol::DFRN, Protocol::DIASPORA])) {
+			$tagger = '';
+		}
+
+		return [
+			'languages'     => $languages,
+			'language'      => $language,
+			'browsershare'  => $browsershare,
+			'ignore_thread' => $ignore_thread,
+			'edpost'        => $edpost,
+			'drop'          => $moderationButtons['drop'],
+			'block'         => $moderationButtons['block'],
+			'ignore'        => $moderationButtons['ignore'],
+			'collapse'      => $moderationButtons['collapse'],
+			'report'        => $moderationButtons['report'],
+			'ignoreServer'  => $moderationButtons['ignoreServer'],
+			'filer'         => $this->uid ? $this->l10n->t('Save to folder') : false,
+			'isstarred'     => !empty($item['starred']) ? 'starred' : 'unstarred',
+			'star'          => $star,
+			'tagger'        => $tagger,
+		];
+	}
+
+	/**
+	 * Builds the data for the privacy and connector indicators in the item header.
+	 *
+	 * @param array<string, mixed> $item
+	 * @return array{privacy: string, lock: string|false, connector: string|false}
+	 */
+	private function buildPrivacyData(array $item): array
+	{
+		$privacy = $this->fetchPrivacy($item);
+
+		return [
+			'privacy'   => $privacy,
+			'lock'      => (($item['private'] ?? ItemModel::PUBLIC) === ItemModel::PRIVATE) ? $privacy : false,
+			'connector' => !in_array($item['network'] ?? '', Protocol::NATIVE_SUPPORT) && (($item['protocol'] ?? '') !== \Friendica\Model\Conversation::PARCEL_JETSTREAM)
+				? $this->l10n->t('Connector Message')
+				: false,
+		];
 	}
 
 	/**

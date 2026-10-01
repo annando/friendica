@@ -37,7 +37,7 @@
 				<span class="pinned">{{$item.pinned}}</span>
 			</span>
 		</div>
-		<div class="wall-item-content">
+		<div class="wall-item-content{{if $click_to_display}} click-to-display{{/if}}"{{if $click_to_display}} onclick="clickToDisplay(event, '{{$item.plink.orig}}');"{{/if}}>
 			{{if $item.title}}<h2 dir="auto"><a href="{{$item.plink.href}}">{{$item.title}}</a></h2>{{/if}}
 			<div class="wall-item-body" dir="auto">{{$item.body_html nofilter}}</div>
 		</div>
@@ -55,7 +55,7 @@
 	</div>
 	<div class="wall-item-bottom">
 		<div dir="auto">
-			{{if $item.conv}}<a href="{{$item.conv.href}}" id="context-{{$item.id}}" title="{{$item.conv.title}}"><i class="icon-link icon-large"></i></a>{{/if}}
+			{{if $item.conv}}<a href="{{$item.conv.href}}" id="context-{{$item.id}}" title="{{$item.conv.title}}"><i class="icon-link icon-large"></i>{{if $item.counts > 0}} {{$item.num_comments}}{{/if}}</a>{{/if}}
 		</div>
 		<div class="wall-item-actions">
 

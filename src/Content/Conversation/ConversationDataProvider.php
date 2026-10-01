@@ -166,6 +166,61 @@ final readonly class ConversationDataProvider
 	}
 
 	/**
+	 * Collect the reaction data (emojis, quote shares, comment counts and the viewer's own
+	 * reactions) for a flat list of items that is rendered without its threads.
+	 *
+	 * @param array<int, array> $items The items to collect the data for
+	 * @param int $viewerUid The user ID of the viewer
+	 * @return array<int, array> The interaction data per URI ID of the given items
+	 */
+	public function getInteractionData(array $items, int $viewerUid): array
+	{
+		if (empty($items)) {
+			return [];
+		}
+
+		$uriIds       = array_values(array_unique(array_column($items, 'uri-id')));
+		$parentUriIds = array_values(array_unique(array_column($items, 'parent-uri-id')));
+
+		$emojis      = $this->getEmojis($parentUriIds, $viewerUid);
+		$quoteshares = $this->getQuoteShares($uriIds);
+		$counts      = $this->getCounts($parentUriIds);
+
+		$own = [];
+		if ($viewerUid) {
+			$verbs = [Activity::LIKE => 'like', Activity::DISLIKE => 'dislike', Activity::ANNOUNCE => 'announce'];
+			$posts = Post::selectToArray(['thr-parent-id', 'verb'], ['thr-parent-id' => $uriIds, 'gravity' => ItemModel::GRAVITY_ACTIVITY, 'author-id' => Contact::getPublicIdByUserId($viewerUid), 'verb' => array_keys($verbs), 'deleted' => false]);
+			foreach ($posts as $post) {
+				$own[$post['thr-parent-id']][$verbs[$post['verb']]] = 1;
+			}
+		}
+
+		$parents = [];
+		$thrIds  = array_values(array_unique(array_filter(array_column($items, 'thr-parent-id'))));
+		if ($thrIds) {
+			foreach (Post::selectToArray(['uri-id', 'guid', 'author-name'], ['uri-id' => $thrIds]) as $post) {
+				$parents[$post['uri-id']] = ['guid' => $post['guid'], 'name' => $post['author-name']];
+			}
+		}
+
+		$result = [];
+		foreach ($items as $item) {
+			$isComment = $item['gravity'] !== ItemModel::GRAVITY_PARENT;
+
+			$result[$item['uri-id']] = [
+				'direction'   => $this->addRowInformation($item, [], [], '', $viewerUid, [])['direction'] ?? [],
+				'parent'      => $isComment ? ($parents[$item['thr-parent-id']] ?? []) : [],
+				'emojis'      => $emojis[$item['uri-id']]      ?? [],
+				'quoteshares' => $quoteshares[$item['uri-id']] ?? [],
+				'counts'      => $item['gravity'] === ItemModel::GRAVITY_PARENT ? ($counts[$item['uri-id']] ?? 0) : 0,
+				'own'         => $own[$item['uri-id']]         ?? [],
+			];
+		}
+
+		return $result;
+	}
+
+	/**
 	 * Build thread template data from items.
 	 *
 	 * @param array<int, array> $items The items to build from
