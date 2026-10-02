@@ -7,14 +7,27 @@
 
 namespace Friendica\Test\src\Util;
 
+use Dice\Dice;
+use Friendica\DI;
 use Friendica\Util\HTTPSignature;
+use gapple\StructuredFields\Parser;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * HTTP Signature utility test class
  */
 class HTTPSignatureTest extends TestCase
 {
+	protected function setUp(): void
+	{
+		parent::setUp();
+
+		// The verification code logs its decisions, so a logger has to be available
+		DI::init((new Dice())->addRule(LoggerInterface::class, ['instanceOf' => NullLogger::class, 'shared' => true]), true);
+	}
+
 	public static function dataParseSigned()
 	{
 		return [
@@ -195,6 +208,128 @@ G1vVmRgkLDqhc4+r3wDz3qy6JpV7tg==
 
 		self::assertNull(HTTPSignature::rfc9421SignatureBase(['@status'], '("@status")', $context, []));
 		self::assertNull(HTTPSignature::rfc9421SignatureBase(['signature'], '("signature")', $context, []));
+	}
+
+	/**
+	 * Parses the covered components of a "Signature-Input" inner list
+	 */
+	private function components(string $list): array
+	{
+		return Parser::parseList('(' . $list . ')')[0]->getValue();
+	}
+
+	/**
+	 * Structured field parameters from RFC 9421, section 2.1.1 to 2.1.3
+	 */
+	public function testRfc9421SignatureBaseStructuredFields(): void
+	{
+		$context = ['method' => 'GET', 'scheme' => 'https', 'authority' => 'example.com', 'target' => '/'];
+		$headers = [
+			'example-dict'   => 'a=1,    b=2;x=1;y=2,   c=(a   b    c)',
+			'example-header' => ['value, with, lots', 'of, commas'],
+		];
+
+		$expected = '"example-dict";sf: a=1, b=2;x=1;y=2, c=(a b c)' . "\n"
+			. '"example-dict";key="b": 2;x=1;y=2' . "\n"
+			. '"example-dict";key="c": (a b c)' . "\n"
+			. '"example-header";bs: :dmFsdWUsIHdpdGgsIGxvdHM=:, :b2YsIGNvbW1hcw==:' . "\n"
+			. '"@signature-params": ("x")';
+
+		$components = $this->components('"example-dict";sf "example-dict";key="b" "example-dict";key="c" "example-header";bs');
+
+		self::assertSame($expected, HTTPSignature::rfc9421SignatureBase($components, '("x")', $context, $headers));
+	}
+
+	/**
+	 * A plain field and the "sf" form differ in the way the value is normalized
+	 */
+	public function testRfc9421SignatureBaseStructuredFieldTypes(): void
+	{
+		$context = ['method' => 'GET', 'scheme' => 'https', 'authority' => 'example.com', 'target' => '/'];
+		$headers = ['example-list' => '  1,  "a";q=0.5 ', 'example-item' => '  ?1;a=b'];
+
+		$expected = '"example-list";sf: 1, "a";q=0.5' . "\n"
+			. '"example-item";sf: ?1;a=b' . "\n"
+			. '"@signature-params": ("x")';
+
+		self::assertSame($expected, HTTPSignature::rfc9421SignatureBase($this->components('"example-list";sf "example-item";sf'), '("x")', $context, $headers));
+		self::assertSame(
+			'"example-list": 1,  "a";q=0.5' . "\n" . '"@signature-params": ("x")',
+			HTTPSignature::rfc9421SignatureBase($this->components('"example-list"'), '("x")', $context, $headers),
+		);
+	}
+
+	public function testRfc9421SignatureBaseInvalidParameters(): void
+	{
+		$context = ['method' => 'GET', 'scheme' => 'https', 'authority' => 'example.com', 'target' => '/'];
+		$headers = ['example-dict' => 'a=1, b=2', 'example-text' => 'not valid!'];
+
+		// A key that is not part of the dictionary
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"example-dict";key="c"'), '("x")', $context, $headers));
+		// "bs" cannot be combined with "sf" or "key"
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"example-dict";bs;sf'), '("x")', $context, $headers));
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"example-dict";bs;key="a"'), '("x")', $context, $headers));
+		// Trailers and unknown parameters are not supported
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"example-text";tr'), '("x")', $context, $headers));
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"example-text";foo'), '("x")', $context, $headers));
+		// A value that is not a structured field
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"example-text";sf'), '("x")', $context, $headers));
+		// "name" is only valid for "@query-param"
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@method";name="a"'), '("x")', $context, $headers));
+	}
+
+	/**
+	 * Query parameters from RFC 9421, section 2.2.8
+	 */
+	public function testRfc9421SignatureBaseQueryParam(): void
+	{
+		$context = [
+			'method'    => 'GET',
+			'scheme'    => 'https',
+			'authority' => 'example.com',
+			'target'    => '/parameters?var=this%20is%20a%20big%0Amultiline%20value&bar=with+plus+whitespace&fa%C3%A7ade%22%3A%20=something&empty=&dup=1&dup=2',
+		];
+
+		$expected = '"@query-param";name="var": this%20is%20a%20big%0Amultiline%20value' . "\n"
+			. '"@query-param";name="bar": with%20plus%20whitespace' . "\n"
+			. '"@query-param";name="fa%C3%A7ade%22%3A%20": something' . "\n"
+			. '"@query-param";name="empty": ' . "\n"
+			. '"@signature-params": ("x")';
+
+		$components = $this->components('"@query-param";name="var" "@query-param";name="bar" "@query-param";name="fa%C3%A7ade%22%3A%20" "@query-param";name="empty"');
+		self::assertSame($expected, HTTPSignature::rfc9421SignatureBase($components, '("x")', $context, []));
+
+		// Missing and repeated parameters, and a missing name
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@query-param";name="missing"'), '("x")', $context, []));
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@query-param";name="dup"'), '("x")', $context, []));
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@query-param"'), '("x")', $context, []));
+	}
+
+	/**
+	 * Components of a response with the "req" parameter, RFC 9421, section 2.4
+	 */
+	public function testRfc9421SignatureBaseResponse(): void
+	{
+		$request = [
+			'context' => ['method' => 'POST', 'scheme' => 'https', 'authority' => 'example.com', 'target' => '/foo?param=Value'],
+			'headers' => ['content-digest' => 'sha-256=:abc=:'],
+		];
+		$response = ['status' => 503];
+
+		$expected = '"@status": 503' . "\n"
+			. '"@method";req: POST' . "\n"
+			. '"@authority";req: example.com' . "\n"
+			. '"content-digest";req: sha-256=:abc=:' . "\n"
+			. '"content-digest";req;key="sha-256": :abc=:' . "\n"
+			. '"@signature-params": ("x")';
+
+		$components = $this->components('"@status" "@method";req "@authority";req "content-digest";req "content-digest";req;key="sha-256"');
+		self::assertSame($expected, HTTPSignature::rfc9421SignatureBase($components, '("x")', $response, ['content-digest' => 'other'], $request));
+
+		// Without the request there is nothing to refer to, and a request has no status
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@method";req'), '("x")', $request['context'], []));
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@status"'), '("x")', $request['context'], []));
+		self::assertNull(HTTPSignature::rfc9421SignatureBase($this->components('"@status";req'), '("x")', $response, [], $request));
 	}
 
 	/**
@@ -455,5 +590,48 @@ G1vVmRgkLDqhc4+r3wDz3qy6JpV7tg==
 
 		self::assertFalse($check->invoke(null, '{}', $components, $headers, 0, 0));
 		self::assertTrue($check->invoke(null, '{}', $components, $headers, time(), 0));
+	}
+
+	/**
+	 * A signature whose components carry parameters verifies after the "Signature-Input" header was parsed
+	 */
+	#[\PHPUnit\Framework\Attributes\DataProvider('dataRfc9421ParsedInput')]
+	public function testRfc9421ParsedInput(string $components, array $headers, string $target): void
+	{
+		$keypair = openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+		openssl_pkey_export($keypair, $privKey);
+		$pubKey = openssl_pkey_get_details($keypair)['key'];
+
+		$context = ['method' => 'POST', 'scheme' => 'https', 'authority' => 'example.com', 'target' => $target];
+		$input   = '(' . $components . ');created=' . time() . ';keyid="test-key";alg="rsa-v1_5-sha256"';
+
+		// What the sender signs: the components are built from the plain identifiers
+		$items = Parser::parseList('(' . $components . ')')[0]->getValue();
+		$base  = HTTPSignature::rfc9421SignatureBase($items, $input, $context, $headers);
+		self::assertNotNull($base);
+		self::assertTrue(openssl_sign($base, $signature, $privKey, OPENSSL_ALGO_SHA256));
+
+		// What the receiver does: it parses the "Signature-Input" header
+		$received = Parser::parseDictionary('sig1=' . $input)->sig1;
+		$check    = HTTPSignature::rfc9421InputBase($received, $context, $headers);
+		self::assertSame($base, $check);
+
+		$verify = new \ReflectionMethod(HTTPSignature::class, 'verifySignature');
+		self::assertTrue($verify->invoke(null, $check, $signature, $pubKey, 'sha256'));
+
+		// A changed message must not verify
+		$changed = HTTPSignature::rfc9421InputBase($received, ['method' => 'GET'] + $context, $headers);
+		self::assertFalse($verify->invoke(null, (string) $changed, $signature, $pubKey, 'sha256'));
+	}
+
+	public static function dataRfc9421ParsedInput(): array
+	{
+		return [
+			'plain'       => ['"@method" "@target-uri" "content-digest"', ['content-digest' => 'sha-256=:abc=:'], '/inbox?a=1'],
+			'sf'          => ['"@method" "content-digest";sf "example-dict";sf', ['content-digest' => 'sha-256=:abc=:', 'example-dict' => 'a=1,   b=2'], '/inbox?a=1'],
+			'key'         => ['"@method" "content-digest";key="sha-256"', ['content-digest' => 'sha-256=:abc=:'], '/inbox?a=1'],
+			'query-param' => ['"@method" "@query-param";name="a" "@query-param";name="b"', [], '/inbox?a=1&b=two%20words'],
+			'bs'          => ['"@method" "example-header";bs', ['example-header' => ['one, two', 'three']], '/inbox?a=1'],
+		];
 	}
 }
