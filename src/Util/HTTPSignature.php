@@ -882,9 +882,9 @@ class HTTPSignature
 				continue;
 			}
 
-			$components = [];
+			$names = [];
 			foreach ($parameters->getValue() as $item) {
-				$components[] = strtolower((string) $item->getValue());
+				$names[] = strtolower((string) $item->getValue());
 			}
 
 			$params  = $parameters->getParameters();
@@ -897,7 +897,7 @@ class HTTPSignature
 				continue;
 			}
 
-			if ($keyId === '' || $components === []) {
+			if ($keyId === '' || $names === []) {
 				DI::logger()->info('Missing keyId or components', ['label' => $label]);
 				continue;
 			}
@@ -907,16 +907,9 @@ class HTTPSignature
 				continue;
 			}
 
-			try {
-				$signature_params = Serializer::serializeList([$parameters]);
-			} catch (\Throwable $th) {
-				DI::logger()->info('Cannot serialize the signature parameters', ['label' => $label, 'message' => $th->getMessage()]);
-				continue;
-			}
-
-			$base = self::rfc9421SignatureBase($components, $signature_params, $context, $headers);
+			$base = self::rfc9421InputBase($parameters, $context, $headers);
 			if (is_null($base)) {
-				DI::logger()->info('Cannot build the signature base', ['label' => $label, 'components' => $components]);
+				DI::logger()->info('Cannot build the signature base', ['label' => $label, 'components' => $names]);
 				continue;
 			}
 
@@ -940,14 +933,14 @@ class HTTPSignature
 			}
 
 			if ($algorithm === '') {
-				DI::logger()->info('RFC 9421 signature could not be verified', ['label' => $label, 'signer' => $key['url'], 'algorithms' => $algorithms, 'components' => $components]);
+				DI::logger()->info('RFC 9421 signature could not be verified', ['label' => $label, 'signer' => $key['url'], 'algorithms' => $algorithms, 'components' => $names]);
 				DI::logger()->debug('Rejected RFC 9421 signature base', ['label' => $label, 'base' => $base, 'signature-input' => $http_headers['HTTP_SIGNATURE_INPUT'] ?? '']);
 				continue;
 			}
 
 			DI::logger()->info('RFC 9421 signature matches', ['label' => $label, 'signer' => $key['url'], 'algorithm' => $algorithm]);
 
-			if (!self::rfc9421CheckContent($content, $components, $headers, $created, $expires)) {
+			if (!self::rfc9421CheckContent($content, $names, $headers, $created, $expires)) {
 				return false;
 			}
 
@@ -960,25 +953,77 @@ class HTTPSignature
 	}
 
 	/**
+	 * Builds the signature base for one entry of a parsed "Signature-Input" header
+	 *
+	 * @param InnerList $input   The covered components and signature parameters of the signature
+	 * @param array     $context See rfc9421SignatureBase()
+	 * @param array     $headers See rfc9421SignatureBase()
+	 *
+	 * @return string|null null when the base cannot be built
+	 */
+	public static function rfc9421InputBase(InnerList $input, array $context, array $headers): ?string
+	{
+		try {
+			$signature_params = Serializer::serializeList([$input]);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		return self::rfc9421SignatureBase($input->getValue(), $signature_params, $context, $headers);
+	}
+
+	/**
 	 * Builds the RFC 9421 signature base for the given covered components
 	 *
-	 * @param array  $components Lower-cased component identifiers
+	 * @param array  $components Covered components, either plain lower-cased names or items that carry
+	 *                           component parameters like "sf", "key", "bs", "req" or "name"
 	 * @param string $params     Serialized signature parameters (the inner list of "Signature-Input")
-	 * @param array  $context    'method', 'scheme', 'authority' and 'target' (path and query) of the request
-	 * @param array  $headers    Request header fields, lower-cased
+	 * @param array  $context    'method', 'scheme', 'authority' and 'target' (path and query) of the message.
+	 *                           A response additionally has 'status'.
+	 * @param array  $headers    Header fields of the message, lower-cased. A value can be an array with one entry per field line.
+	 * @param array|null $request The request that belongs to a signed response, with the keys 'context' and 'headers'.
+	 *                           It is the source for components with the "req" parameter.
 	 *
 	 * @return string|null The signature base, or null when a covered component cannot be resolved
-	 *                     (unsupported, response-only or missing from the request)
+	 *                     (unsupported, missing from the message or with invalid parameters)
 	 */
-	public static function rfc9421SignatureBase(array $components, string $params, array $context, array $headers): ?string
+	public static function rfc9421SignatureBase(array $components, string $params, array $context, array $headers, ?array $request = null): ?string
 	{
 		$base = '';
 		foreach ($components as $component) {
-			$value = self::rfc9421ComponentValue($component, $context, $headers);
+			if (!$component instanceof StructuredFieldsItem) {
+				$component = new StructuredFieldsItem(strtolower((string) $component));
+			}
+
+			$name = $component->getValue();
+			if (!is_string($name)) {
+				return null;
+			}
+			$name = strtolower($name);
+
+			$source_context = $context;
+			$source_headers = $headers;
+			if (!empty($component->getParameters()->req)) {
+				// A request signature cannot refer to a request (RFC 9421, section 2.4)
+				if (is_null($request)) {
+					return null;
+				}
+				$source_context = $request['context'] ?? [];
+				$source_headers = $request['headers'] ?? [];
+			}
+
+			$value = self::rfc9421ComponentValue($name, $component->getParameters(), $source_context, $source_headers);
 			if (is_null($value)) {
 				return null;
 			}
-			$base .= '"' . $component . '": ' . $value . "\n";
+
+			try {
+				$identifier = Serializer::serializeItem($name, $component->getParameters());
+			} catch (\Throwable) {
+				return null;
+			}
+
+			$base .= $identifier . ': ' . $value . "\n";
 		}
 
 		return $base . '"@signature-params": ' . $params;
@@ -987,32 +1032,38 @@ class HTTPSignature
 	/**
 	 * Resolves a single RFC 9421 component to its value in the signature base
 	 *
-	 * @return string|null null for components we do not support or that are absent
+	 * @param string $component  Lower-cased component name
+	 * @param object $parameters Parameters of the component identifier
+	 *
+	 * @return string|null null for components we do not support, that are absent or that have invalid parameters
 	 */
-	private static function rfc9421ComponentValue(string $component, array $context, array $headers): ?string
+	private static function rfc9421ComponentValue(string $component, object $parameters, array $context, array $headers): ?string
 	{
-		switch ($component) {
-			case '@method':
-				return $context['method'];
-			case '@authority':
-				return $context['authority'];
-			case '@scheme':
-				return $context['scheme'];
-			case '@target-uri':
-				return $context['scheme'] . '://' . $context['authority'] . $context['target'];
-			case '@path':
-				// RFC 9421 §2.2.6: an empty path is "/"
-				return (string) parse_url((string) $context['target'], PHP_URL_PATH) ?: '/';
-			case '@query':
-				$query = parse_url((string) $context['target'], PHP_URL_QUERY);
-				return '?' . (is_string($query) ? $query : '');
-			case '@request-target':
-				$query = parse_url((string) $context['target'], PHP_URL_QUERY);
-				return ((string) parse_url((string) $context['target'], PHP_URL_PATH) ?: '/') . (is_string($query) && $query !== '' ? '?' . $query : '');
+		$flags = [];
+		foreach ($parameters as $key => $value) {
+			$flags[$key] = $value;
 		}
 
-		// Derived components we do not implement and response-only ones such as "@status"
+		// Trailers ("tr") are not available to us. Unknown parameters invalidate the component (RFC 9421, section 2.1)
+		if (array_diff_key($flags, array_flip(['sf', 'key', 'bs', 'req', 'name']))) {
+			return null;
+		}
+
 		if (str_starts_with($component, '@')) {
+			if (array_diff_key($flags, array_flip(['req', 'name']))) {
+				return null;
+			}
+			if (isset($flags['name']) && ($component !== '@query-param')) {
+				return null;
+			}
+			return self::rfc9421DerivedValue($component, $flags['name'] ?? null, $context);
+		}
+
+		if (isset($flags['name'])) {
+			return null;
+		}
+
+		if (isset($flags['bs']) && (isset($flags['sf']) || isset($flags['key']))) {
 			return null;
 		}
 
@@ -1020,7 +1071,144 @@ class HTTPSignature
 			return null;
 		}
 
-		return trim((string) preg_replace('/\s*\n\s*/', ' ', (string) $headers[$component]));
+		$lines = array_map(
+			fn ($line): string => trim((string) preg_replace('/\s*\n\s*/', ' ', (string) $line)),
+			is_array($headers[$component]) ? array_values($headers[$component]) : [$headers[$component]],
+		);
+
+		if (isset($flags['bs'])) {
+			return implode(', ', array_map(fn (string $line): string => ':' . base64_encode($line) . ':', $lines));
+		}
+
+		$value = implode(', ', $lines);
+
+		if (isset($flags['key'])) {
+			return self::rfc9421DictionaryMember($value, (string) $flags['key']);
+		}
+
+		if (isset($flags['sf'])) {
+			return self::rfc9421Reserialize($value);
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Resolves a derived component (RFC 9421, section 2.2)
+	 */
+	private static function rfc9421DerivedValue(string $component, $name, array $context): ?string
+	{
+		switch ($component) {
+			case '@method':
+				return $context['method'] ?? null;
+			case '@authority':
+				return $context['authority'] ?? null;
+			case '@scheme':
+				return $context['scheme'] ?? null;
+			case '@status':
+				return isset($context['status']) ? (string) $context['status'] : null;
+		}
+
+		if (!isset($context['target'])) {
+			return null;
+		}
+
+		$target = (string) $context['target'];
+		$path   = (string) parse_url($target, PHP_URL_PATH) ?: '/';
+		$query  = parse_url($target, PHP_URL_QUERY);
+		return match ($component) {
+			'@target-uri' => ($context['scheme'] ?? '') . '://' . ($context['authority'] ?? '') . $target,
+			// RFC 9421 §2.2.6: an empty path is "/"
+			'@path'           => $path,
+			'@query'          => '?' . (is_string($query) ? $query : ''),
+			'@request-target' => $path . (is_string($query) && $query !== '' ? '?' . $query : ''),
+			'@query-param'    => is_string($name) ? self::rfc9421QueryParam($name, is_string($query) ? $query : '') : null,
+			// Derived components we do not implement
+			default => null,
+		};
+	}
+
+	/**
+	 * Returns the value of a query parameter as "@query-param" needs it (RFC 9421, section 2.2.8)
+	 *
+	 * @return string|null null when the parameter is missing or occurs more than once
+	 */
+	private static function rfc9421QueryParam(string $name, string $query): ?string
+	{
+		$values = [];
+		foreach (explode('&', $query) as $pair) {
+			if ($pair === '') {
+				continue;
+			}
+			// The query is form-encoded, so "+" is a space
+			[$key, $value] = array_pad(explode('=', $pair, 2), 2, '');
+			// The name in the component identifier is the encoded name
+			if (rawurlencode(urldecode($key)) === $name) {
+				$values[] = urldecode($value);
+			}
+		}
+
+		// A parameter that occurs more than once must not be signed this way
+		if (count($values) !== 1) {
+			return null;
+		}
+
+		return rawurlencode($values[0]);
+	}
+
+	/**
+	 * Serializes a structured field the way RFC 8941 defines it ("sf" parameter)
+	 *
+	 * The type of the field is not known here. A dictionary, a list and an item are tried
+	 * in turn, which gives the same result whenever more than one of them can parse the value.
+	 *
+	 * @return string|null null when the value is no structured field or serializes to nothing
+	 */
+	private static function rfc9421Reserialize(string $value): ?string
+	{
+		$serializers = [
+			fn (): string => Serializer::serializeDictionary(Parser::parseDictionary($value)),
+			fn (): string => Serializer::serializeList(Parser::parseList($value)),
+			function () use ($value) {
+				$item = Parser::parseItem($value);
+				return Serializer::serializeItem($item->getValue(), $item->getParameters());
+			},
+		];
+
+		foreach ($serializers as $serializer) {
+			try {
+				$result = $serializer();
+			} catch (\Throwable) {
+				continue;
+			}
+
+			// Empty dictionaries and lists are not serialized (RFC 9421, section 2.1.1)
+			return $result !== '' ? $result : null;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns a single member of a dictionary field ("key" parameter)
+	 *
+	 * @return string|null null when the field is no dictionary or has no such member
+	 */
+	private static function rfc9421DictionaryMember(string $value, string $key): ?string
+	{
+		try {
+			$member = Parser::parseDictionary($value)->{$key};
+			if ($member instanceof InnerList) {
+				return Serializer::serializeList([$member]);
+			}
+			if ($member instanceof StructuredFieldsItem) {
+				return Serializer::serializeItem($member->getValue(), $member->getParameters());
+			}
+		} catch (\Throwable) {
+			// Not a dictionary
+		}
+
+		return null;
 	}
 
 	/**
