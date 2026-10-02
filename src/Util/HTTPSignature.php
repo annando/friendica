@@ -311,7 +311,7 @@ class HTTPSignature
 			$return_code = $postResult->getReturnCode();
 		}
 
-		DI::logger()->info('Transmit to ' . $target . ' returned ' . $return_code);
+		//DI::logger()->info('Transmit', ['uid'  => $owner['uid'], 'target' => $target, 'retur'  => $return_code]);
 
 		self::setInboxStatus($target, ($return_code >= 200) && ($return_code <= 299));
 
@@ -499,7 +499,7 @@ class HTTPSignature
 		}
 
 		if (!$curlResult->isSuccess() || empty($curlResult->getBodyString())) {
-			DI::logger()->debug('Fetching was unsuccessful', ['url' => $request, 'return-code' => $curlResult->getReturnCode(), 'error-number' => $curlResult->getErrorNumber(), 'error' => $curlResult->getError()]);
+			//DI::logger()->debug('Fetching was unsuccessful', ['url' => $request, 'return-code' => $curlResult->getReturnCode(), 'error-number' => $curlResult->getErrorNumber(), 'error' => $curlResult->getError()]);
 			return [];
 		}
 
@@ -597,7 +597,7 @@ class HTTPSignature
 			}
 		}
 
-		DI::logger()->info('Fetched for user ' . $uid . ' from ' . $request . ' returned ' . $return_code);
+		//DI::logger()->info('Fetched', ['user' => $uid, 'request' => $request, 'return' => $return_code]);
 
 		return $curlResult;
 	}
@@ -654,17 +654,17 @@ class HTTPSignature
 			// attempt on the "Signature" header, as the SWICG report recommends for
 			// senders that are in the middle of the migration.
 			if (!empty($http_headers['HTTP_SIGNATURE'])) {
-				DI::logger()->info('Falling back from RFC 9421 to a draft-cavage signature');
+				//DI::logger()->info('Falling back from RFC 9421 to a draft-cavage signature');
 			}
 		}
 
 		if (empty($http_headers['HTTP_SIGNATURE'])) {
-			DI::logger()->debug('Request carries neither a draft-cavage nor an RFC 9421 signature');
+			//DI::logger()->debug('Request carries neither a draft-cavage nor an RFC 9421 signature');
 			return false;
 		}
 
 		if (empty($http_headers['HTTP_SIGNATURE_INPUT'])) {
-			DI::logger()->info('Verifying a draft-cavage signature');
+			//DI::logger()->info('Verifying a draft-cavage signature');
 		}
 
 		$actor = self::signedActor($content);
@@ -695,7 +695,7 @@ class HTTPSignature
 		}
 
 		if (empty($sig_block) || empty($sig_block['headers']) || empty($sig_block['keyId'])) {
-			DI::logger()->info('No headers or keyId');
+			//DI::logger()->info('No headers or keyId');
 			return false;
 		}
 
@@ -753,7 +753,7 @@ class HTTPSignature
 			}
 		}
 
-		DI::logger()->info('Draft-cavage signature matches', ['signer' => $key['url'], 'algorithm' => $algorithm, 'legacy-request-target' => $legacy_target]);
+		//DI::logger()->info('Draft-cavage signature matches', ['signer' => $key['url'], 'algorithm' => $algorithm, 'legacy-request-target' => $legacy_target]);
 
 		$hasGoodSignedContent = false;
 
@@ -806,14 +806,14 @@ class HTTPSignature
 				return false;
 			}
 
-			DI::logger()->debug('Valid creation date', ['created' => date(DateTimeFormat::MYSQL, $created), 'expired' => date(DateTimeFormat::MYSQL, $expired), 'current' => date(DateTimeFormat::MYSQL, $current)]);
+			//DI::logger()->debug('Valid creation date', ['created' => date(DateTimeFormat::MYSQL, $created), 'expired' => date(DateTimeFormat::MYSQL, $expired), 'current' => date(DateTimeFormat::MYSQL, $current)]);
 			$hasGoodSignedContent = true;
 		}
 
 		// Check the content-length when it is part of the signed data
 		if (in_array('content-length', $sig_block['headers'])) {
 			if (strlen($content) != $headers['content-length']) {
-				DI::logger()->info('Content length does not match');
+				DI::logger()->info('Content length does not match', ['content' => strlen($content), 'header' => $headers['content-length']]);
 				return false;
 			}
 		}
@@ -825,7 +825,7 @@ class HTTPSignature
 			return false;
 		}
 
-		DI::logger()->info('Draft-cavage signature is valid', ['signer' => $key['url']]);
+		//DI::logger()->info('Draft-cavage signature is valid', ['signer' => $key['url']]);
 		return $key['url'];
 	}
 
@@ -847,7 +847,7 @@ class HTTPSignature
 		// Web Bot Auth (draft-meunier-web-bot-auth-architecture) reuses RFC 9421 for
 		// crawlers. It is not an ActivityPub signer, so there is nothing to resolve.
 		if (!empty($http_headers['HTTP_SIGNATURE_AGENT'])) {
-			DI::logger()->debug('Request carries a Signature-Agent header, not an ActivityPub signature', ['signature-agent' => $http_headers['HTTP_SIGNATURE_AGENT']]);
+			//DI::logger()->debug('Request carries a Signature-Agent header, not an ActivityPub signature', ['signature-agent' => $http_headers['HTTP_SIGNATURE_AGENT']]);
 			return false;
 		}
 
@@ -1644,7 +1644,7 @@ class HTTPSignature
 		}
 
 		if (empty($key)) {
-			DI::logger()->notice('Key could not be fetched', ['url' => $url, 'actor' => $actor]);
+			DI::logger()->notice('Key could not be fetched', ['url' => $url, 'actor' => $actor, 'id' => $id]);
 		}
 		return $key;
 	}
@@ -1664,13 +1664,13 @@ class HTTPSignature
 	{
 		$profile = APContact::getByURL($url, false);
 		if (!empty($profile) && ($profile['updated'] > DateTimeFormat::utc('now - 1 month')) && (!empty($profile['pubkey']) || ($profile['type'] === 'Tombstone'))) {
-			DI::logger()->info('Taking key from the stored actor', ['url' => $url, 'actor' => $profile['url']]);
+			//DI::logger()->info('Taking key from the stored actor', ['url' => $url, 'actor' => $profile['url']]);
 			return ['url' => $profile['url'], 'pubkey' => $profile['pubkey'], 'type' => $profile['type']];
 		}
 
 		$key = self::fetchUnsignedKey($url, $follow_owner);
 		if (empty($key) && !empty($profile['pubkey'])) {
-			DI::logger()->info('Taking key from the outdated stored actor', ['url' => $url, 'actor' => $profile['url']]);
+			//DI::logger()->info('Taking key from the outdated stored actor', ['url' => $url, 'actor' => $profile['url']]);
 			return ['url' => $profile['url'], 'pubkey' => $profile['pubkey'], 'type' => $profile['type']];
 		}
 		return $key;
@@ -1732,7 +1732,7 @@ class HTTPSignature
 			return [];
 		}
 
-		DI::logger()->info('Taking key from the unsigned document', ['url' => $url, 'actor' => $actor]);
+		//DI::logger()->info('Taking key from the unsigned document', ['url' => $url, 'actor' => $actor]);
 		return ['url' => $actor, 'pubkey' => $pubkey, 'type' => str_replace('as:', '', $type)];
 	}
 }
