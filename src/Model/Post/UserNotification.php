@@ -268,7 +268,7 @@ class UserNotification
 			}
 		}
 
-		if (($item['verb'] != Activity::ANNOUNCE) && self::checkCommentedThread($item, $contacts)) {
+		if (($item['verb'] != Activity::ANNOUNCE) && self::checkCommentedThread($item, $contacts, $uid)) {
 			$notification_type = $notification_type | self::TYPE_THREAD_COMMENT;
 			if (!$notified) {
 				self::insertNotificationByItem(self::TYPE_THREAD_COMMENT, $uid, $item);
@@ -276,7 +276,7 @@ class UserNotification
 			}
 		}
 
-		if (($item['verb'] != Activity::ANNOUNCE) && self::checkCommentedParticipation($item, $contacts)) {
+		if (($item['verb'] != Activity::ANNOUNCE) && self::checkCommentedParticipation($item, $contacts, $uid)) {
 			$notification_type = $notification_type | self::TYPE_COMMENT_PARTICIPATION;
 			if (!$notified) {
 				self::insertNotificationByItem(self::TYPE_COMMENT_PARTICIPATION, $uid, $item);
@@ -300,7 +300,7 @@ class UserNotification
 			}
 		}
 
-		if (($item['verb'] != Activity::ANNOUNCE) && self::checkActivityParticipation($item, $contacts)) {
+		if (($item['verb'] != Activity::ANNOUNCE) && self::checkActivityParticipation($item, $contacts, $uid)) {
 			$notification_type = $notification_type | self::TYPE_ACTIVITY_PARTICIPATION;
 			if (!$notified) {
 				self::insertNotificationByItem(self::TYPE_ACTIVITY_PARTICIPATION, $uid, $item);
@@ -505,12 +505,14 @@ class UserNotification
 	 *
 	 * @param array $item
 	 * @param array $contacts Array of contact IDs
+	 * @param int   $uid User ID
 	 * @return bool The user had created this thread
 	 * @throws Exception
 	 */
-	private static function checkCommentedThread(array $item, array $contacts): bool
+	private static function checkCommentedThread(array $item, array $contacts, int $uid): bool
 	{
-		$condition = ['parent' => $item['parent'], 'author-id' => $contacts, 'deleted' => false, 'gravity' => Item::GRAVITY_PARENT];
+		$condition = ['parent-uri-id' => $item['parent-uri-id'], 'uid' => $uid, 'author-id' => $contacts, 'deleted' => false, 'gravity' => Item::GRAVITY_PARENT];
+		$condition = DBA::mergeConditions($condition, ["`uri-id` != ?", $item['uri-id']]);
 		return Post::exists($condition);
 	}
 
@@ -547,12 +549,14 @@ class UserNotification
 	 *
 	 * @param array $item
 	 * @param array $contacts Array of contact IDs
+	 * @param int   $uid User ID
 	 * @return bool The user had commented in the thread
 	 * @throws Exception
 	 */
-	private static function checkCommentedParticipation(array $item, array $contacts): bool
+	private static function checkCommentedParticipation(array $item, array $contacts, int $uid): bool
 	{
-		$condition = ['parent' => $item['parent'], 'author-id' => $contacts, 'deleted' => false, 'gravity' => Item::GRAVITY_COMMENT];
+		$condition = ['parent-uri-id' => $item['parent-uri-id'], 'uid' => $uid, 'author-id' => $contacts, 'deleted' => false, 'gravity' => Item::GRAVITY_COMMENT];
+		$condition = DBA::mergeConditions($condition, ["`uri-id` != ?", $item['uri-id']]);
 		return Post::exists($condition);
 	}
 
@@ -575,13 +579,14 @@ class UserNotification
 	 *
 	 * @param array $item
 	 * @param array $contacts Array of contact IDs
+	 * @param int   $uid User ID
 	 * @return bool The user had interacted in the thread
 	 * @throws Exception
 	 */
-	private static function checkActivityParticipation(array $item, array $contacts): bool
+	private static function checkActivityParticipation(array $item, array $contacts, int $uid): bool
 	{
-		$condition = ['parent' => $item['parent'], 'author-id' => $contacts, 'deleted' => false, 'gravity' => Item::GRAVITY_ACTIVITY];
-		$condition = DBA::mergeConditions($condition, ["NOT `verb` IN (?, ?, ?)", Activity::FOLLOW, Activity::VIEW, Activity::READ]);
+		$condition = ['parent-uri-id' => $item['parent-uri-id'], 'uid' => $uid, 'author-id' => $contacts, 'deleted' => false, 'gravity' => Item::GRAVITY_ACTIVITY];
+		$condition = DBA::mergeConditions($condition, ["NOT `verb` IN (?, ?, ?) AND `uri-id` != ?", Activity::FOLLOW, Activity::VIEW, Activity::READ, $item['uri-id']]);
 		return Post::exists($condition);
 	}
 
