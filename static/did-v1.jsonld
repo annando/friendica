@@ -1,5 +1,9 @@
 {
   "@context": {
+    "@protected": true,
+    "id": "@id",
+    "type": "@type",
+
     "alsoKnownAs": {
       "@id": "https://www.w3.org/ns/activitystreams#alsoKnownAs",
       "@type": "@id"

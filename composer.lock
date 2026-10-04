@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "445dec6ec7f891f2e76a20f868ad25ec",
+    "content-hash": "67950ed43cb65fe7b7fb4505af4dd740",
     "packages": [
         {
             "name": "asika/simple-console",
@@ -593,20 +593,40 @@
         },
         {
             "name": "friendica/json-ld",
-            "version": "1.1.5",
-            "source": {
-                "type": "git",
-                "url": "https://git.friendi.ca/friendica/php-json-ld.git",
+            "version": "2.0.0",
+            "dist": {
+                "type": "path",
+                "url": "/home/ike/php-json-ld",
                 "reference": "0bb148c3af22c3dbe4f187b122d6f47457a8dab5"
             },
             "require": {
                 "ext-json": "*",
-                "php": ">=5.4.0"
+                "php": ">=8.2"
+            },
+            "require-dev": {
+                "phpunit/php-invoker": "^5.0",
+                "phpunit/phpunit": "^11.5"
             },
             "type": "library",
             "autoload": {
+                "psr-4": {
+                    "Friendica\\JsonLD\\": "src/"
+                },
                 "files": [
                     "jsonld.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Friendica\\JsonLD\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "fetch-test-suites": [
+                    "tests/fetch-test-suites.sh"
                 ]
             },
             "license": [
@@ -633,7 +653,10 @@
                 "Semantic Web",
                 "jsonld"
             ],
-            "time": "2026-05-19T21:13:39+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": false
+            }
         },
         {
             "name": "gapple/structured-fields",
@@ -10374,9 +10397,9 @@
         "ext-sodium": "*",
         "ext-xml": "*"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "platform-overrides": {
         "php": "8.2"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.3.0"
 }

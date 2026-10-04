@@ -36,7 +36,7 @@
 		"bower-asset/base64": "^1.0",
 		"enyo/dropzone": "^5.9",
 		"ezyang/htmlpurifier": "^4.7",
-		"friendica/json-ld": "^1.1.5",
+		"friendica/json-ld": "^2.0",
 		"gapple/structured-fields": "^2.3",
 		"geekwright/po": "^2.0",
 		"guzzlehttp/guzzle": "^7.11",
@@ -95,6 +95,16 @@
 		"ext-mysqli": "To use mysqli as a databse driver"
 	},
 	"repositories": [
+		{
+			"type": "path",
+			"url": "/home/ike/php-json-ld",
+			"options": {
+				"symlink": true,
+				"versions": {
+					"friendica/json-ld": "2.0.0"
+				}
+			}
+		},
 		{
 			"name": "friendica/php-json-ld",
 			"type": "vcs",
