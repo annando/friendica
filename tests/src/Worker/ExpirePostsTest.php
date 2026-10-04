@@ -72,6 +72,38 @@ class ExpirePostsTest extends DatabaseTestCase
 		self::assertFalse(DBA::exists('item-uri', ['id' => 9004]));
 	}
 
+	/**
+	 * Remote posts that quote a local post must survive the expiry, since the quote authorization
+	 * that we issued for them can only be served as long as the quoting post is present.
+	 */
+	public function testExpiredThreadQuotingLocalPostIsKept(): void
+	{
+		$this->insertThread(9005, 9105, false);
+		$this->insertQuote(9005, 9205, true);
+		$this->insertThread(9006, 9106, false);
+		$this->insertQuote(9006, 9206, false);
+
+		DBA::e('SET FOREIGN_KEY_CHECKS = 1');
+		$this->runExpiry();
+
+		self::assertTrue(DBA::exists('item-uri', ['id' => 9005]));
+		self::assertFalse(DBA::exists('item-uri', ['id' => 9006]));
+	}
+
+	public function testUnclaimedPublicPostQuotingLocalPostIsKept(): void
+	{
+		$this->insertUnclaimed(9007, 9107, false);
+		$this->insertQuote(9007, 9207, true);
+		$this->insertUnclaimed(9008, 9108, false);
+		$this->insertQuote(9008, 9208, false);
+
+		DBA::e('SET FOREIGN_KEY_CHECKS = 1');
+		$this->runExpiry();
+
+		self::assertTrue(DBA::exists('item-uri', ['id' => 9007]));
+		self::assertFalse(DBA::exists('item-uri', ['id' => 9008]));
+	}
+
 	private function runExpiry(): void
 	{
 		$method = new \ReflectionMethod(ExpirePosts::class, 'deleteExpiredExternalPosts');
@@ -103,6 +135,16 @@ class ExpirePostsTest extends DatabaseTestCase
 		$this->insertContact($contactId, $contactUsesUri ? $uriId : 0);
 		DBA::insert('post-thread', ['uri-id' => $uriId, 'owner-id' => $contactId, 'author-id' => $contactId, 'received' => self::OLD]);
 		DBA::insert('post-thread-user', ['uri-id' => $uriId, 'uid' => 0, 'owner-id' => $contactId, 'author-id' => $contactId, 'received' => self::OLD]);
+	}
+
+	private function insertQuote(int $uriId, int $quotedUriId, bool $quotedIsLocal): void
+	{
+		$this->insertUri($quotedUriId);
+		if ($quotedIsLocal) {
+			DBA::insert('post-origin', ['id' => $quotedUriId, 'uri-id' => $quotedUriId, 'uid' => 1, 'parent-uri-id' => $quotedUriId, 'thr-parent-id' => $quotedUriId, 'received' => self::OLD]);
+		}
+		DBA::insert('post', ['uri-id' => $uriId, 'parent-uri-id' => $uriId, 'thr-parent-id' => $uriId, 'received' => self::OLD]);
+		DBA::insert('post-quote', ['uri-id' => $uriId, 'quote-uri-id' => $quotedUriId]);
 	}
 
 	private function insertUnclaimed(int $uriId, int $contactId, bool $contactUsesUri): void
