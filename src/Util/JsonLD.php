@@ -13,6 +13,7 @@ use Friendica\Core\System;
 use Friendica\DI;
 use Friendica\Protocol\ActivityPub;
 use stdClass;
+use Throwable;
 
 /**
  * This class contain methods to work with JsonLD data
@@ -70,44 +71,21 @@ class JsonLD
 				$url = DI::basePath() . '/static/data-integrity-v2.jsonld';
 				break;
 			default:
-				switch (parse_url((string) $url, PHP_URL_PATH)) {
-					case '/schemas/litepub-0.1.jsonld':
-						$url = DI::basePath() . '/static/litepub-0.1.jsonld';
-						break;
-					case '/apschema/v1.2':
-					case '/apschema/v1.9':
-					case '/apschema/v1.10':
-						$url = DI::basePath() . '/static/apschema.jsonld';
-						break;
-					default:
-						DI::logger()->info('Got url', ['url' => $url]);
-						break;
-				}
+				DI::logger()->info('Got url', ['url' => $url]);
+				break;
 		}
 
-		$recursion = 0;
-
-		$x = debug_backtrace();
-		if ($x) {
-			foreach ($x as $n) {
-				if ($n['function'] === __FUNCTION__) {
-					$recursion++;
-				}
-			}
+		$data = DI::cache()->get('documentLoader:' . $url);
+		if (is_null($data)) {
+			$data = jsonld_default_document_loader($url);
+			DI::cache()->set('documentLoader:' . $url, $data, Duration::DAY);
 		}
 
-		if ($recursion > 5) {
-			DI::logger()->error('jsonld bomb detected at: ' . $url);
-			System::exit();
+		// The local contexts never change, so the processed contexts can be kept between the calls
+		if (strpos($url, DI::basePath() . '/static/') === 0) {
+			$data->tag = 'static';
 		}
 
-		$result = DI::cache()->get('documentLoader:' . $url);
-		if (!is_null($result)) {
-			return $result;
-		}
-
-		$data = jsonld_default_document_loader($url);
-		DI::cache()->set('documentLoader:' . $url, $data, Duration::DAY);
 		return $data;
 	}
 
@@ -120,17 +98,68 @@ class JsonLD
 	 */
 	private static function isValidObject(array $data): bool
 	{
-		$valid = true;
+		// Data integrity proofs are graphs by definition, so "@graph" is allowed there
+		$command = self::findSuspiciousCommand(self::removeProofGraphs($data));
+		if ($command !== null) {
+			DI::logger()->warning('Document with suspicious commands.', ['command' => $command, 'document' => $data]);
+			return false;
+		}
 
-		array_walk_recursive($data, function (&$value, $key) use ($data, &$valid): void {
-			$suspicious = ['@graph', '@included', '@reverse'];
-			if (in_array((string) $key, $suspicious) || in_array((string) $value, $suspicious)) {
-				DI::logger()->warning('Document with suspicious commands.', ['key' => $key, 'value' => $value, 'document' => $data]);
-				$valid = false;
+		return true;
+	}
+
+	/**
+	 * Searches the keys and values of the given data for @graph, @included or @reverse
+	 *
+	 * @param array $data
+	 * @return string|null the found command
+	 */
+	private static function findSuspiciousCommand(array $data): ?string
+	{
+		$suspicious = ['@graph', '@included', '@reverse'];
+
+		foreach ($data as $key => $value) {
+			if (in_array((string) $key, $suspicious, true)) {
+				return (string) $key;
 			}
-		});
+			if (is_array($value)) {
+				$command = self::findSuspiciousCommand($value);
+				if ($command !== null) {
+					return $command;
+				}
+			} elseif (is_string($value) && in_array($value, $suspicious, true)) {
+				return $value;
+			}
+		}
 
-		return $valid;
+		return null;
+	}
+
+	/**
+	 * Replaces the graphs of compacted data integrity proofs ("w3id:proof") with their content
+	 *
+	 * @param array $data
+	 * @return array
+	 */
+	private static function removeProofGraphs(array $data): array
+	{
+		foreach ($data as $key => $value) {
+			if (!is_array($value)) {
+				continue;
+			}
+			if ($key === 'w3id:proof') {
+				$proofs = array_is_list($value) ? $value : [$value];
+				foreach ($proofs as $index => $proof) {
+					if (is_array($proof) && isset($proof['@graph']) && empty(array_diff(array_keys($proof), ['@graph', '@id']))) {
+						$proofs[$index] = $proof['@graph'];
+					}
+				}
+				$value = $proofs;
+			}
+			$data[$key] = self::removeProofGraphs($value);
+		}
+
+		return $data;
 	}
 
 	/**
@@ -153,7 +182,7 @@ class JsonLD
 
 		try {
 			$normalized = jsonld_normalize($jsonobj, ['algorithm' => 'URDNA2015', 'format' => 'application/nquads']);
-		} catch (Exception $e) {
+		} catch (Throwable $e) {
 			$normalized       = false;
 			$messages         = [];
 			$currentException = $e;
@@ -182,26 +211,27 @@ class JsonLD
 	{
 		jsonld_set_document_loader('Friendica\Util\JsonLD::documentLoader');
 
+		// In JSON-LD 1.1, terms that are defined with an object are only used as prefixes when they have "@prefix"
 		$context = (object) [
 			'as'        => 'https://www.w3.org/ns/activitystreams#',
 			'w3id'      => 'https://w3id.org/security#',
-			'ldp'       => (object) ['@id' => 'http://www.w3.org/ns/ldp#', '@type' => '@id'],
-			'vcard'     => (object) ['@id' => 'http://www.w3.org/2006/vcard/ns#', '@type' => '@id'],
-			'dfrn'      => (object) ['@id' => 'http://purl.org/macgirvin/dfrn/1.0/', '@type' => '@id'],
-			'diaspora'  => (object) ['@id' => 'https://diasporafoundation.org/ns/', '@type' => '@id'],
-			'ostatus'   => (object) ['@id' => 'http://ostatus.org#', '@type' => '@id'],
-			'dc'        => (object) ['@id' => 'http://purl.org/dc/terms/', '@type' => '@id'],
-			'toot'      => (object) ['@id' => 'http://joinmastodon.org/ns#', '@type' => '@id'],
-			'litepub'   => (object) ['@id' => 'http://litepub.social/ns#', '@type' => '@id'],
-			'sc'        => (object) ['@id' => 'http://schema.org#', '@type' => '@id'],
-			'pt'        => (object) ['@id' => 'https://joinpeertube.org/ns#', '@type' => '@id'],
-			'mobilizon' => (object) ['@id' => 'https://joinmobilizon.org/ns#', '@type' => '@id'],
-			'fedibird'  => (object) ['@id' => 'http://fedibird.com/ns#', '@type' => '@id'],
-			'misskey'   => (object) ['@id' => 'https://misskey-hub.net/ns#', '@type' => '@id'],
-			'pixelfed'  => (object) ['@id' => 'http://pixelfed.org/ns#', '@type' => '@id'],
-			'lemmy'     => (object) ['@id' => 'https://join-lemmy.org/ns#', '@type' => '@id'],
-			'quote'     => (object) ['@id' => 'https://w3id.org/fep/044f#', '@type' => '@id'],
-			'gts'       => (object) ['@id' => 'https://gotosocial.org/ns#', '@type' => '@id'],
+			'ldp'       => (object) ['@id' => 'http://www.w3.org/ns/ldp#', '@type' => '@id', '@prefix' => true],
+			'vcard'     => (object) ['@id' => 'http://www.w3.org/2006/vcard/ns#', '@type' => '@id', '@prefix' => true],
+			'dfrn'      => (object) ['@id' => 'http://purl.org/macgirvin/dfrn/1.0/', '@type' => '@id', '@prefix' => true],
+			'diaspora'  => (object) ['@id' => 'https://diasporafoundation.org/ns/', '@type' => '@id', '@prefix' => true],
+			'ostatus'   => (object) ['@id' => 'http://ostatus.org#', '@type' => '@id', '@prefix' => true],
+			'dc'        => (object) ['@id' => 'http://purl.org/dc/terms/', '@type' => '@id', '@prefix' => true],
+			'toot'      => (object) ['@id' => 'http://joinmastodon.org/ns#', '@type' => '@id', '@prefix' => true],
+			'litepub'   => (object) ['@id' => 'http://litepub.social/ns#', '@type' => '@id', '@prefix' => true],
+			'sc'        => (object) ['@id' => 'http://schema.org#', '@type' => '@id', '@prefix' => true],
+			'pt'        => (object) ['@id' => 'https://joinpeertube.org/ns#', '@type' => '@id', '@prefix' => true],
+			'mobilizon' => (object) ['@id' => 'https://joinmobilizon.org/ns#', '@type' => '@id', '@prefix' => true],
+			'fedibird'  => (object) ['@id' => 'http://fedibird.com/ns#', '@type' => '@id', '@prefix' => true],
+			'misskey'   => (object) ['@id' => 'https://misskey-hub.net/ns#', '@type' => '@id', '@prefix' => true],
+			'pixelfed'  => (object) ['@id' => 'http://pixelfed.org/ns#', '@type' => '@id', '@prefix' => true],
+			'lemmy'     => (object) ['@id' => 'https://join-lemmy.org/ns#', '@type' => '@id', '@prefix' => true],
+			'quote'     => (object) ['@id' => 'https://w3id.org/fep/044f#', '@type' => '@id', '@prefix' => true],
+			'gts'       => (object) ['@id' => 'https://gotosocial.org/ns#', '@type' => '@id', '@prefix' => true],
 		];
 
 		$orig_json = $json;
@@ -210,7 +240,7 @@ class JsonLD
 
 		try {
 			$compacted = jsonld_compact($jsonobj, $context);
-		} catch (Exception $e) {
+		} catch (Throwable $e) {
 			$compacted = false;
 			DI::logger()->notice('compacting error', ['msg' => $e->getMessage(), 'previous' => $e->getPrevious(), 'line' => $e->getLine()]);
 			if ($logfailed && DI::config()->get('debug', 'ap_log_failure')) {
@@ -241,7 +271,7 @@ class JsonLD
 
 		if (is_array($json['@context'])) {
 			// Remove empty entries from the context (a problem with WriteFreely)
-			$json['@context'] = array_filter($json['@context']);
+			$json['@context'] = array_values(array_filter($json['@context']));
 
 			// Workaround for servers with missing context
 			// See issue https://github.com/nextcloud/social/issues/330
@@ -251,20 +281,11 @@ class JsonLD
 			}
 		}
 
-		// Issue 14448: Peertube transmits an unexpected type and schema URL.
+		// Issue 14448: Peertube uses a different schema URL.
 		array_walk_recursive($json['@context'], function (&$value, $key): void {
-			if ($key == '@type' && $value == '@json') {
-				DI::logger()->debug('"@json" converted to "@id"');
-				$value = '@id';
-			}
 			if ($key == 'sc' && $value == 'http://schema.org/') {
 				DI::logger()->debug('schema.org path fixed');
 				$value = 'http://schema.org#';
-			}
-			// Issue 14630: Wordpress Event Bridge uses a URL that cannot be retrieved
-			if (is_int($key) && $value == 'https://schema.org/') {
-				DI::logger()->debug('https schema.org path fixed');
-				$value = 'https://schema.org/docs/jsonldcontext.json#';
 			}
 		});
 
