@@ -422,6 +422,11 @@ as the value of $top_child_total (this is done at the end of this file)
 						<i class="ri ri-emotion-line" aria-hidden="true"></i>
 						<span class="action-label">{{$item.vote.react.1}}</span>
 					</button>
+					{{else}}
+					<button type="button" class="btn button-likes" id="react-{{$item.id}}" title="{{$item.react_label}}" disabled>
+						<i class="ri ri-emotion-line" aria-hidden="true"></i>
+						<span class="action-label">{{$item.react_label}}</span>
+					</button>
 					{{/if}}
 				{{/if}}
 

@@ -415,6 +415,7 @@ final class PostTemplateBuilder
 			'switchcomment'          => $this->l10n->t('Comment'),
 			'like_label'             => $this->l10n->t('Like'),
 			'dislike_label'          => $this->l10n->t('Dislike'),
+			'react_label'            => $this->l10n->t('React'),
 			'announce_label'         => $this->l10n->t('Reshare'),
 			'reply_label'            => $this->l10n->t('Reply to %s', $profileName),
 			'comment_html'           => $comment_html,
