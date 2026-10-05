@@ -294,7 +294,7 @@
 				</span>
 			</p><!--./wall-item-actions-->
 
-			{{* Display likes, dislike and attendance stats *}}
+			{{* Display emoji reaction stats *}}
 			{{if $item.emojis}}
 				{{foreach $item.emojis as $emoji}}
 					{{if $emoji.icon.fa}}
@@ -303,12 +303,6 @@
 						<span class="wall-item-emoji" title="{{$emoji.title}}">{{$emoji.emoji}} {{$emoji.total}}</span>
 					{{/if}}
 				{{/foreach}}
-			{{elseif $item.responses}}
-				<div class="wall-item-responses">
-				{{foreach $item.responses as $verb=>$response}}
-					<div class="wall-item-{{$verb}}" id="wall-item-{{$verb}}-{{$item.id}}">{{$response.output nofilter}}</div>
-				{{/foreach}}
-				</div>
 			{{/if}}
 
 			<div class="wall-item-conv" id="wall-item-conv-{{$item.id}}" dir="auto">
