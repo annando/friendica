@@ -609,7 +609,7 @@ as the value of $top_child_total (this is done at the end of this file)
 		{{if $item.interactions}}
 		<div class="wall-item-interactions">
 			{{foreach $item.interactions as $interaction}}
-			<a class="add-to-modal wall-item-interaction wall-item-interaction-{{$interaction.type}}" href="{{$interaction.url}}">{{$interaction.label nofilter}}</a>
+			<a class="wall-item-interaction wall-item-interaction-{{$interaction.type}}" href="{{$interaction.url}}" onclick="addToModal(this.href); return false;">{{$interaction.label nofilter}}</a>
 			{{/foreach}}
 		</div>
 		{{/if}}
