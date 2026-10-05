@@ -65,6 +65,7 @@ final readonly class ConversationRenderer
 		private Profiler $profiler,
 		private \Friendica\App\Arguments $args,
 		private StatusEditor $statusEditor,
+		private PostInteractions $postInteractions,
 	) {}
 
 	/**
@@ -288,6 +289,10 @@ final readonly class ConversationRenderer
 		if (empty($root)) {
 			$this->profiler->stopRecording();
 			return '';
+		}
+
+		if ($mode === self::MODE_DISPLAY) {
+			$root['interactions'] = $this->postInteractions->getSummary((int) $root['uriid'], (string) $root['guid'], $viewerUid);
 		}
 
 		$html = $this->renderThreadedTemplate([$root], $mode, $update, $page_dropping);
@@ -638,8 +643,6 @@ final readonly class ConversationRenderer
 				'star'                 => false,
 				'drop'                 => $drop,
 				'vote'                 => $likebuttons,
-				'like_html'            => '',
-				'dislike_html'         => '',
 				'comment_html'         => '',
 				'conv'                 => $preview ? '' : ['href' => 'display/' . $item['guid'], 'title' => $this->l10n->t('View in context')],
 				'previewing'           => $preview ? ' preview ' : '',
