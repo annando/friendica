@@ -43,6 +43,16 @@ use Psr\Http\Message\ResponseInterface;
 class Page implements ArrayAccess
 {
 	/**
+	 * @var string[] Fonts a user can select in the accessibility settings, each backed by view/fonts/accessibility/<name>.css
+	 */
+	public const ACCESSIBILITY_FONTS = ['opendyslexic', 'atkinson-hyperlegible', 'lexend', 'luciole', 'andika'];
+
+	/**
+	 * @var string[] Text spacings a user can select in the accessibility settings, each backed by view/accessibility/text-spacing-<name>.css
+	 */
+	public const ACCESSIBILITY_TEXT_SPACINGS = ['increased', 'large'];
+
+	/**
 	 * @var array Contains all stylesheets, which should get loaded during page
 	 */
 	private $stylesheets = [];
@@ -284,6 +294,14 @@ class Page implements ArrayAccess
 
 		]) . $this->page['htmlhead'];
 
+		$font = $pConfig->get($localUID, 'accessibility', 'font');
+		if (in_array($font, self::ACCESSIBILITY_FONTS, true)) {
+			$this->page['htmlhead'] .= '<link rel="stylesheet" href="view/fonts/accessibility/' . $font . '.css?v=' . App::VERSION . '" type="text/css" media="all" />' . "\n";
+		}
+		$text_spacing = $pConfig->get($localUID, 'accessibility', 'text_spacing');
+		if (in_array($text_spacing, self::ACCESSIBILITY_TEXT_SPACINGS, true)) {
+			$this->page['htmlhead'] .= '<link rel="stylesheet" href="view/accessibility/text-spacing-' . $text_spacing . '.css?v=' . App::VERSION . '" type="text/css" media="all" />' . "\n";
+		}
 		if ($pConfig->get($localUID, 'accessibility', 'hide_empty_descriptions')) {
 			$this->page['htmlhead'] .= "<style>a[data-alt='']{display:none;} a:has(.empty-description){display:none;} .empty-description {display: none;}</style>\n";
 		}
