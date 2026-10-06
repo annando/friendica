@@ -471,6 +471,7 @@ return [
 	],
 
 	'/credits'                  => [Module\Credits::class,          [R::GET]],
+	'/deck'                     => [Module\Deck::class,             [R::GET]],
 	'/delegation'               => [Module\User\Delegation::class,  [R::GET, R::POST]],
 	'/dfrn_notify[/{nickname}]' => [Module\DFRN\Notify::class,      [        R::POST]],
 	'/dfrn_poll/{nickname}'     => [Module\Feed::class,            [R::GET]],
