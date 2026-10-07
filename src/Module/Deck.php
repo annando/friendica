@@ -16,6 +16,7 @@ use Friendica\Content\Conversation\Factory\Channel as ChannelFactory;
 use Friendica\Content\Conversation\Factory\Community as CommunityFactory;
 use Friendica\Content\Conversation\Factory\Network as NetworkFactory;
 use Friendica\Content\Conversation\Repository\UserDefinedChannel;
+use Friendica\Content\Nav;
 use Friendica\Core\L10n;
 use Friendica\Core\PConfig\Capability\IManagePersonalConfigValues;
 use Friendica\Core\Renderer;
@@ -60,6 +61,8 @@ class Deck extends BaseModule
 			throw new NotImplementedException($this->t('This feature is only available with the frio theme.'));
 		}
 
+		Nav::setSelected('deck');
+
 		$this->page->registerStylesheet(Theme::getPathForFile('css/deck.css'));
 		$this->page->registerFooterScript(Theme::getPathForFile('js/deck.js'));
 
@@ -77,6 +80,7 @@ class Deck extends BaseModule
 			'l10n'      => [
 				'search'    => ['prompt' => $this->t('Search term'), 'title' => $this->t('Search')],
 				'custom'    => ['prompt' => $this->t('Path of the page, e.g. network/circle/1'), 'title' => $this->t('Custom page')],
+				'scrollTop' => $this->t('Scroll to top'),
 				'reload'    => $this->t('Reload'),
 				'moveLeft'  => $this->t('Move left'),
 				'moveRight' => $this->t('Move right'),

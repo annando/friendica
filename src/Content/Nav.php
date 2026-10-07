@@ -39,6 +39,7 @@ class Nav
 		'settings'      => null,
 		'contacts'      => null,
 		'delegation'    => null,
+		'deck'          => null,
 		'calendar'      => null,
 		'register'      => null,
 	];
@@ -182,6 +183,7 @@ class Nav
 			'apps'          => null,
 			'community'     => null,
 			'channel'       => null,
+			'deck'          => null,
 			'calendar'      => null,
 			'login'         => null,
 			'logout'        => null,
@@ -258,6 +260,7 @@ class Nav
 		}
 
 		if ($this->session->getLocalUserId()) {
+			$nav['deck'] = ['deck', $this->l10n->t('Deck'), '', $this->l10n->t('Show several timelines side by side')];
 			$nav['calendar'] = ['calendar', $this->l10n->t('Calendar'), '', $this->l10n->t('Calendar')];
 		}
 

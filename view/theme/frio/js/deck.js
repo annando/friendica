@@ -189,6 +189,14 @@
 		}
 	}
 
+	function scrollToTop(column) {
+		try {
+			column.frame.contentWindow.scrollTo({ top: 0, behavior: "smooth" });
+		} catch (e) {
+			// Frame not accessible yet, nothing to scroll.
+		}
+	}
+
 	/** Shows another page in an existing column. */
 	function change(column, path, titleText) {
 		const url = normalize(path);
@@ -238,6 +246,7 @@
 
 		header.append(
 			switcher,
+			button("ri-arrow-up-line", config.l10n.scrollTop, function () { scrollToTop(column); }),
 			button("ri-refresh-line", config.l10n.reload, function () { reload(column); }),
 			button("ri-arrow-left-s-line", config.l10n.moveLeft, function () { move(column, -1); }),
 			button("ri-arrow-right-s-line", config.l10n.moveRight, function () { move(column, 1); }),
