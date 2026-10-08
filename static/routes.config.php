@@ -600,6 +600,7 @@ return [
 		'/system[/json]'               => [Module\Notifications\Notifications::class, [R::GET, R::POST]],
 		'/personal[/json]'             => [Module\Notifications\Notifications::class, [R::GET, R::POST]],
 		'/home[/json]'                 => [Module\Notifications\Notifications::class, [R::GET, R::POST]],
+		'/stream'                      => [Module\Notifications\Stream::class,        [R::GET]],
 		'/intros[/json]'               => [Module\Notifications\Introductions::class, [R::GET, R::POST]],
 		'/intros/all[/json]'           => [Module\Notifications\Introductions::class, [R::GET, R::POST]],
 		'/intros/{contact:\d+}[/json]' => [Module\Notifications\Introductions::class, [R::GET, R::POST]],

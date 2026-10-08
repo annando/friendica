@@ -149,3 +149,27 @@ body.column-view #back-to-top {
 #deck-compose-modal .modal-body {
 	padding: 0;
 }
+
+.friendica-column-header .btn.has-new {
+	/* Inverted: the (link) color of the button becomes the background, the icon turns white */
+	background-color: currentColor;
+}
+
+.friendica-column-header .btn.has-new > i {
+	color: #fff;
+}
+
+.notification-stream-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 10px 4px;
+}
+
+.notification-stream-header img {
+	border-radius: 3px;
+}
+
+.notification-stream-empty {
+	padding: 10px;
+}

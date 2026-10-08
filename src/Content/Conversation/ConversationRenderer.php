@@ -354,7 +354,7 @@ final readonly class ConversationRenderer
 	private function getNetargsForMode(string $mode, array $request): string
 	{
 		$paramsByMode = [
-			self::MODE_NETWORK   => ['contactid', 'search', 'star', 'order', 'bmark', 'liked', 'conv', 'nets', 'cmin', 'cmax', 'file', 'channel', 'no_sharer', 'accounttype'],
+			self::MODE_NETWORK   => ['contactid', 'search', 'star', 'mention', 'order', 'bmark', 'liked', 'conv', 'nets', 'cmin', 'cmax', 'file', 'channel', 'no_sharer', 'accounttype'],
 			self::MODE_CHANNEL   => ['no_sharer', 'accounttype'],
 			self::MODE_COMMUNITY => ['no_sharer', 'accounttype'],
 			self::MODE_CONTACTS  => [],

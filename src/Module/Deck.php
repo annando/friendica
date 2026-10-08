@@ -21,7 +21,12 @@ use Friendica\Core\L10n;
 use Friendica\Core\PConfig\Capability\IManagePersonalConfigValues;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
+use Friendica\Core\Protocol;
+use Friendica\Core\Search;
 use Friendica\Core\Theme;
+use Friendica\Database\Database;
+use Friendica\Model\Circle;
+use Friendica\Model\Contact;
 use Friendica\Module\Security\Login;
 use Friendica\Network\HTTPException\NotImplementedException;
 use Friendica\Util\Profiler;
@@ -42,7 +47,7 @@ class Deck extends BaseModule
 	/** @var AppHelper */
 	protected $appHelper;
 
-	public function __construct(private readonly NetworkFactory $network, private readonly ChannelFactory $channel, private readonly UserDefinedChannel $userDefinedChannel, private readonly CommunityFactory $community, private readonly IManagePersonalConfigValues $pConfig, L10n $l10n, BaseURL $baseUrl, Arguments $args, LoggerInterface $logger, Profiler $profiler, Response $response, IHandleUserSessions $session, Page $page, AppHelper $appHelper, array $server, array $parameters = [])
+	public function __construct(private readonly NetworkFactory $network, private readonly ChannelFactory $channel, private readonly UserDefinedChannel $userDefinedChannel, private readonly CommunityFactory $community, private readonly Database $database, private readonly IManagePersonalConfigValues $pConfig, L10n $l10n, BaseURL $baseUrl, Arguments $args, LoggerInterface $logger, Profiler $profiler, Response $response, IHandleUserSessions $session, Page $page, AppHelper $appHelper, array $server, array $parameters = [])
 	{
 		parent::__construct($l10n, $baseUrl, $args, $logger, $profiler, $response, $server, $parameters);
 
@@ -68,15 +73,19 @@ class Deck extends BaseModule
 
 		$timelines = $this->getTimelines($this->session->getLocalUserId());
 		$pages     = [
-			['path' => 'notifications/system',   'title' => $this->t('Notifications')],
+			['path' => 'notifications/stream',   'title' => $this->t('Notifications')],
+			['path' => 'notifications/system',   'title' => $this->t('System notifications')],
 			['path' => 'notifications/personal', 'title' => $this->t('Personal notifications')],
 			['path' => 'message',                'title' => $this->t('Messages')],
 		];
 
 		$config = [
 			'timelines' => $timelines,
+			'circles'   => $this->getCircles($this->session->getLocalUserId()),
+			'groups'    => $this->getGroups($this->session->getLocalUserId()),
+			'searches'  => $this->getSavedSearches($this->session->getLocalUserId()),
 			'pages'     => $pages,
-			'defaults'  => array_merge(array_slice(array_column($timelines, 'path'), 0, 1), ['notifications/system']),
+			'defaults'  => array_merge(array_slice(array_column($timelines, 'path'), 0, 1), ['notifications/stream']),
 			'l10n'      => [
 				'search'    => ['prompt' => $this->t('Search term'), 'title' => $this->t('Search')],
 				'custom'    => ['prompt' => $this->t('Path of the page, e.g. network/circle/1'), 'title' => $this->t('Custom page')],
@@ -96,6 +105,48 @@ class Deck extends BaseModule
 			'$close'       => $this->t('Close'),
 			'$compose_url' => 'compose?mode=column',
 		]);
+	}
+
+	/**
+	 * @return array[] List of ['path', 'title']
+	 */
+	private function getCircles(int $uid): array
+	{
+		return array_map(fn(array $circle) => [
+			'path'  => 'network/circle/' . $circle['id'],
+			'title' => $circle['name'],
+		], Circle::getByUserId($uid));
+	}
+
+	/**
+	 * Groups the user is following
+	 *
+	 * @return array[] List of ['path', 'title']
+	 */
+	private function getGroups(int $uid): array
+	{
+		$contacts = Contact::selectToArray(
+			['id', 'name', 'nick'],
+			['uid' => $uid, 'self' => false, 'blocked' => false, 'archive' => false, 'deleted' => false, 'pending' => false,
+				'network' => Protocol::FEDERATED, 'contact-type' => Contact::TYPE_COMMUNITY, 'rel' => [Contact::SHARING, Contact::FRIEND]],
+			['order' => ['name']]
+		);
+
+		return array_map(fn(array $contact) => [
+			'path'  => 'contact/' . $contact['id'] . '/conversations',
+			'title' => $contact['name'] ?: $contact['nick'],
+		], $contacts);
+	}
+
+	/**
+	 * @return array[] List of ['path', 'title']
+	 */
+	private function getSavedSearches(int $uid): array
+	{
+		return array_map(fn(array $search) => [
+			'path'  => Search::getSearchPath($search['term']),
+			'title' => $search['term'],
+		], $this->database->selectToArray('search', ['term'], ['uid' => $uid], ['order' => ['term']]));
 	}
 
 	/**

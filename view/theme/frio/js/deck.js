@@ -22,6 +22,17 @@
 	const composeFrame = document.getElementById("deck-compose-frame");
 	let columns = [];
 
+	/** Diagnostic output, enabled with localStorage.setItem("friendica.deck.debug", "1"). */
+	function log() {
+		try {
+			if (window.localStorage.getItem("friendica.deck.debug")) {
+				console.debug.apply(console, ["[deck]"].concat(Array.prototype.slice.call(arguments)));
+			}
+		} catch (e) {
+			// Storage is not available, no logging.
+		}
+	}
+
 	host.style.backgroundColor = window.getComputedStyle(document.body).backgroundColor;
 
 	/** Places the host directly below the fixed navigation bars. */
@@ -104,7 +115,11 @@
 		element.title = label;
 		element.setAttribute("aria-label", label);
 		element.innerHTML = '<i class="' + icon + '" aria-hidden="true"></i>';
-		element.addEventListener("click", onClick);
+		element.addEventListener("click", function () {
+			onClick();
+			// Don't keep the button highlighted by the focus after the action.
+			element.blur();
+		});
 		return element;
 	}
 
@@ -143,6 +158,15 @@
 
 		config.pages.forEach(function (entry) {
 			item(entry.title, "", function () { onSelect(entry.path, entry.title); });
+		});
+
+		[config.circles, config.groups, config.searches].forEach(function (entries) {
+			if (entries && entries.length) {
+				separator();
+				entries.forEach(function (entry) {
+					item(entry.title, "", function () { onSelect(entry.path, entry.title); });
+				});
+			}
 		});
 
 		separator();
@@ -187,6 +211,11 @@
 		} catch (e) {
 			column.frame.src = frameUrl(column.url);
 		}
+	}
+
+	/** Marks the reload button of a column when there are new posts that aren't inserted automatically. */
+	function setUnseen(column, unseen) {
+		column.reloadButton.classList.toggle("has-new", unseen);
 	}
 
 	function scrollToTop(column) {
@@ -244,10 +273,12 @@
 
 		fillMenu(menu, function (path, titleText) { change(column, path, titleText); });
 
+		column.reloadButton = button("ri-refresh-line", config.l10n.reload, function () { reload(column); });
+
 		header.append(
 			switcher,
 			button("ri-arrow-up-line", config.l10n.scrollTop, function () { scrollToTop(column); }),
-			button("ri-refresh-line", config.l10n.reload, function () { reload(column); }),
+			column.reloadButton,
 			button("ri-arrow-left-s-line", config.l10n.moveLeft, function () { move(column, -1); }),
 			button("ri-arrow-right-s-line", config.l10n.moveRight, function () { move(column, 1); }),
 			button("ri-close-line", config.l10n.remove, function () { remove(column); })
@@ -255,6 +286,7 @@
 		element.append(header, frame);
 
 		frame.addEventListener("load", function () {
+			setUnseen(column, false);
 			try {
 				// Follow the navigation inside the column so it is restored on the next visit.
 				const current = normalize(frame.contentWindow.location.href);
@@ -309,8 +341,21 @@
 			return column.frame.contentWindow === e.source;
 		});
 
+		if (e.data.action === "log") {
+			if (source) {
+				log.apply(null, ["column " + columns.indexOf(source)].concat(e.data.args));
+			}
+			return;
+		}
+
+		log("message", e.data.action, source ? "column " + columns.indexOf(source) : "unknown source", e.data);
+
 		if (e.data.action === "open" && source) {
 			add(e.data.url, "", source);
+		} else if (e.data.action === "unseen" && source) {
+			setUnseen(source, true);
+		} else if (e.data.action === "seen" && source) {
+			setUnseen(source, false);
 		} else if (e.data.action === "posted") {
 			// A new post changes the timelines.
 			closeCompose();
