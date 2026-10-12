@@ -4740,3 +4740,8 @@ div.login-form, .login-content-wrapper,
 	  display: none;
 	}
 }
+
+/* Filters below the "Posts" tab of profiles and contacts */
+.posts-filter {
+	margin: 10px 0;
+}

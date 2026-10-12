@@ -448,11 +448,15 @@ return [
 
 		'/{id:\d+}/{action:block|ignore|collapse|update|updateprofile|fetchoutbox}' => [Module\Contact\Profile::class,        [R::GET]],
 
+		'/{id:\d+}/activities'         => [Module\Contact\Activities::class,    [R::GET]],
+		'/{id:\d+}/reshares'           => [Module\Contact\Reshares::class,      [R::GET]],
 		'/{id:\d+}/advanced'          => [Module\Contact\Advanced::class,       [R::GET, R::POST]],
 		'/{id:\d+}/conversations'     => [Module\Contact\Conversations::class,  [R::GET]],
 		'/{id:\d+}/contacts[/{type}]' => [Module\Contact\Contacts::class,       [R::GET]],
 		'/{id:\d+}/media'             => [Module\Contact\Media::class,          [R::GET]],
 		'/{id:\d+}/posts'             => [Module\Contact\Posts::class,          [R::GET]],
+		'/{id:\d+}/original'          => [Module\Contact\Original::class,       [R::GET]],
+		'/{id:\d+}/quotes'            => [Module\Contact\Quotes::class,         [R::GET]],
 		'/{id:\d+}/revoke'            => [Module\Contact\Revoke::class,         [R::GET, R::POST]],
 		'/archived'                   => [Module\Contact::class,                [R::GET]],
 		'/batch'                      => [Module\Contact::class,                [R::GET, R::POST]],
