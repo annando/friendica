@@ -36,6 +36,8 @@ class Media extends BaseModule
 
 	protected function content(array $request = []): string
 	{
+		$raw = isset($request['mode']) && ($request['mode'] == 'raw');
+
 		$cid = $this->parameters['id'];
 
 		$contact = Model\Contact::selectFirst([], ['id' => $cid]);
@@ -45,11 +47,11 @@ class Media extends BaseModule
 
 		if (Model\Contact::isSelf($contact['id'], $this->userSession->getLocalUserId())) {
 			$profile = ProfileModel::load($this->appHelper, $contact['nick']);
-			$o       = BaseProfile::getTabsHTML('media', true, $profile['nickname'], $profile['hide-friends']);
+			$o       = $raw ? '' : BaseProfile::getTabsHTML('media', true, $profile['nickname'], $profile['hide-friends']);
 		} else {
 			DI::page()['aside'] = Widget\VCard::getHTML($contact);
 			Contact::setPageTitle($contact);
-			$o = Contact::getTabsHTML($contact, Contact::TAB_MEDIA);
+			$o = $raw ? '' : Contact::getTabsHTML($contact, Contact::TAB_MEDIA);
 		}
 
 		$o .= ModelContact::getPostsFromUrl($contact['url'], $this->userSession->getLocalUserId(), true, $request);

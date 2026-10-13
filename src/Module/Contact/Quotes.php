@@ -38,6 +38,8 @@ class Quotes extends BaseModule
 
 	protected function content(array $request = []): string
 	{
+		$raw = isset($request['mode']) && ($request['mode'] == 'raw');
+
 		if (!$this->userSession->getLocalUserId()) {
 			return Login::form($_SERVER['REQUEST_URI']);
 		}
@@ -60,12 +62,12 @@ class Quotes extends BaseModule
 		if (Model\Contact::isSelf($contact['id'], $this->userSession->getLocalUserId())) {
 			$profile = ProfileModel::load($this->appHelper, $contact['nick']);
 			Nav::setSelected('home');
-			$o = BaseProfile::getTabsHTML('quotes', true, $profile['nickname'], $profile['hide-friends']);
+			$o = $raw ? '' : BaseProfile::getTabsHTML('quotes', true, $profile['nickname'], $profile['hide-friends']);
 		} else {
 			$this->page['aside'] .= Widget\VCard::getHTML($contact);
 			Nav::setSelected('contacts');
 			Contact::setPageTitle($contact);
-			$o = Contact::getTabsHTML($contact, Contact::TAB_QUOTES);
+			$o = $raw ? '' : Contact::getTabsHTML($contact, Contact::TAB_QUOTES);
 		}
 
 		$o .= Model\Contact::getQuotesFromId($contact['id'], $this->userSession->getLocalUserId(), $request);
