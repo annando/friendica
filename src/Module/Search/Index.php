@@ -88,7 +88,11 @@ class Index extends BaseSearch
 		}
 
 		if (DI::userSession()->getLocalUserId()) {
-			DI::page()['aside'] .= Widget\SavedSearches::getHTML(Search::getSearchPath($search), $search);
+			if (Widget\SidebarMenu::isActive(DI::userSession()->getLocalUserId())) {
+				DI::page()['aside'] .= Widget\SidebarMenu::getHTML(DI::userSession()->getLocalUserId(), Widget\SidebarMenu::SEARCHES);
+			} else {
+				DI::page()['aside'] .= Widget\SavedSearches::getHTML(Search::getSearchPath($search), $search);
+			}
 		}
 
 		Nav::setSelected('search');

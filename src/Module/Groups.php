@@ -14,9 +14,11 @@ use Friendica\Content\GroupManager;
 use Friendica\Content\Nav;
 use Friendica\Content\Text\BBCode;
 use Friendica\Content\Text\Plaintext;
+use Friendica\Content\Widget\SidebarMenu;
 use Friendica\Core\L10n;
 use Friendica\Core\Renderer;
 use Friendica\Core\Session\Capability\IHandleUserSessions;
+use Friendica\DI;
 use Friendica\Model\Contact;
 use Friendica\Model\Item;
 use Friendica\Network\HTTPException\ForbiddenException;
@@ -51,6 +53,7 @@ class Groups extends BaseModule
 		}
 
 		Nav::setSelected('groups');
+		DI::page()['aside'] .= SidebarMenu::getHTML($uid, SidebarMenu::GROUPS);
 
 		$contacts = $this->groupManager->getList($uid, true, true, true);
 
@@ -108,6 +111,7 @@ class Groups extends BaseModule
 			'$discover_short'  => $this->t('Discover'),
 			'$discover_server' => $this->t('Discover more groups on this server'),
 			'$no_groups'       => $this->t('You are not subscribed to any groups.'),
+			'$filter'          => $this->t('Filter groups'),
 			'$groups'          => $groups,
 		]);
 	}
