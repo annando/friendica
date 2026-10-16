@@ -7,6 +7,7 @@
 
 namespace Friendica\Content;
 
+use Friendica\BaseModule;
 use Friendica\Core\Cache\Enum\Duration;
 use Friendica\Core\Protocol;
 use Friendica\Core\Renderer;
@@ -185,10 +186,12 @@ class Widget
 	 * @param string $baseUrl The full page request URI
 	 * @param array  $options
 	 * @param string $selected The currently selected filter option value
+	 * @param string $renameToken Form security token to rename an option, shown only when provided
+	 * @param string $removeToken Form security token to remove an option, shown only when provided
 	 * @return string
 	 * @throws \Exception
 	 */
-	private static function filter(string $type, string $title, string $desc, string $all, string $baseUrl, array $options, ?string $selected = null): string
+	private static function filter(string $type, string $title, string $desc, string $all, string $baseUrl, array $options, ?string $selected = null, ?string $renameToken = null, ?string $removeToken = null): string
 	{
 		$queryString = parse_url($baseUrl, PHP_URL_QUERY);
 		$queryArray  = [];
@@ -211,13 +214,20 @@ class Widget
 		});
 
 		return Renderer::replaceMacros(Renderer::getMarkupTemplate('widget/filter.tpl'), [
-			'$type'      => $type,
-			'$title'     => $title,
-			'$desc'      => $desc,
-			'$selected'  => $selected,
-			'$all_label' => $all,
-			'$options'   => $options,
-			'$base'      => $baseUrl,
+			'$type'         => $type,
+			'$title'        => $title,
+			'$desc'         => $desc,
+			'$selected'     => $selected,
+			'$all_label'    => $all,
+			'$options'      => $options,
+			'$base'         => $baseUrl,
+			'$rename_token' => $renameToken,
+			'$remove_token' => $removeToken,
+			'$renametext'   => DI::l10n()->t('Rename this folder'),
+			'$removetext'   => DI::l10n()->t('Delete this folder'),
+			'$renameprompt' => DI::l10n()->t('New folder name:'),
+			'$renamefailed' => DI::l10n()->t('Folder was not renamed'),
+			'$removefailed' => DI::l10n()->t('Folder was not removed'),
 		]);
 	}
 
@@ -353,6 +363,8 @@ class Widget
 			$baseurl,
 			$terms,
 			$selected,
+			BaseModule::getFormSecurityToken('filer_rename'),
+			BaseModule::getFormSecurityToken('filer_remove'),
 		);
 	}
 
