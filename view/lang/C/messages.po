@@ -155,6 +155,7 @@ msgstr ""
 #: mod/message.php:190 mod/message.php:345 mod/photos.php:76 mod/photos.php:624
 #: src/Content/Conversation/StatusEditor.php:156 src/Module/Post/Edit.php:142
 #: mod/message.php:190 mod/message.php:345 mod/photos.php:76 mod/photos.php:629
+#: mod/message.php:190 mod/message.php:345 mod/photos.php:79 mod/photos.php:628
 #: src/Content/Conversation/StatusEditor.php:150 src/Module/Post/Edit.php:142
 #: src/Module/Profile/Photos.php:336 src/Module/Profile/Photos.php:356
 #: src/Module/Profile/Photos.php:359
@@ -235,7 +236,7 @@ msgid_plural "%d messages"
 msgstr[0] ""
 msgstr[1] ""
 
-#: mod/photos.php:42 mod/photos.php:99 mod/photos.php:328
+#: mod/photos.php:45 mod/photos.php:102 mod/photos.php:332
 #: src/Model/Event.php:504 src/Model/Profile.php:213
 #: src/Module/Calendar/Export.php:71 src/Module/Calendar/Show.php:63
 #: src/Module/Feed.php:52 src/Module/HCard.php:37
@@ -251,47 +252,49 @@ msgid "User not found."
 msgstr ""
 
 #: mod/photos.php:73 src/Module/BaseProfile.php:91
+#: mod/photos.php:76 src/Module/BaseProfile.php:53
 #: src/Module/Profile/Photos.php:333
 msgid "Photo Albums"
 msgstr ""
 
-#: mod/photos.php:74 src/Module/Profile/Photos.php:334
+#: mod/photos.php:77 src/Module/Profile/Photos.php:334
 #: src/Module/Profile/Photos.php:354
 msgid "Recent Photos"
 msgstr ""
 
-#: mod/photos.php:88 src/Module/BaseSettings.php:60
+#: mod/photos.php:91 src/Module/BaseSettings.php:60
 #: src/Module/Profile/Photos.php:317
 msgid "everybody"
 msgstr ""
 
-#: mod/photos.php:124
+#: mod/photos.php:127
 msgid "Contact information unavailable"
 msgstr ""
 
 #: mod/photos.php:153 src/Module/Photo/AlbumDownload.php:67
+#: mod/photos.php:156
 msgid "Album not found."
 msgstr ""
 
-#: mod/photos.php:206
+#: mod/photos.php:209
 msgid "Album successfully deleted"
 msgstr ""
 
-#: mod/photos.php:208
+#: mod/photos.php:211
 msgid "Album was empty."
 msgstr ""
 
-#: mod/photos.php:237
+#: mod/photos.php:240
 msgid "Failed to delete the photo."
 msgstr ""
 
-#: mod/photos.php:332 src/Module/Conversation/Community.php:150
+#: mod/photos.php:336 src/Module/Conversation/Community.php:150
 #: src/Module/Directory.php:34 src/Module/Profile/Photos.php:251
 #: src/Module/Search/Index.php:56
 msgid "Public access denied."
 msgstr ""
 
-#: mod/photos.php:337
+#: mod/photos.php:341
 msgid "No photos selected"
 msgstr ""
 
@@ -304,11 +307,21 @@ msgid "Upload selected photo"
 msgstr ""
 
 #: mod/photos.php:473
+#: mod/photos.php:460
+msgid "Upload photo to this album"
+msgstr ""
+
+#: mod/photos.php:460
+msgid "Upload selected photo"
+msgstr ""
+
+#: mod/photos.php:476
 #, php-format
 msgid "The maximum accepted image size is %s"
 msgstr ""
 
 #: mod/photos.php:480
+#: mod/photos.php:483
 #, php-format
 msgid "Upload Photos to %s"
 msgstr ""
@@ -328,6 +341,19 @@ msgstr ""
 #: mod/photos.php:487 mod/photos.php:808
 #: src/Content/Conversation/StatusEditor.php:190
 #: mod/photos.php:488 mod/photos.php:814
+#: mod/photos.php:483
+msgid "Upload Photos"
+msgstr ""
+
+#: mod/photos.php:487
+msgid "Album name: "
+msgstr ""
+
+#: mod/photos.php:488
+msgid "If you want to add this photo to an album, begin typing its name, and existing albums will be suggested, which you can select. If you choose something new, it will be created."
+msgstr ""
+
+#: mod/photos.php:491 mod/photos.php:815
 #: src/Content/Conversation/StatusEditor.php:184
 #: src/Module/Calendar/Event/Form.php:266 src/Module/Post/Edit.php:196
 msgid "Permissions"
@@ -342,6 +368,15 @@ msgid "Delete Album"
 msgstr ""
 
 #: mod/photos.php:557 mod/photos.php:661 src/Module/Contact/Follow.php:158
+#: mod/photos.php:558
+msgid "Do you really want to delete this photo album and all its photos?"
+msgstr ""
+
+#: mod/photos.php:559
+msgid "Delete Album"
+msgstr ""
+
+#: mod/photos.php:560 mod/photos.php:659 src/Module/Contact/Follow.php:158
 #: src/Module/Contact/Revoke.php:92 src/Module/Contact/Unfollow.php:107
 #: src/Module/Media/BaseBrowser.php:86 src/Module/Post/Edit.php:180
 #: src/Module/Post/Tag/Remove.php:101 src/Module/Profile/RemoteFollow.php:110
@@ -354,6 +389,11 @@ msgid "New album name: "
 msgstr ""
 
 #: mod/photos.php:578 mod/photos.php:817 src/Module/Calendar/Event/Form.php:124
+#: mod/photos.php:577
+msgid "New album name: "
+msgstr ""
+
+#: mod/photos.php:581 mod/photos.php:818 src/Module/Calendar/Event/Form.php:124
 #: src/Module/Settings/Server/Index.php:104
 msgid "Save changes"
 msgstr ""
@@ -443,6 +483,96 @@ msgid "Rotate CCW (left)"
 msgstr ""
 
 #: mod/photos.php:835 src/Model/Event.php:654
+#: mod/photos.php:585
+msgid "Edit Album"
+msgstr ""
+
+#: mod/photos.php:586
+msgid "Delete album"
+msgstr ""
+
+#: mod/photos.php:590
+msgid "Show Newest First"
+msgstr ""
+
+#: mod/photos.php:592
+msgid "Show Oldest First"
+msgstr ""
+
+#: mod/photos.php:613 src/Module/Profile/Photos.php:304
+msgid "View Photo"
+msgstr ""
+
+#: mod/photos.php:645
+msgid "Permission denied. Access to this item may be restricted."
+msgstr ""
+
+#: mod/photos.php:647
+msgid "Photo not available"
+msgstr ""
+
+#: mod/photos.php:657
+msgid "Do you really want to delete this photo?"
+msgstr ""
+
+#: mod/photos.php:658 mod/photos.php:819
+msgid "Delete Photo"
+msgstr ""
+
+#: mod/photos.php:756
+msgid "View photo"
+msgstr ""
+
+#: mod/photos.php:758
+msgid "Edit photo"
+msgstr ""
+
+#: mod/photos.php:759
+msgid "Delete photo"
+msgstr ""
+
+#: mod/photos.php:760 mod/photos.php:857
+msgid "Use as profile picture"
+msgstr ""
+
+#: mod/photos.php:762 mod/photos.php:838 mod/photos.php:858
+#: src/Module/Settings/Attachments.php:124
+msgid "Used in posts"
+msgstr ""
+
+#: mod/photos.php:770
+msgid "Private Photo"
+msgstr ""
+
+#: mod/photos.php:776
+msgid "View Full Size"
+msgstr ""
+
+#: mod/photos.php:807
+msgid "New album name"
+msgstr ""
+
+#: mod/photos.php:808
+msgid "Caption"
+msgstr ""
+
+#: mod/photos.php:809
+msgid "Do not rotate"
+msgstr ""
+
+#: mod/photos.php:810
+msgid "Rotate CW (right)"
+msgstr ""
+
+#: mod/photos.php:811
+msgid "Rotate CCW (left)"
+msgstr ""
+
+#: mod/photos.php:839
+msgid "This photo isn't used in any of your posts."
+msgstr ""
+
+#: mod/photos.php:855 src/Model/Event.php:654
 #: src/Module/Calendar/Event/Show.php:77
 msgid "Edit"
 msgstr ""
@@ -450,17 +580,19 @@ msgstr ""
 #: mod/photos.php:830 src/Model/Event.php:656
 #: src/Module/Calendar/Event/Show.php:79
 #: mod/photos.php:836 src/Content/Conversation/ConversationRenderer.php:575
+#: mod/photos.php:856 src/Content/Conversation/ConversationRenderer.php:575
 #: src/Model/Event.php:656 src/Module/Calendar/Event/Show.php:79
 #: src/Module/Moderation/Users/Active.php:92
 #: src/Module/Moderation/Users/Blocked.php:92
 #: src/Module/Moderation/Users/Index.php:100
-#: src/Module/Settings/Attachments.php:99
+#: src/Module/Settings/Attachments.php:123
 #: src/Module/Settings/Connectors.php:232
 #: src/Module/Settings/Server/Index.php:102
 msgid "Delete"
 msgstr ""
 
 #: mod/photos.php:838
+#: mod/photos.php:859
 msgid "Back to viewing"
 msgstr ""
 
@@ -2338,7 +2470,7 @@ msgstr ""
 
 #: src/Content/Nav.php:211 src/Module/BaseSettings.php:148
 #: src/Module/Media/Attachment/Browser.php:31
-#: src/Module/Media/BaseBrowser.php:93 src/Module/Settings/Attachments.php:95
+#: src/Module/Media/BaseBrowser.php:93 src/Module/Settings/Attachments.php:119
 msgid "Files"
 msgstr ""
 
@@ -8712,17 +8844,17 @@ msgid "Or - did you try to upload an empty file?"
 msgstr ""
 
 #: src/Module/Media/Attachment/Upload.php:84
-#: src/Module/Settings/Attachments.php:53
+#: src/Module/Settings/Attachments.php:56
 #, php-format
 msgid "File exceeds size limit of %s"
 msgstr ""
 
 #: src/Module/Media/Attachment/Upload.php:94
-#: src/Module/Settings/Attachments.php:65
+#: src/Module/Settings/Attachments.php:68
 msgid "File upload failed."
 msgstr ""
 
-#: src/Module/Media/BaseBrowser.php:88 src/Module/Settings/Attachments.php:101
+#: src/Module/Media/BaseBrowser.php:88 src/Module/Settings/Attachments.php:126
 #: src/Module/Settings/Profile/Photo/Index.php:112
 msgid "Upload"
 msgstr ""
@@ -11264,23 +11396,32 @@ msgstr ""
 msgid "None of the addons installed on this server have any settings."
 msgstr ""
 
-#: src/Module/Settings/Attachments.php:46
+#: src/Module/Settings/Attachments.php:49
 msgid "File is empty."
 msgstr ""
 
-#: src/Module/Settings/Attachments.php:96
+#: src/Module/Settings/Attachments.php:109
+#, php-format
+msgid "Posts using %s"
+msgstr ""
+
+#: src/Module/Settings/Attachments.php:110
+msgid "This file isn't used in any of your posts."
+msgstr ""
+
+#: src/Module/Settings/Attachments.php:120
 msgid "Filename"
 msgstr ""
 
-#: src/Module/Settings/Attachments.php:97
+#: src/Module/Settings/Attachments.php:121
 msgid "Size"
 msgstr ""
 
-#: src/Module/Settings/Attachments.php:98
+#: src/Module/Settings/Attachments.php:122
 msgid "Uploaded"
 msgstr ""
 
-#: src/Module/Settings/Attachments.php:100
+#: src/Module/Settings/Attachments.php:125
 msgid "You have no uploaded files."
 msgstr ""
 
