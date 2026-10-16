@@ -58,6 +58,7 @@
 				toggle();
 			})();
 		</script>
+		{{include file="field_checkbox.tpl" field=$widgets_as_menu}}
 		{{include file="field_checkbox.tpl" field=$show_page_drop}}
 		{{include file="field_checkbox.tpl" field=$display_eventlist}}
 		{{include file="field_select.tpl" field=$preview_mode}}
