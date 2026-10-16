@@ -199,7 +199,8 @@
 					}
 				}
 			],
-			closeButton: true
+			closeButton: true,
+			l10n: {{$emoji_l10n nofilter}}
 		});
 	};
 	</script>
