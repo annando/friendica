@@ -364,7 +364,7 @@ function item_post_return(string $baseurl, string $return_path, array $item = []
 		$json['guid'] = $item['guid'];
 	}
 
-	if ($item && ($item['gravity'] === Item::GRAVITY_COMMENT) && ($item['thr-parent-id'] !== $item['parent-uri-id'])) {
+	if ($item && ($item['gravity'] === Item::GRAVITY_COMMENT)) {
 		$json['comment-uri-id'] = $item['uri-id'];
 		$json['parent-uri-id']  = $item['thr-parent-id'];
 	}

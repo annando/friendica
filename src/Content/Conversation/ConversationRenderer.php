@@ -152,13 +152,16 @@ final readonly class ConversationRenderer
 	 * rebuilding the whole thread (which drops loaded and among-strangers
 	 * comments in the compact timeline).
 	 *
+	 * For a reply to the thread starter the thread root is rendered with the new
+	 * reply as its only child, so the client can pick the reply out of it.
+	 *
 	 * Returns an empty string for anything that should go through the regular
-	 * thread update: a missing item, a non-comment, or a reply to the thread
-	 * starter.
+	 * thread update: a missing item, a non-comment, or a reply that isn't part
+	 * of the rendered thread.
 	 *
 	 * @param int $commentUriId The URI ID of the freshly posted comment
 	 * @param int $uid The user ID of the viewer, or null for public view
-	 * @return string The rendered HTML of the immediate parent's subtree
+	 * @return string The rendered HTML of the immediate parent's subtree, or of the thread root for a reply to the thread starter
 	 * @throws ImagickException
 	 * @throws \Friendica\Network\HTTPException\InternalServerErrorException
 	 */
@@ -170,7 +173,7 @@ final readonly class ConversationRenderer
 		$viewerUid = $this->resolveViewerUid($uid);
 
 		$comment = $this->dataProvider->fetchItemByUriId($commentUriId, $viewerUid);
-		if (empty($comment) || ($comment['gravity'] !== ItemModel::GRAVITY_COMMENT) || ($comment['thr-parent-id'] == $comment['parent-uri-id'])) {
+		if (empty($comment) || ($comment['gravity'] !== ItemModel::GRAVITY_COMMENT)) {
 			$this->profiler->stopRecording();
 			return '';
 		}
@@ -182,8 +185,14 @@ final readonly class ConversationRenderer
 		$page_dropping = $viewerUid && $this->pConfig->get($viewerUid, 'system', 'show_page_drop', true);
 		$root          = $this->dataProvider->getRootTemplateDataFromItem($comment, $viewerUid, self::MODE_DISPLAY, [], $page_dropping, $smartThreading);
 
-		$parent = $root ? $this->findNodeByUriId($root, (int) $comment['thr-parent-id']) : null;
-		$html   = $parent ? $this->renderItemHtml($parent, self::MODE_DISPLAY) : '';
+		if ($root && ($comment['thr-parent-id'] == $comment['parent-uri-id'])) {
+			// A reply to the thread starter has no parent subtree to swap
+			$parent = $this->isolateReply($root, (int) $comment['uri-id']);
+		} else {
+			$parent = $root ? $this->findNodeByUriId($root, (int) $comment['thr-parent-id']) : null;
+		}
+
+		$html = $parent ? $this->renderItemHtml($parent, self::MODE_DISPLAY) : '';
 
 		$this->profiler->stopRecording();
 
@@ -230,6 +239,26 @@ final readonly class ConversationRenderer
 		$this->profiler->stopRecording();
 
 		return $html;
+	}
+
+	/**
+	 * Reduce a thread to its root and one reply, which is stripped of its own replies.
+	 *
+	 * @param array $root The thread root
+	 * @param int $uriId The URI ID of the reply to keep
+	 * @return array|null The reduced thread root, or null when the reply isn't in the tree
+	 */
+	private function isolateReply(array $root, int $uriId): ?array
+	{
+		$node = $this->findNodeByUriId($root, $uriId);
+		if ($node === null) {
+			return null;
+		}
+
+		$node['children'] = [];
+		$root['children'] = [$node];
+
+		return $root;
 	}
 
 	/**

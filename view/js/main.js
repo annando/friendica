@@ -1019,6 +1019,7 @@ function updateCounter(type, counter) {
 }
 
 function updateItem(itemNo, guid) {
+	console.trace('updateItem', itemNo, guid);
 	update_item = itemNo;
 	triggerLiveUpdates(true, guid);
 }
@@ -1367,8 +1368,22 @@ function loadMoreComments(uriId, itemId, existing) {
 			});
 
 			if (newItems.length > 0) {
-				// Replace the button with the new comments
-				button.replaceWith(newItems);
+				// Under a thread starter the comments go into a comment container, as a full
+				// render has it, so later replies to the thread starter find it
+				var $bottom = button.closest('.wall-item-bottom');
+				var $root   = $bottom.parent('.wall-item-container.thread_level_1');
+				if ($root.length && $root.children('.wall-item-comment-wrapper').length) {
+					var $container = $root.children('.comment-container').last();
+					if ($container.length) {
+						$container.prepend(newItems);
+						$bottom.remove();
+					} else {
+						$bottom.replaceWith($('<div class="comment-container">').append(newItems));
+					}
+				} else {
+					// Replace the button with the new comments
+					button.replaceWith(newItems);
+				}
 			} else {
 				// No new comments to add
 				button.hide();
@@ -1414,15 +1429,25 @@ function insertPostedComment(parentItemId, data) {
 				return;
 			}
 
-			// The base theme wraps a comment and its children in a .children div
-			var $old     = $(parent);
-			var $oldWrap = $old.closest('.children');
-			var $newWrap = $new.closest('.children');
+			var $old = $(parent);
 
-			if ($oldWrap.length && $newWrap.length) {
-				$oldWrap.replaceWith($newWrap);
+			if ($new.hasClass('thread_level_1')) {
+				// A reply to the thread starter: there is no subtree to swap, the reply is appended
+				if (!insertRootComment($old, $new, data['comment-uri-id'])) {
+					updateItem(parentItemId, data.guid);
+					return;
+				}
 			} else {
-				$old.replaceWith($new);
+				// The base theme wraps a comment and its children in a .children div
+				var $oldWrap = $old.closest('.children');
+				var $newWrap = $new.closest('.children');
+
+				console.trace('insertPostedComment', data['comment-uri-id']);
+				if ($oldWrap.length && $newWrap.length) {
+					$oldWrap.replaceWith($newWrap);
+				} else {
+					$old.replaceWith($new);
+				}
 			}
 
 			document.dispatchEvent(new Event('postprocess_liveupdate'));
@@ -1436,6 +1461,58 @@ function insertPostedComment(parentItemId, data) {
 			updateItem(parentItemId, data.guid);
 		});
 
+	return true;
+}
+
+// Append a freshly posted reply to the thread starter. $newRoot is the thread
+// starter as rendered by the server with the new reply as its only comment.
+// Returns false when the live markup doesn't have the expected structure
+// (e.g. the vier theme, which has no comment container), so the caller can
+// fall back to updating the thread.
+function insertRootComment($oldRoot, $newRoot, commentUriId) {
+	var $comment = $newRoot.find('[data-uri-id="' + commentUriId + '"]').first();
+	var $box     = $oldRoot.children('.wall-item-comment-wrapper').last();
+	if (!$comment.length || !$box.length) {
+		return false;
+	}
+
+	// Don't add a reply twice, e.g. when it has been loaded in the meantime
+	if ($oldRoot.find('[data-uri-id="' + commentUriId + '"]').length) {
+		return true;
+	}
+
+	var $container = $oldRoot.children('.comment-container').last();
+	if ($container.length) {
+		console.trace('insertRootComment', commentUriId);
+		$container.append($comment);
+
+		// The thread starter has no fake comment form until it is rendered with comments
+		var $newFakeForm = $newRoot.children('.comment-fake-form').first();
+		if ($newFakeForm.length && !$oldRoot.children('.comment-fake-form').length) {
+			$box.before($newFakeForm);
+		}
+
+		return true;
+	}
+
+	// First comment: the thread starter has neither the comment container nor the fake comment form yet
+	var $newContainer = $comment.parent('.comment-container');
+	if (!$newContainer.length) {
+		return false;
+	}
+
+	var $fakeForm = $newRoot.children('.comment-fake-form').first();
+	if ($fakeForm.length && !$oldRoot.children('.comment-fake-form').length) {
+		$box.before($fakeForm);
+	} else {
+		$fakeForm = $oldRoot.children('.comment-fake-form').first();
+	}
+
+	console.trace('insertRootComment (first comment)', commentUriId, {
+		roots:    $oldRoot.length,
+		children: $oldRoot.children().map(function () { return this.tagName + '.' + this.className; }).get().join(' | ')
+	});
+	($fakeForm.length ? $fakeForm : $box).before($newContainer);
 	return true;
 }
 
