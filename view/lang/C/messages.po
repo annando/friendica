@@ -75,6 +75,8 @@ msgstr ""
 #: src/Module/Settings/ContactImport.php:110
 #: src/Module/Settings/Delegation.php:68 src/Module/Settings/Display.php:93
 #: src/Module/Settings/Display.php:233
+#: src/Module/Settings/Delegation.php:68 src/Module/Settings/Display.php:92
+#: src/Module/Settings/Display.php:234
 #: src/Module/Settings/Profile/Photo/Crop.php:148
 #: src/Module/Settings/Profile/Photo/Index.php:95
 #: src/Module/Settings/RemoveMe.php:93 src/Module/Settings/UserExport.php:73
@@ -11838,6 +11840,11 @@ msgid "The theme you chose isn't available."
 msgstr ""
 
 #: src/Module/Settings/Display.php:259
+#: src/Module/Settings/Display.php:220
+msgid "The theme you chose isn't available."
+msgstr ""
+
+#: src/Module/Settings/Display.php:260
 #, php-format
 msgid "%s - (Unsupported)"
 msgstr ""
