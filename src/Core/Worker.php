@@ -321,8 +321,8 @@ class Worker
 	{
 		$mypid = getmypid();
 
-		// Quit when in maintenance
-		if (DI::config()->get('system', 'maintenance', false)) {
+		// Quit when in maintenance, except for critical tasks
+		if (DI::config()->get('system', 'maintenance', false) && ($queue['priority'] != self::PRIORITY_CRITICAL)) {
 			DI::logger()->notice('Maintenance mode - quit process', ['pid' => $mypid]);
 			return false;
 		}
@@ -961,6 +961,11 @@ class Worker
 	 */
 	private static function nextPriority()
 	{
+		if (DI::config()->get('system', 'maintenance', false)) {
+			DI::logger()->notice('Maintenance mode - only fetch critical queue jobs');
+			return self::PRIORITY_CRITICAL;
+		}
+
 		$waiting    = [];
 		$priorities = [self::PRIORITY_CRITICAL, self::PRIORITY_HIGH, self::PRIORITY_MEDIUM, self::PRIORITY_LOW, self::PRIORITY_NEGLIGIBLE];
 		foreach ($priorities as $priority) {
