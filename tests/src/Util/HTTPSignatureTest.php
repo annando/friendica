@@ -612,7 +612,7 @@ G1vVmRgkLDqhc4+r3wDz3qy6JpV7tg==
 		self::assertTrue(openssl_sign($base, $signature, $privKey, OPENSSL_ALGO_SHA256));
 
 		// What the receiver does: it parses the "Signature-Input" header
-		$received = Parser::parseDictionary('sig1=' . $input)->sig1;
+		$received = iterator_to_array(Parser::parseDictionary('sig1=' . $input))['sig1'];
 		$check    = HTTPSignature::rfc9421InputBase($received, $context, $headers);
 		self::assertSame($base, $check);
 
