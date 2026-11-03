@@ -12,6 +12,7 @@ use Friendica\Content\ContactSelector;
 use Friendica\Content\Item as ContentItem;
 use Friendica\Content\Smilies;
 use Friendica\Content\Text\BBCode;
+use Friendica\Content\Text\RenderedContent;
 use Friendica\Core\Protocol;
 use Friendica\Database\Database;
 use Friendica\Database\DBA;
@@ -49,6 +50,7 @@ class Status extends BaseFactory
 		private readonly Poll $mstdnPollFactory,
 		private readonly ContentItem $contentItem,
 		private readonly ACLFormatter $aclFormatter,
+		private readonly RenderedContent $renderedContent,
 	) {
 		parent::__construct($logger);
 	}
@@ -103,22 +105,73 @@ class Status extends BaseFactory
 			}
 		}
 
-		$condition = [
-			'thr-parent-id' => $uriId,
-			'gravity'       => Item::GRAVITY_ACTIVITY,
-			'deleted'       => false,
-		];
-		$condition = DBA::mergeConditions($condition, ["((`uid` = ? AND `global`) OR (`uid` = ? AND NOT `global`))", 0, $uid]);
+		$vid_post     = Verb::getID(Activity::POST);
+		$vid_announce = Verb::getID(Activity::ANNOUNCE);
+		$vid_like     = Verb::getID(Activity::LIKE);
+		$vid_dislike  = Verb::getID(Activity::DISLIKE);
 
-		$count_announce = Post::count(DBA::mergeConditions($condition, ['vid' => Verb::getID(Activity::ANNOUNCE)]))
-			+ Post::countPosts(['quote-uri-id' => $uriId, 'body' => '', 'deleted' => false]);
+		// The counts table has an entry for a verb as long as there is any non deleted post of it, regardless of the visibility.
+		// Without an entry there is nothing to count, so the expensive queries on the post view can be skipped.
+		$count_rows    = DBA::selectToArray('post-counts', ['vid', 'reaction', 'count'], ['uri-id' => $uriId]);
+		$existing_vids = array_column($count_rows, 'vid');
 
-		$plain_like    = DBA::mergeConditions(['vid' => Verb::getID(Activity::LIKE)], ["(`body` IS NULL OR `body` IN ('', ?))", Activity::LIKE]);
-		$count_like    = Post::count(DBA::mergeConditions($condition, $plain_like));
-		$count_dislike = Post::count(DBA::mergeConditions($condition, ['vid' => Verb::getID(Activity::DISLIKE)]));
+		$activity_counts = [];
+		$public_counts   = null;
+		$is_public       = in_array((int) $item['private'], [Item::PUBLIC, Item::UNLISTED]);
+		if ($is_public) {
+			// The counts table contains the counts of the public activities. Like in the conversation view they are
+			// used for public posts, since counting them in the post view is very slow for posts with many activities.
+			$public_counts = [];
+			foreach ($count_rows as $count_row) {
+				if ($count_row['reaction'] === '') {
+					$public_counts[$count_row['vid']] = (int) $count_row['count'];
+				}
+			}
+		} elseif (!array_intersect([$vid_announce, $vid_like, $vid_dislike], $existing_vids)) {
+			$public_counts = [];
+		}
+
+		if (!is_null($public_counts)) {
+			foreach ([$vid_announce, $vid_like, $vid_dislike] as $vid) {
+				$activity_counts[$vid] = ['total' => $public_counts[$vid] ?? 0, 'plain' => $public_counts[$vid] ?? 0];
+			}
+		} else {
+			$condition = [
+				'thr-parent-id' => $uriId,
+				'gravity'       => Item::GRAVITY_ACTIVITY,
+				'deleted'       => false,
+			];
+			$condition = DBA::mergeConditions($condition, ["((`uid` = ? AND `global`) OR (`uid` = ? AND NOT `global`))", 0, $uid]);
+
+			// Announces, likes and dislikes share the same condition, so they are counted with a single query.
+			// Likes with an emoji as body are reactions and are not part of the like counter.
+			$activity_condition = DBA::mergeConditions($condition, ['vid' => [$vid_announce, $vid_like, $vid_dislike]]);
+			$condition_string   = DBA::buildCondition($activity_condition);
+			$activities         = DBA::p(
+				"SELECT `vid`, COUNT(*) AS `total`, SUM(`body` IS NULL OR `body` IN ('', ?)) AS `plain` FROM `post-user-view`" . $condition_string . " GROUP BY `vid`",
+				array_merge([Activity::LIKE], $activity_condition),
+			);
+			while ($activity_count = DBA::fetch($activities)) {
+				$activity_counts[$activity_count['vid']] = $activity_count;
+			}
+			DBA::close($activities);
+		}
+
+		// The quote table is indexed by the quoted post, so the expensive count on the post view is only needed when there are quotes
+		$has_quotes     = DBA::exists('post-quote', ['quote-uri-id' => $uriId]);
+		$count_announce = (int) ($activity_counts[$vid_announce]['total'] ?? 0)
+			+ ($has_quotes ? Post::countPosts(['quote-uri-id' => $uriId, 'body' => '', 'deleted' => false]) : 0);
+
+		$plain_like    = DBA::mergeConditions(['vid' => $vid_like], ["(`body` IS NULL OR `body` IN ('', ?))", Activity::LIKE]);
+		$count_like    = (int) ($activity_counts[$vid_like]['plain'] ?? 0);
+		$count_dislike = (int) ($activity_counts[$vid_dislike]['total'] ?? 0);
 
 		$counts = new \Friendica\Object\Api\Mastodon\Status\Counts(
-			Post::countPosts(['thr-parent-id' => $uriId, 'gravity' => Item::GRAVITY_COMMENT, 'deleted' => false], []),
+			match (true) {
+				$is_public                          => $public_counts[$vid_post] ?? 0,
+				in_array($vid_post, $existing_vids) => Post::countPosts(['thr-parent-id' => $uriId, 'gravity' => Item::GRAVITY_COMMENT, 'deleted' => false], []),
+				default                             => 0,
+			},
 			$count_announce,
 			$count_like,
 			$count_dislike,
@@ -274,7 +327,7 @@ class Status extends BaseFactory
 
 		$delivery_data   = $uid != $item['uid'] ? null : new FriendicaDeliveryData($item['delivery_queue_count'], $item['delivery_queue_done'], $item['delivery_queue_failed']);
 		$visibility_data = $uid != $item['uid'] ? null : new FriendicaVisibility($this->aclFormatter->expand($item['allow_cid']), $this->aclFormatter->expand($item['deny_cid']), $this->aclFormatter->expand($item['allow_gid']), $this->aclFormatter->expand($item['deny_gid']));
-		$friendica       = new FriendicaExtension($item['title'] ?? '', $item['changed'], $item['commented'], $item['received'], $counts->dislikes, $origin_dislike, $network, $platform, $version, $sitename, $delivery_data, $visibility_data, BBCode::convertForUriId($item['uri-id'], $item['body'], BBCode::EXTERNAL));
+		$friendica       = new FriendicaExtension($item['title'] ?? '', $item['changed'], $item['commented'], $item['received'], $counts->dislikes, $origin_dislike, $network, $platform, $version, $sitename, $delivery_data, $visibility_data, $this->renderedContent->convert($item['uri-id'], $item['body'], BBCode::EXTERNAL));
 
 		$emoji_reactions = [];
 		foreach (Post\Counts::getReactions($item['uri-id'], $uid) as $reaction) {
@@ -282,7 +335,7 @@ class Status extends BaseFactory
 			$emoji_reactions[]       = $reaction;
 		}
 
-		return new \Friendica\Object\Api\Mastodon\Status($item, $account, $counts, $userAttributes, $sensitive, $application, $mentions, $tags, $card, $attachments, $in_reply, $reshare, $friendica, $quote, $poll, $emojis, $emoji_reactions);
+		return new \Friendica\Object\Api\Mastodon\Status($item, $account, $counts, $userAttributes, $sensitive, $application, $mentions, $tags, $card, $attachments, $in_reply, $reshare, $friendica, $reshare ? '' : $this->renderedContent->convert($item['uri-id'], BBCode::setMentionsToNicknames($item['raw-body'] ?? $item['body']), BBCode::MASTODON_API), $quote, $poll, $emojis, $emoji_reactions);
 	}
 
 	/**
@@ -376,6 +429,6 @@ class Status extends BaseFactory
 		$reshare     = [];
 		$friendica   = new FriendicaExtension('', null, null, null, 0, false, null, null, null, null, null, null, BBCode::convertForUriId($item['uri-id'], $item['body'], BBCode::EXTERNAL));
 
-		return new \Friendica\Object\Api\Mastodon\Status($item, $account, $counts, $userAttributes, $sensitive, $application, $mentions, $tags, $card, $attachments, $in_reply, $reshare, $friendica);
+		return new \Friendica\Object\Api\Mastodon\Status($item, $account, $counts, $userAttributes, $sensitive, $application, $mentions, $tags, $card, $attachments, $in_reply, $reshare, $friendica, $this->renderedContent->convert($item['uri-id'], BBCode::setMentionsToNicknames($item['raw-body'] ?? $item['body']), BBCode::MASTODON_API));
 	}
 }

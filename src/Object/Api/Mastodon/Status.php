@@ -8,7 +8,6 @@
 namespace Friendica\Object\Api\Mastodon;
 
 use Friendica\BaseDataTransferObject;
-use Friendica\Content\Text\BBCode;
 use Friendica\Model\Item;
 use Friendica\Object\Api\Mastodon\Status\Counts;
 use Friendica\Object\Api\Mastodon\Status\FriendicaExtension;
@@ -113,6 +112,7 @@ class Status extends BaseDataTransferObject
 		array $in_reply,
 		array $reblog,
 		FriendicaExtension $friendica,
+		string $content,
 		?array $quote = null,
 		?array $poll = null,
 		?array $emojis = null,
@@ -152,7 +152,7 @@ class Status extends BaseDataTransferObject
 		$this->muted             = $userAttributes->muted;
 		$this->bookmarked        = $userAttributes->bookmarked;
 		$this->pinned            = $userAttributes->pinned;
-		$this->content           = $reblogged ? '' : BBCode::convertForUriId($item['uri-id'], BBCode::setMentionsToNicknames($item['raw-body'] ?? $item['body']), BBCode::MASTODON_API);
+		$this->content           = $reblogged ? '' : $content;
 		$this->reblog            = $reblog;
 		$this->quote             = $quote;
 		$this->application       = $application->toArray();
