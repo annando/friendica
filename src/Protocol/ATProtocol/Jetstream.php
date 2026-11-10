@@ -481,12 +481,22 @@ class Jetstream
 	 */
 	private function routeProfile(stdClass $data): void
 	{
-		match ($data->commit->operation) {
-			'delete' => $this->storeCommitMessage($data),
-			'create' => $this->actor->updateContactByDID($data->did, 0),
-			'update' => $this->actor->updateContactByDID($data->did, 0),
-			default  => $this->storeCommitMessage($data),
-		};
+		switch ($data->commit->operation) {
+			case 'delete':
+				$this->processor->updatePinnedPost($data->did, null);
+				$this->storeCommitMessage($data);
+				break;
+
+			case 'create':
+			case 'update':
+				$this->actor->updateContactByDID($data->did, 0);
+				$this->processor->updatePinnedPost($data->did, $data->commit->record->pinnedPost ?? null);
+				break;
+
+			default:
+				$this->storeCommitMessage($data);
+				break;
+		}
 	}
 
 	/**

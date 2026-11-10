@@ -119,6 +119,49 @@ class Processor
 	}
 
 	/**
+	 * Update the featured post of a contact according to the pinned post of its profile.
+	 *
+	 * @param string        $did    DID of the profile owner
+	 * @param stdClass|null $pinned Strong reference (uri, cid) of the pinned post, "null" if no post is pinned
+	 * @return void
+	 */
+	public function updatePinnedPost(string $did, ?stdClass $pinned): void
+	{
+		$contact = Contact::selectFirst(['id'], ['nurl' => $did, 'network' => Protocol::ATPROTO, 'uid' => 0]);
+		if (empty($contact['id'])) {
+			$this->logger->info('Contact not found', ['did' => $did]);
+			return;
+		}
+
+		$old_featured = array_column(Post\Collection::selectToArrayForContact($contact['id'], Post\Collection::FEATURED, ['uri-id']), 'uri-id');
+		$featured     = 0;
+
+		if (!empty($pinned->uri) && !empty($pinned->cid)) {
+			$parts = $this->atprotocol->getUriObject($pinned->uri);
+			if (empty($parts) || ($parts->repo !== $did)) {
+				$this->logger->notice('Pinned post is not a post of the profile owner', ['did' => $did, 'uri' => $pinned->uri]);
+			} else {
+				$uri = $this->fetchMissingPost($this->getUri($pinned), 0, Item::PR_FETCHED, $contact['id'], 0);
+				$post = Post::selectFirst(['uri-id', 'author-id'], ['uri' => $uri, 'uid' => 0]);
+				if (!empty($post['uri-id']) && ($post['author-id'] == $contact['id'])) {
+					$featured = $post['uri-id'];
+					Post\Collection::add($featured, Post\Collection::FEATURED, $post['author-id']);
+					$this->logger->debug('Pinned post stored', ['did' => $did, 'uri-id' => $featured]);
+				} else {
+					$this->logger->notice('Pinned post could not be stored', ['did' => $did, 'uri' => $pinned->uri]);
+				}
+			}
+		}
+
+		foreach ($old_featured as $uri_id) {
+			if ($uri_id != $featured) {
+				Post\Collection::remove($uri_id, Post\Collection::FEATURED);
+				$this->logger->debug('Removed no longer pinned post', ['did' => $did, 'uri-id' => $uri_id]);
+			}
+		}
+	}
+
+	/**
 	 * Delete an existing record identified by DID, collection and rkey.
 	 *
 	 * @param stdClass $data
@@ -599,6 +642,8 @@ class Processor
 	/**
 	 * Convert ATProto facets to BBCode links and store hashtags.
 	 *
+	 * Besides the tag facets this also stores the additional tags of the record, which don't appear in the text.
+	 *
 	 * @param stdClass $record
 	 * @param int $uri_id
 	 * @return string
@@ -606,6 +651,12 @@ class Processor
 	private function parseFacets(stdClass $record, int $uri_id): string
 	{
 		$text = $record->text ?? '';
+
+		foreach ($record->tags ?? [] as $tag) {
+			if (is_string($tag)) {
+				Tag::store($uri_id, Tag::HASHTAG, $tag);
+			}
+		}
 
 		if (empty($record->facets)) {
 			return $text;
