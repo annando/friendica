@@ -25,6 +25,7 @@ use Friendica\Database\DBA;
 use Friendica\Model\Contact;
 use Friendica\Model\Item;
 use Friendica\Model\Post;
+use Friendica\Model\Tag;
 use Friendica\Util\Proxy;
 use Friendica\Worker\UpdateServerDirectory;
 
@@ -34,6 +35,9 @@ use Friendica\Worker\UpdateServerDirectory;
 class GroupManager
 {
 	private const CONTACT_TYPES = [Contact::TYPE_COMMUNITY];
+
+	// A post that merely mentions a group (without being addressed to it via audience or exclusive mention) still counts as a group post.
+	private const MENTION_TYPES = [Tag::MENTION, Tag::EXCLUSIVE_MENTION];
 
 	// Like in Post::selectForUser(): hidden, deleted and blocked or ignored threads are skipped
 	private const THREAD_VISIBLE = "`post-user`.`visible` AND NOT `post-user`.`deleted`
@@ -230,22 +234,47 @@ class GroupManager
 		$counts  = [];
 		$authors = $this->getIgnoredAuthors($uid);
 
-		// The join order is forced: The optimizer otherwise starts with all threads of the groups instead of the few unseen posts
+		$pcidPlaceholders = implode(', ', array_fill(0, count($pcids), '?'));
+		$typePlaceholders = implode(', ', array_fill(0, count(self::MENTION_TYPES), '?'));
+
+		// The join order is forced in every branch: The optimizer otherwise starts with all threads of the groups instead of the few unseen posts
 		$unread = $this->database->p(
-			"SELECT `post-thread-user`.`owner-id`, COUNT(DISTINCT `post-user`.`parent-uri-id`) AS `unread` FROM `post-user`
-				STRAIGHT_JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
-				WHERE `post-user`.`uid` = ? AND `post-user`.`unseen` AND NOT `post-user`.`hidden` AND NOT `post-user`.`deleted`
-				AND `post-user`.`gravity` IN (?, ?) AND `post-thread-user`.`owner-id` IN (" . implode(', ', array_fill(0, count($pcids), '?')) . ")
-				AND NOT `post-thread-user`.`deleted`" . $this->excludeAuthors($authors) . "
-				GROUP BY `post-thread-user`.`owner-id`",
-			$uid,
-			Item::GRAVITY_PARENT,
-			Item::GRAVITY_COMMENT,
-			...$pcids,
-			...$authors,
+			"SELECT `gid`, COUNT(DISTINCT `uri-id`) AS `unread` FROM (
+				(SELECT `post-thread-user`.`owner-id` AS `gid`, `post-user`.`parent-uri-id` AS `uri-id` FROM `post-user`
+					STRAIGHT_JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
+					WHERE `post-user`.`uid` = ? AND `post-user`.`unseen` AND NOT `post-user`.`hidden` AND NOT `post-user`.`deleted`
+					AND `post-user`.`gravity` IN (?, ?) AND `post-thread-user`.`owner-id` IN ($pcidPlaceholders)
+					AND NOT `post-thread-user`.`deleted`" . $this->excludeAuthors($authors) . ")
+				UNION
+				(SELECT `post-thread-user`.`causer-id` AS `gid`, `post-user`.`parent-uri-id` AS `uri-id` FROM `post-user`
+					STRAIGHT_JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
+					WHERE `post-user`.`uid` = ? AND `post-user`.`unseen` AND NOT `post-user`.`hidden` AND NOT `post-user`.`deleted`
+					AND `post-user`.`gravity` IN (?, ?) AND `post-thread-user`.`causer-id` IN ($pcidPlaceholders)
+					AND NOT `post-thread-user`.`deleted`" . $this->excludeAuthors($authors) . ")
+				UNION
+				(SELECT `post-tag`.`cid` AS `gid`, `post-user`.`parent-uri-id` AS `uri-id` FROM `post-user`
+					STRAIGHT_JOIN `post-thread-user` ON `post-thread-user`.`uri-id` = `post-user`.`parent-uri-id` AND `post-thread-user`.`uid` = `post-user`.`uid`
+					INNER JOIN `post-tag` ON `post-tag`.`uri-id` = `post-thread-user`.`uri-id`
+					WHERE `post-user`.`uid` = ? AND `post-user`.`unseen` AND NOT `post-user`.`hidden` AND NOT `post-user`.`deleted`
+					AND `post-user`.`gravity` IN (?, ?) AND `post-tag`.`cid` IN ($pcidPlaceholders) AND `post-tag`.`type` IN ($typePlaceholders)
+					AND NOT `post-thread-user`.`deleted`" . $this->excludeAuthors($authors) . ")
+			) `group_unread`
+			GROUP BY `gid`",
+			...array_merge(
+				[$uid, Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT],
+				$pcids,
+				$authors,
+				[$uid, Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT],
+				$pcids,
+				$authors,
+				[$uid, Item::GRAVITY_PARENT, Item::GRAVITY_COMMENT],
+				$pcids,
+				self::MENTION_TYPES,
+				$authors,
+			),
 		);
 		while ($row = $this->database->fetch($unread)) {
-			$counts[$row['owner-id']] = (int) $row['unread'];
+			$counts[$row['gid']] = (int) $row['unread'];
 		}
 		$this->database->close($unread);
 
@@ -261,7 +290,8 @@ class GroupManager
 	 */
 	public function markSeen(int $uid, int $pcid): void
 	{
-		Item::update(['unseen' => false], ["`uid` = ? AND `unseen` AND `parent-uri-id` IN (SELECT `uri-id` FROM `post-thread-user` WHERE `uid` = ? AND `owner-id` = ?)", $uid, $uid, $pcid]);
+		[$condition, $params] = $this->groupThreadUriIdsCondition($uid, [$pcid]);
+		Item::update(['unseen' => false], array_merge(["`uid` = ? AND `unseen` AND `parent-uri-id` IN " . $condition, $uid], $params));
 		$this->invalidateUnreadCache($uid);
 	}
 
@@ -279,8 +309,30 @@ class GroupManager
 			return;
 		}
 
-		Item::update(['unseen' => false], array_merge(["`uid` = ? AND `unseen` AND `parent-uri-id` IN (SELECT `uri-id` FROM `post-thread-user` WHERE `uid` = ? AND `owner-id` IN (" . implode(', ', array_fill(0, count($pcids), '?')) . '))', $uid, $uid], $pcids));
+		[$condition, $params] = $this->groupThreadUriIdsCondition($uid, $pcids);
+		Item::update(['unseen' => false], array_merge(["`uid` = ? AND `unseen` AND `parent-uri-id` IN " . $condition, $uid], $params));
 		$this->invalidateUnreadCache($uid);
+	}
+
+	/**
+	 * SQL subquery and bind parameters matching the uri-ids of the threads that belong to the given groups:
+	 * addressed to them (owner-id), reshared by them (causer-id, e.g. a classic Announce-based forum reshare)
+	 * or merely mentioning them (post-tag, e.g. a plain "@group" mention that isn't the post's audience).
+	 *
+	 * @param int   $uid   User id, restricts the owner-id/causer-id match to this user's copy of the threads
+	 * @param int[] $pcids Public contact ids of the groups
+	 *
+	 * @return array{0: string, 1: array} SQL subquery (including its enclosing parentheses) and its bind parameters
+	 */
+	private function groupThreadUriIdsCondition(int $uid, array $pcids): array
+	{
+		$placeholders = implode(', ', array_fill(0, count($pcids), '?'));
+
+		$sql = "(SELECT `uri-id` FROM `post-thread-user` WHERE `uid` = ? AND (`owner-id` IN ($placeholders) OR `causer-id` IN ($placeholders))
+			UNION
+			SELECT `uri-id` FROM `post-tag` WHERE `cid` IN ($placeholders) AND `type` IN (" . implode(', ', array_fill(0, count(self::MENTION_TYPES), '?')) . '))';
+
+		return [$sql, array_merge([$uid], $pcids, $pcids, $pcids, self::MENTION_TYPES)];
 	}
 
 	/**
@@ -542,21 +594,36 @@ class GroupManager
 
 		$authors = array_flip($this->getIgnoredAuthors($uid));
 
+		$typePlaceholders = implode(', ', array_fill(0, count(self::MENTION_TYPES), '?'));
+
 		do {
+			// A thread belongs to the group when it is addressed to it or reshared by it (owner-id/causer-id of either copy of the
+			// thread), or when it merely mentions it (post-tag). The same uri-id can surface from more than one branch, so the
+			// result is deduplicated below instead of relying on the (cheaper) UNION ALL to do it.
 			$candidates = $this->database->toArray($this->database->p(
-				"(SELECT `uri-id`, `post-user-id`, `author-id`, `commented` FROM `post-thread-user` WHERE `uid` = 0 AND `owner-id` = ? AND NOT `deleted`
+				"(SELECT `uri-id`, `post-user-id`, `author-id`, `commented` FROM `post-thread-user` WHERE `uid` = 0 AND (`owner-id` = ? OR `causer-id` = ?) AND NOT `deleted`
 					ORDER BY `commented` DESC, `uri-id` DESC LIMIT ?)
 				UNION ALL
-				(SELECT `uri-id`, `post-user-id`, `author-id`, `commented` FROM `post-thread-user` WHERE `uid` = ? AND `owner-id` = ? AND NOT `deleted`
+				(SELECT `uri-id`, `post-user-id`, `author-id`, `commented` FROM `post-thread-user` WHERE `uid` = ? AND (`owner-id` = ? OR `causer-id` = ?) AND NOT `deleted`
+					ORDER BY `commented` DESC, `uri-id` DESC LIMIT ?)
+				UNION ALL
+				(SELECT `post-thread-user`.`uri-id`, `post-thread-user`.`post-user-id`, `post-thread-user`.`author-id`, `post-thread-user`.`commented` FROM `post-thread-user`
+					INNER JOIN `post-tag` ON `post-tag`.`uri-id` = `post-thread-user`.`uri-id`
+					WHERE `post-thread-user`.`uid` = 0 AND `post-tag`.`cid` = ? AND `post-tag`.`type` IN ($typePlaceholders) AND NOT `post-thread-user`.`deleted`
+					ORDER BY `commented` DESC, `uri-id` DESC LIMIT ?)
+				UNION ALL
+				(SELECT `post-thread-user`.`uri-id`, `post-thread-user`.`post-user-id`, `post-thread-user`.`author-id`, `post-thread-user`.`commented` FROM `post-thread-user`
+					INNER JOIN `post-tag` ON `post-tag`.`uri-id` = `post-thread-user`.`uri-id`
+					WHERE `post-thread-user`.`uid` = ? AND `post-tag`.`cid` = ? AND `post-tag`.`type` IN ($typePlaceholders) AND NOT `post-thread-user`.`deleted`
 					ORDER BY `commented` DESC, `uri-id` DESC LIMIT ?)
 				ORDER BY `commented` DESC, `uri-id` DESC LIMIT ?, ?",
-				$pcid,
-				$offset + $size,
-				$uid,
-				$pcid,
-				$offset + $size,
-				$offset,
-				$size,
+				...array_merge(
+					[$pcid, $pcid, $offset + $size],
+					[$uid, $pcid, $pcid, $offset + $size],
+					array_merge([$pcid], self::MENTION_TYPES, [$offset + $size]),
+					array_merge([$uid, $pcid], self::MENTION_TYPES, [$offset + $size]),
+					[$offset, $size],
+				),
 			));
 
 			$complete   = count($candidates) < $size;
@@ -573,7 +640,7 @@ class GroupManager
 
 				foreach ($candidates as $candidate) {
 					if (isset($ids[$candidate['post-user-id']])) {
-						$visible[] = $candidate['uri-id'];
+						$visible[$candidate['uri-id']] = true;
 					}
 				}
 			}
@@ -583,7 +650,7 @@ class GroupManager
 			$size *= 2;
 		} while (!$complete && count($visible) < $wanted);
 
-		return array_slice($visible, $start, $limit);
+		return array_slice(array_keys($visible), $start, $limit);
 	}
 
 	/**
@@ -638,19 +705,43 @@ class GroupManager
 
 		$authors = $this->getIgnoredAuthors($uid);
 
-		// Public threads are in the global copy, private ones in the copy of the user. Threads that are in both copies are counted once.
+		$pcidPlaceholders = implode(', ', array_fill(0, count($pcids), '?'));
+		$typePlaceholders = implode(', ', array_fill(0, count(self::MENTION_TYPES), '?'));
+
+		// Public threads are in the global copy, private ones in the copy of the user. Threads that are in both copies, or that
+		// match more than one of owner-id/causer-id/post-tag, are counted once.
 		$threads = $this->database->p(
-			"SELECT `owner-id`, COUNT(DISTINCT `uri-id`) AS `threads`, MAX(`commented`) AS `commented`
-				FROM `post-thread-user` WHERE `uid` IN (0, ?)
-				AND `owner-id` IN (" . implode(', ', array_fill(0, count($pcids), '?')) . ")
-				AND NOT `deleted`" . $this->excludeAuthors($authors) . "
-				GROUP BY `owner-id`",
-			$uid,
-			...$pcids,
-			...$authors,
+			"SELECT `gid`, COUNT(DISTINCT `uri-id`) AS `threads`, MAX(`commented`) AS `commented` FROM (
+				(SELECT `owner-id` AS `gid`, `uri-id`, `commented` FROM `post-thread-user` WHERE `uid` IN (0, ?)
+					AND `owner-id` IN ($pcidPlaceholders)
+					AND NOT `deleted`" . $this->excludeAuthors($authors) . ")
+				UNION
+				(SELECT `causer-id` AS `gid`, `uri-id`, `commented` FROM `post-thread-user` WHERE `uid` IN (0, ?)
+					AND `causer-id` IN ($pcidPlaceholders)
+					AND NOT `deleted`" . $this->excludeAuthors($authors) . ")
+				UNION
+				(SELECT `post-tag`.`cid` AS `gid`, `post-thread-user`.`uri-id`, `post-thread-user`.`commented` FROM `post-thread-user`
+					INNER JOIN `post-tag` ON `post-tag`.`uri-id` = `post-thread-user`.`uri-id`
+					WHERE `post-thread-user`.`uid` IN (0, ?)
+					AND `post-tag`.`cid` IN ($pcidPlaceholders) AND `post-tag`.`type` IN ($typePlaceholders)
+					AND NOT `post-thread-user`.`deleted`" . $this->excludeAuthors($authors) . ")
+			) `group_threads`
+			GROUP BY `gid`",
+			...array_merge(
+				[$uid],
+				$pcids,
+				$authors,
+				[$uid],
+				$pcids,
+				$authors,
+				[$uid],
+				$pcids,
+				self::MENTION_TYPES,
+				$authors,
+			),
 		);
 		while ($row = $this->database->fetch($threads)) {
-			$counts[$row['owner-id']] = [
+			$counts[$row['gid']] = [
 				'threads'   => (int) $row['threads'],
 				'commented' => (string) $row['commented'],
 			];
